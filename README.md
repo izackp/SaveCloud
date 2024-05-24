@@ -22,6 +22,11 @@ a different hash but the save file is still the same and relevant.
 
 Sometimes the same game can be stored in different formats. We need to support multiple hashes for one game
 
+### Goals
+* REST / HTTP API 
+* Built in http server to manage internal data and accounts
+* C library to make integration easy as well as a cli client
+
 
 ### Napkin API
 
