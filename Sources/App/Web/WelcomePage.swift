@@ -45,6 +45,6 @@ struct WelcomePage: Plot.Component, IHtmlHeader {
                     }
                 }
             }
-        }
+        }.class("content")
     }
 }

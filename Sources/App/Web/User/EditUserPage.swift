@@ -26,7 +26,7 @@ struct EditUserPage: Plot.Component, IHtmlHeader {
             Div() {
                 EditUserForm(user: user, error: userEditError)
                 ChangePasswordForm(user: user, error: passwordEditError)
-            }.id("body")
+            }.id("nav_body")
         }
     }
 }

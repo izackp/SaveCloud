@@ -17,7 +17,15 @@ struct RegisterRequest: Content {
     let password_confirmation: String
 }
 
-struct RegisterForm: Plot.Component {
+struct RegisterForm: Plot.Component, IHtmlHeader {
+    func header() -> String {
+        "Registration"
+    }
+    
+    func css() -> String {
+        "/style.css"
+    }
+    
     public init(error: String? = nil) {
         self.error = error
     }
@@ -52,13 +60,11 @@ struct RegisterForm: Plot.Component {
             if let error = error {
                 Paragraph(error)
             }
-        }
+        }.class("content")
     }
 }
 
 
-private let title = "SaveCloud"
-private let css = "/style.css"
 @Sendable func register(req: Request) async throws -> Response {//EventLoopFuture<AuthSession> {
     let contents = try req.content.decode(RegisterRequest.self)
     var errors = [String]()
@@ -77,7 +83,7 @@ private let css = "/style.css"
         //passwordError = true
     }
     if !errors.isEmpty {
-        let response = RegisterForm(error: errors.joined(separator: "\n")).wrapHTML(title, css)
+        let response = RegisterForm(error: errors.joined(separator: "\n")).wrapHTML()
         return response.response()
         //throw Abort(.unauthorized)
         //return some view

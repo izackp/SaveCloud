@@ -8,7 +8,16 @@
 import Vapor
 import Plot
 
-struct HomePage: Plot.Component {
+struct HomePage: Plot.Component, IHtmlHeader {
+    func header() -> String {
+        "Save Cloud - Home"
+    }
+    
+    func css() -> String {
+        "/style.css"
+    }
+    
+    
     let admin:Bool
     var body: Component {
         Div {

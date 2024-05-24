@@ -1,5 +1,6 @@
-/*! Kraken v13.0.0 | (c) 2021 Chris Ferdinandi | MIT License | http://github.com/cferdinandi/kraken */
 @charset "UTF-8";
+/*! Kraken v13.0.0 | (c) 2021 Chris Ferdinandi | MIT License | http://github.com/cferdinandi/kraken */
+
 /**
  * Configs
  */
@@ -46,6 +47,7 @@ label,
 summary {
     touch-action: manipulation;
 }
+
 
 /**
  * Add box sizing to everything
@@ -968,11 +970,15 @@ td {
     background-color: rgb(34,34,34);
     position: fixed;
     top: 0;
-    width: 300px;
+    width: 200px;
     bottom: 0;
     left: 0;
     font-weight: 400;
     font-size: 15px;
+}
+
+#nav_body {
+    margin-left: 200px;
 }
 
 #sidebar a {
@@ -1040,17 +1046,9 @@ td {
     background-color: #183f81;
 }
 
-#body {
-    padding: 32px;
-}
 
 @media only all and (max-width: 59.938em) {
-    #sidebar {
-        width: 200px;
-    }
-    #body {
-        margin-left: 200px;
-    }
+
 }
 
 @media only all and (max-width: 47.938em) {
@@ -1063,7 +1061,7 @@ td {
         text-align: center;
     }
     
-    #body {
+    #nav_body {
         margin-left: 0;
         width: 100%;
     }
@@ -1119,7 +1117,7 @@ td {
     .sidebar-hidden #sidebar {
         left: 0;
     }
-    .sidebar-hidden #body {
+    .sidebar-hidden #nav_body {
         margin-left: 200px;
         overflow: hidden;
     }
@@ -1183,4 +1181,8 @@ td {
 
 #sidebar h5.parent + ul.topics, #sidebar h5.active + ul.topics {
     display: block;
+}
+
+.content {
+    padding: 32px;
 }

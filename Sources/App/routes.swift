@@ -9,27 +9,24 @@ import Vapor
 import Argon2Swift
 import Plot
 
-private let title = "SaveCloud"
-private let css = "/style.css"
-
 func routes(_ app: Application) throws {
     app.get { req async in
         let session = try? req.fetchSession() //TODO: Log error
         if let session = session {
-            return HomePage(admin: session.isAdmin).wrapHTML(title, css)
+            return HomePage(admin: session.isAdmin).wrapHTML()
         } else {
             do {
                 let connection = try Database.getConnection()
                 let users = try connection.fetchAll(User.self)
-                return WelcomePage(error: nil, users: users).wrapHTML(title, css)
+                return WelcomePage(error: nil, users: users).wrapHTML()
             } catch {
                 
-                return WelcomePage(error: nil).wrapHTML(title, css)
+                return WelcomePage(error: nil).wrapHTML()
             }
         }
     }
     app.get("register") { req async in
-        RegisterForm().wrapHTML(title, css)
+        RegisterForm().wrapHTML()
     }
     app.post("register", use: register(req:))
 
