@@ -1,11 +1,70 @@
+//
+//  routes.swift
+//
+//
+//  Created by Isaac Paul on 5/15/24.
+//
+
 import Vapor
+import Argon2Swift
+import Plot
+
+private let title = "SaveCloud"
+private let css = "/style.css"
 
 func routes(_ app: Application) throws {
     app.get { req async in
-        "It works!"
+        let session = try? req.fetchSession() //TODO: Log error
+        if let session = session {
+            return HomePage(admin: session.isAdmin).wrapHTML(title, css)
+        } else {
+            do {
+                let connection = try Database.getConnection()
+                let users = try connection.fetchAll(User.self)
+                return WelcomePage(error: nil, users: users).wrapHTML(title, css)
+            } catch {
+                
+                return WelcomePage(error: nil).wrapHTML(title, css)
+            }
+        }
     }
+    app.get("register") { req async in
+        RegisterForm().wrapHTML(title, css)
+    }
+    app.post("register", use: register(req:))
 
-    app.get("hello") { req async -> String in
-        "Hello, world!"
+    let userSessGroup = app.routes.grouped([
+        UserSessionAuthenticator(),
+    ])
+    userSessGroup.post("login", use: login(req:))
+    userSessGroup.post("user", "edit", use: editUser(req:))
+    userSessGroup.post("user", "change_password", use: changePassword(req:))
+    let group = app.routes.grouped([
+        User.authenticator(), User.guardMiddleware()
+    ])
+    
+    group.get("login") { req -> String in
+                let idk = try req.auth.require(User.self)
+                return idk.email ?? "No email"
+            }
+    
+    userSessGroup.get("user", "edit") { req async throws in
+        let connection = try Database.getConnection()
+        guard
+            let session = try req.fetchSession(),
+            let user = try connection.first(User.self, uuid:session.user) else {//TODO: Log error
+            return WelcomePage(error:"Session doesn't exist").wrapHTML().response()
+        }
+        return EditUserPage(user: user, userEditError: nil, passwordEditError: nil).wrapHTML().response()
     }
+    
 }
+
+
+func signOut(
+    _ req: Request
+) throws -> Response {
+    req.session.unauthenticate(AuthenticatedUser.self)
+    return req.redirect(to: "/")
+}
+
