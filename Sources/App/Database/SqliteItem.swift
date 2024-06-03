@@ -110,6 +110,36 @@ extension Connection {
         let list:[T] = try rowIterator.map({ return try type.toItemFull(self, $0) })
         return list
     }
+    
+    func fetchAll<T>(_ type: T.Type, predicate:Expression<Bool>) throws -> [T] where T : SQLItem {
+        let table = type.getTable()
+        let filter = table.filter(predicate)
+        let rowIterator = try self.prepareRowIterator(filter)
+        let list:[T] = try rowIterator.map({ return try type.toItemFull(self, $0) })
+        return list
+    }
+    
+    func fetchAll<T>(_ type: T.Type, predicate:Expression<Bool?>) throws -> [T] where T : SQLItem {
+        let table = type.getTable()
+        let filter = table.filter(predicate)
+        let rowIterator = try self.prepareRowIterator(filter)
+        let list:[T] = try rowIterator.map({ return try type.toItemFull(self, $0) })
+        return list
+    }
+    
+    func deleteAll<T>(_ type: T.Type, predicate:Expression<Bool>) throws where T : SQLItem {
+        let table = type.getTable()
+        let filter = table.filter(predicate)
+        let query = filter.delete()
+        try self.run(query)
+    }
+    
+    func deleteAll<T>(_ type: T.Type, predicate:Expression<Bool?>) throws where T : SQLItem {
+        let table = type.getTable()
+        let filter = table.filter(predicate)
+        let query = filter.delete()
+        try self.run(query)
+    }
 }
 
 extension Connection {
@@ -119,6 +149,20 @@ extension Connection {
     func count<T>(_ type: T.Type) throws -> Int where T : SQLItem {
         let table = type.getTable()
         let count = try self.scalar(table.count)
+        return count
+    }
+    
+    func count<T>(_ type: T.Type, predicate:Expression<Bool>) throws -> Int where T : SQLItem {
+        let table = type.getTable()
+        let filter = table.filter(predicate)
+        let count = try self.scalar(filter.count)
+        return count
+    }
+    
+    func count<T>(_ type: T.Type, predicate:Expression<Bool?>) throws -> Int where T : SQLItem {
+        let table = type.getTable()
+        let filter = table.filter(predicate)
+        let count = try self.scalar(filter.count)
         return count
     }
     

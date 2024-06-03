@@ -69,6 +69,7 @@ struct LoginForm: Plot.Component {
     }
     let newSession = try createSession(req, user.id, user.isAdmin, connection)
     req.session.authenticate(newSession)
+    req.auth.login(user)
     
     return req.redirect(to: "/", redirectType: .normal)
 }

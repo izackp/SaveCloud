@@ -25,10 +25,33 @@ func routes(_ app: Application) throws {
             }
         }
     }
+    
+    app.get { req async in
+        let session = try? req.fetchSession() //TODO: Log error
+        if let session = session {
+            return HomePage(admin: session.isAdmin).wrapHTML()
+        } else {
+            do {
+                let connection = try Database.getConnection()
+                let users = try connection.fetchAll(User.self)
+                return WelcomePage(error: nil, users: users).wrapHTML()
+            } catch {
+                
+                return WelcomePage(error: nil).wrapHTML()
+            }
+        }
+    }
     app.get("register") { req async in
         RegisterForm().wrapHTML()
     }
     app.post("register", use: register(req:))
+    app.post("api", "v1", "register", use: apiRegister(req:))
+    app.post("api", "v1", "login", use: apiLogin(req:))
+    app.get("api", "v1", "user", use: apiGETUser(req:))
+    app.put("api", "v1", "user", use: apiPUTUser(req:))
+    app.put("api", "v1", "user", ":id", use: apiPUTUser(req:))
+    app.delete("api", "v1", "user", use: apiDELETEUser(req:))
+    app.delete("api", "v1", "user", ":id", use: apiDELETEUser(req:))
 
     let userSessGroup = app.routes.grouped([
         UserSessionAuthenticator(),
@@ -41,9 +64,9 @@ func routes(_ app: Application) throws {
     ])
     
     group.get("login") { req -> String in
-                let idk = try req.auth.require(User.self)
-                return idk.email ?? "No email"
-            }
+        let idk = try req.auth.require(User.self)
+        return idk.email ?? "No email"
+    }
     
     userSessGroup.get("user", "edit") { req async throws in
         let connection = try Database.getConnection()

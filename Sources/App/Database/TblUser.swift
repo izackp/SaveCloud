@@ -27,6 +27,44 @@ extension AuthenticatedUser: SessionAuthenticatable {
     public var sessionID: UUID { id }
 }
 
+final class PublicUser: Content, IValidate {
+    
+    init(id: UUID, username:String, email: String? = nil, isAdmin:Bool, createdAt: Date, updatedAt: Date) {
+        self.id = id
+        self.username = username
+        self.email = email
+        self.isAdmin = isAdmin
+        self.createdAt = createdAt
+        self.updatedAt = updatedAt
+    }
+    
+    var id: UUID
+    var username: String
+    var email: String?
+    var isAdmin: Bool
+    var createdAt: Date
+    var updatedAt: Date
+    
+    func iterateErrors(_ index:inout Int) -> String? {
+        switch index {
+            case 0:
+                index += 1
+                if username.isEmpty {
+                    return "Username is empty"
+                }
+                fallthrough
+            case 1:
+                index += 1
+                if email?.isEmpty ?? true {
+                    return "Email is empty"
+                }
+                fallthrough
+            default:
+                return nil
+        }
+    }
+}
+
 final class User: Content, SQLItem, Authenticatable {
     
     static func authenticator() -> AsyncAuthenticator {
@@ -51,6 +89,10 @@ final class User: Content, SQLItem, Authenticatable {
     
     func toRow() -> [SQLite.Setter] {
         TblUser.toRow(self)
+    }
+    
+    func toPublicUser() -> PublicUser {
+        return PublicUser(id: id, username: username, email: email, isAdmin: isAdmin, createdAt: createdAt, updatedAt: updatedAt)
     }
     
     init(id: UUID, username:String, email: String? = nil, passwordHash: String? = nil, isAdmin:Bool, createdAt: Date, updatedAt: Date) {
