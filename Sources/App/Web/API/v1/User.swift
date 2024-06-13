@@ -10,10 +10,24 @@ import SQLite
 import Argon2Swift
 
 @Sendable func apiGETUser(req: Request) async throws -> PublicUser {
-    guard let user:User = req.auth.get() else {
-        throw Abort(.internalServerError, reason: "No session found")
+    guard let claims:JWTClaims = req.auth.get() else {
+        throw Abort(.internalServerError)
+    }
+    let pathId:UUID? = req.parameters.get("id")
+    let userId:UUID
+    if let pathId = pathId {
+        if (pathId != claims.userId && !claims.admin) {
+            throw Abort(.unauthorized)
+        }
+        userId = pathId
+    } else {
+        userId = claims.userId
     }
     
+    let connection = try Database.getConnection()
+    guard let user = try connection.first(User.self, uuid: userId) else {
+        throw Abort(.notFound)
+    }
     return user.toPublicUser()
 }
 
@@ -53,8 +67,8 @@ final class PutUser: Content, IValidate {
 }
 
 @Sendable func apiPUTUser(req: Request) async throws -> PublicUser {
-    guard let user:User = req.auth.get() else {
-        throw Abort(.internalServerError, reason: "No session found")
+    guard let claims:JWTClaims = req.auth.get() else {
+        throw Abort(.internalServerError)
     }
     let contents = try req.content.decode(PutUser.self)
     try contents.checkValdiation()
@@ -63,9 +77,11 @@ final class PutUser: Content, IValidate {
         throw Abort(.badRequest, reason: "No user specified.")
     }
     if let pathId = pathId, let contentId = contents.id {
-        throw Abort(.badRequest, reason: "Specified two different users.")
+        if (pathId != contentId) {
+            throw Abort(.badRequest, reason: "Specified two different users.")
+        }
     }
-    let allowed = (user.isAdmin || contents.id == user.id)
+    let allowed = (claims.admin || id == claims.userId)
     if (!allowed) {
         throw Abort(.unauthorized, reason: "You don't have permission to edit this user.")
     }
@@ -101,7 +117,7 @@ final class PutUser: Content, IValidate {
     matchingUser.updatedAt = Date()
     try connection.update(User.self, item: matchingUser)
     
-    return user.toPublicUser()
+    return matchingUser.toPublicUser()
 }
 
 final class PasswordCheck: Content, IValidate {
@@ -127,14 +143,14 @@ final class PasswordCheck: Content, IValidate {
 }
 
 @Sendable func apiDELETEUser(req: Request) async throws -> PublicUser {
-    guard let user:User = req.auth.get() else {
-        throw Abort(.internalServerError, reason: "No session found")
+    guard let claims:JWTClaims = req.auth.get() else {
+        throw Abort(.internalServerError)
     }
     
     let pathId:UUID? = req.parameters.get("id")
-    let id = pathId ?? user.id
+    let id = pathId ?? claims.userId
     
-    let allowed = (user.isAdmin || user.id == id)
+    let allowed = (claims.admin || claims.userId == id)
     if (!allowed) {
         throw Abort(.unauthorized, reason: "You don't have permission to edit this user.")
     }
@@ -147,7 +163,7 @@ final class PasswordCheck: Content, IValidate {
         throw Abort(.notFound, reason: "User with id not found: \(id)")
     }
     
-    let verified = try Argon2Swift.verifyHashString(password: contents.password, hash: user.passwordHash ?? "")
+    let verified = try Argon2Swift.verifyHashString(password: contents.password, hash: matchingUser.passwordHash ?? "")
     if (!verified) {
         throw Abort(.unauthorized, reason: "Incorrect password")
     }
@@ -157,5 +173,5 @@ final class PasswordCheck: Content, IValidate {
         try connection.delete(User.self, uuid: id)
     }
     
-    return user.toPublicUser()
+    return matchingUser.toPublicUser()
 }

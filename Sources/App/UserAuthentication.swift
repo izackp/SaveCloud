@@ -9,22 +9,22 @@ import Foundation
 import Vapor
 import Argon2Swift
 import SQLite
+import SwiftJWT
 
-struct UserTokenAuthenticator: AsyncBearerAuthenticator {
+struct JWTClaimAuthenticator: AsyncBearerAuthenticator {
 
     func authenticate(
         bearer: BearerAuthorization,
         for request: Request
     ) async throws {
-        /*
-        let connection = try Database.getConnection()
-        guard let session = try TBLSession.first(connection, token: bearer.token) else {
+        
+        let jwtVerifier = JWTVerifier.rs256(publicKey: jwtPublicKey)
+        let jwt = try JWT<JWTClaims>(jwtString: bearer.token, verifier: jwtVerifier)
+        if (jwt.validateClaims(leeway: 60) == .success) {
+            request.auth.login(jwt.claims)
             return
         }
-        guard let user = try connection.first(User.self, uuid: session.user) else {
-            return
-        }
-        request.auth.login(user)*/
+        //throw Abort(.unauthorized)
     }
 }
 
@@ -77,26 +77,29 @@ struct UserCredentialsAuthenticator: AsyncCredentialsAuthenticator {
         if (!verified) {
             throw Abort(.unauthorized) //AppError("Wrong Password") {"reason":"App.AppError","error":true}
         }
-        let newSession = try createSession(req, user.id, user.isAdmin, connection)
+        let hours24:TimeInterval = 24 * 60 * 60
+        let newSession = try createSession(req, user.id, user.isAdmin, hours24, nil, connection)
         
         req.session.authenticate(newSession)
     }
 }
 
-func createSession(_ req: Request, _ userId:UUID, _ isAdmin:Bool) throws -> AuthSession {
+public let hours24:TimeInterval = 24 * 60 * 60
+
+func createSession(_ req: Request, _ userId:UUID, _ isAdmin:Bool, _ expiresIn:TimeInterval = hours24, _ refreshToken:UUID?) throws -> AuthSession {
     let connection = try Database.getConnection()
-    return try createSession(req, userId, isAdmin, connection)
+    return try createSession(req, userId, isAdmin, expiresIn, refreshToken, connection)
 }
 
-func createSession(_ req: Request, _ userId:UUID, _ isAdmin:Bool, _ connection:Connection) throws -> AuthSession {
+func createSession(_ req: Request, _ userId:UUID, _ isAdmin:Bool, _ expiresIn:TimeInterval = hours24, _ refreshToken:UUID?, _ connection:Connection) throws -> AuthSession {
     //TODO: Build with SEC-CH-UA-PLATFORM etc
     let userAgent = req.headers.first(name: .userAgent)
     //TODO: Add ip address field
     let ipAddress = req.remoteAddress?.ipAddress ?? "" //TODO: Odd if empty
     
     let date = Date()
-    let expirationDate = date.advanced(by: 24 * 60 * 60)
-    let newSession = AuthSession(id: UUID.init(), user: userId, deviceName: userAgent, location: nil, ipAddress: ipAddress, isAdmin: isAdmin, createdAt: date, updatedAt: date, expiresAt: expirationDate)
+    let expirationDate:Date = date.advanced(by: expiresIn)
+    let newSession = AuthSession(id: UUID.init(), refreshToken: refreshToken, user: userId, deviceName: userAgent, location: nil, ipAddress: ipAddress, isAdmin: isAdmin, createdAt: date, updatedAt: date, expiresAt: expirationDate)
     try connection.insert(AuthSession.self, item: newSession)
     return newSession
 }

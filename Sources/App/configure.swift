@@ -1,5 +1,6 @@
 import Vapor
 import NIOSSL
+
 public let defaultCipherSuites = [
     "ECDH+AESGCM",
     "ECDH+CHACHA20",
@@ -15,10 +16,24 @@ public let defaultCipherSuites = [
     "!eNULL",
     "!MD5",
     ].joined(separator: ":")
+
+public var jwtPrivateKey:Data = Data()
+public var jwtPublicKey:Data = Data()
+
+//TODO: Maybe this can go into app storage?
+public func loadKeys(_ directory:String) throws {
+    let privateKeyPath = URL(fileURLWithPath:  "\(directory)jwt.pem")
+    jwtPrivateKey = try Data(contentsOf: privateKeyPath, options: .alwaysMapped)
+    let publicKeyPath = URL(fileURLWithPath: "\(directory)jwtPublic.pem")
+    jwtPublicKey = try Data(contentsOf: publicKeyPath, options: .alwaysMapped)
+}
+
 // configures your application
 public func configure(_ app: Application) async throws {
     // uncomment to serve files from /Public folder
     print("Public Dir: \(app.directory.publicDirectory)")
+    try loadKeys(app.directory.publicDirectory)
+    
     // Enable TLS.
     app.http.server.configuration.responseCompression = .enabled
     var tlsConfiguration:TLSConfiguration = .makeServerConfiguration(

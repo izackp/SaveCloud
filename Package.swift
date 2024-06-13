@@ -10,7 +10,8 @@ let package = Package(
         .package(url: "https://github.com/JohnSundell/Plot.git", from: "0.14.0"),
         .package(url: "https://github.com/vapor/vapor.git", from: "4.92.4"),
         .package(url: "https://github.com/stephencelis/SQLite.swift.git", branch: "master"),
-        .package(url: "https://github.com/tmthecoder/Argon2Swift.git", branch: "main")
+        .package(url: "https://github.com/tmthecoder/Argon2Swift.git", branch: "main"),
+        .package(url: "https://github.com/Kitura/Swift-JWT.git", from: "4.0.1")
     ],
     targets: [
         .executableTarget(
@@ -19,7 +20,8 @@ let package = Package(
                 .product(name: "Plot", package: "plot"),
                 .product(name: "Vapor", package: "vapor"),
                 .product(name: "SQLite", package: "SQLite.swift"),
-                .product(name: "Argon2Swift", package: "Argon2Swift")
+                .product(name: "Argon2Swift", package: "Argon2Swift"),
+                .product(name: "SwiftJWT", package: "Swift-JWT")
             ],
             //resources: [ .copy("style.css"), ],
             swiftSettings: swiftSettings

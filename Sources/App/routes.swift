@@ -44,14 +44,21 @@ func routes(_ app: Application) throws {
     app.get("register") { req async in
         RegisterForm().wrapHTML()
     }
+
     app.post("register", use: register(req:))
     app.post("api", "v1", "register", use: apiRegister(req:))
-    app.post("api", "v1", "login", use: apiLogin(req:))
-    app.get("api", "v1", "user", use: apiGETUser(req:))
-    app.put("api", "v1", "user", use: apiPUTUser(req:))
-    app.put("api", "v1", "user", ":id", use: apiPUTUser(req:))
-    app.delete("api", "v1", "user", use: apiDELETEUser(req:))
-    app.delete("api", "v1", "user", ":id", use: apiDELETEUser(req:))
+    app.post("api", "v1", "login", use: apiLoginJWT(req:))
+    app.post("api", "v1", "refresh", use: apiRefreshJWT(req:))
+    
+    let jwtAuth = app.routes.grouped([
+        JWTClaimAuthenticator(), JWTClaims.guardMiddleware()
+    ])
+    jwtAuth.get("api", "v1", "user", use: apiGETUser(req:))
+    jwtAuth.get("api", "v1", "user", ":id", use: apiGETUser(req:))
+    jwtAuth.put("api", "v1", "user", use: apiPUTUser(req:))
+    jwtAuth.put("api", "v1", "user", ":id", use: apiPUTUser(req:))
+    jwtAuth.delete("api", "v1", "user", use: apiDELETEUser(req:))
+    jwtAuth.delete("api", "v1", "user", ":id", use: apiDELETEUser(req:))
 
     let userSessGroup = app.routes.grouped([
         UserSessionAuthenticator(),
@@ -59,14 +66,6 @@ func routes(_ app: Application) throws {
     userSessGroup.post("login", use: login(req:))
     userSessGroup.post("user", "edit", use: editUser(req:))
     userSessGroup.post("user", "change_password", use: changePassword(req:))
-    let group = app.routes.grouped([
-        User.authenticator(), User.guardMiddleware()
-    ])
-    
-    group.get("login") { req -> String in
-        let idk = try req.auth.require(User.self)
-        return idk.email ?? "No email"
-    }
     
     userSessGroup.get("user", "edit") { req async throws in
         let connection = try Database.getConnection()

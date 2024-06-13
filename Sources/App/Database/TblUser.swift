@@ -65,11 +65,7 @@ final class PublicUser: Content, IValidate {
     }
 }
 
-final class User: Content, SQLItem, Authenticatable {
-    
-    static func authenticator() -> AsyncAuthenticator {
-        UserTokenAuthenticator()
-    }
+final class User: Content, SQLItem {
     
     static func getTable() -> SQLite.Table {
         return TblUser.table

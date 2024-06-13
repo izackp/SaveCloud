@@ -34,8 +34,9 @@ final class AuthSession: Content, SQLItem, SessionAuthenticatable {
         TBLSession.toRow(self)
     }
     
-    internal init(id: UUID, user: UUID, deviceName: String? = nil, location: String? = nil, ipAddress:String, isAdmin: Bool, createdAt: Date, updatedAt: Date, expiresAt: Date) {
+    internal init(id: UUID, refreshToken: UUID?, user: UUID, deviceName: String? = nil, location: String? = nil, ipAddress:String, isAdmin: Bool, createdAt: Date, updatedAt: Date, expiresAt: Date) {
         self.id = id
+        self.refreshToken = refreshToken
         self.user = user
         self.deviceName = deviceName
         self.location = location
@@ -47,6 +48,7 @@ final class AuthSession: Content, SQLItem, SessionAuthenticatable {
     }
     
     var id: UUID
+    var refreshToken: UUID?
     var user: UUID
     var deviceName: String?
     var location: String?
@@ -56,12 +58,20 @@ final class AuthSession: Content, SQLItem, SessionAuthenticatable {
     var updatedAt: Date
     var expiresAt: Date
 
+    
+    func isExpired(leeway: TimeInterval = 60) -> Bool {
+        if (Date() + leeway < self.expiresAt) {
+            return false
+        }
+        return true
+    }
 }
  
 class TBLSession {
     static let table = Table("session")
     
     static let id = Expression<UUID>("id")
+    static let refreshToken = Expression<UUID?>("refreshToken")
     static let user = Expression<UUID>("user")
     static let deviceName = Expression<String?>("device_name")
     static let location = Expression<String?>("location")
@@ -74,6 +84,7 @@ class TBLSession {
     static func createQuery() -> String {
         return table.create(ifNotExists: true) { t in
             t.column(id, primaryKey: true)
+            t.column(refreshToken)
             t.column(user)
             t.column(deviceName)
             t.column(location)
@@ -88,6 +99,7 @@ class TBLSession {
     static func toItem(_ row:Row) throws -> AuthSession {
         let result = AuthSession(
             id: try row.get(id),
+            refreshToken: try row.get(refreshToken),
             user: try row.get(user),
             deviceName: try row.get(deviceName),
             location: try row.get(location),
@@ -101,6 +113,7 @@ class TBLSession {
     
     static func toRow(_ item:AuthSession) -> [SQLite.Setter] {
         return [self.id <- item.id,
+                self.refreshToken <- item.refreshToken,
                 self.user <- item.user,
                 self.deviceName <- item.deviceName,
                 self.location <- item.location,
@@ -114,6 +127,15 @@ class TBLSession {
     static func first(_ con:Connection, uuid:UUID) throws -> AuthSession? {
         return try con.first(AuthSession.self, uuid: uuid)
     }
+    
+    /*
+    static func firstByRefreshToken(_ con:Connection, _ refreshToken:UUID) throws -> AuthSession? {
+        let filter = table.filter(TBLSession.refreshToken == refreshToken)
+        if let row = try con.pluck(filter) {
+            return try TBLSession.toItem(row)
+        }
+        return nil
+    }*/
 }
 
 
