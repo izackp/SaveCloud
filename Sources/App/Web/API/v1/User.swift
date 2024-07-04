@@ -171,6 +171,7 @@ final class PasswordCheck: Content, IValidate {
     try connection.transaction {
         try connection.deleteAll(AuthSession.self, predicate: TBLSession.user == id)
         try connection.delete(User.self, uuid: id)
+        //TODO: Need to also delete saves, profiles, hashes
     }
     
     return matchingUser.toPublicUser()

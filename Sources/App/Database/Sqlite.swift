@@ -27,9 +27,15 @@ class Database {
         //try db.run(TblUser.dropQuery())
         try db.run(TblUser.createQuery())
         try db.run(TBLSession.createQuery())
+        try db.run(TBLGameMeta.createQuery())
+        try db.run(TBLGameHash.createQuery())
+        try db.run(TblUserProfile.createQuery())
     }
     
-    static func getConnection() throws -> Connection {
+    static func getConnection(_ existing:Connection? = nil) throws -> Connection {
+        if let existing = existing { //Note: Seems dumb but cleans up a lot of code
+            return existing
+        }
         do {
             return try Connection("\(path)/\(fileName)")
         } catch {

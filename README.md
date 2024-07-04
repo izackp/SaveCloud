@@ -56,7 +56,11 @@ GET PUT DELETE /user
     "avatar":"Base64;asdadsasd",
     "email":"someemail@gmail.com",
     "created_at":"..",
-    "updated_at":".."
+    "updated_at":"..",
+    "profiles": {
+        "id":123,
+        "name":"Default"
+    }
 }
 ```
 
@@ -67,16 +71,19 @@ GET /user/games
     "hash":"asdadsasd",
     "created_at":"..",
     "updated_at":"..",
-    //Not necessary?
-    "name":"The Battle for Wesnoth",
-    "version":"1.18.0",
+    "meta": { //nullable
+        //Not necessary?
+        "name":"The Battle for Wesnoth",
+        "version":"1.18.0",
+        etc
+    }
 }]
 ```
 Returns all games where a user has a save
 
 ```
 GET/DELETE /user/games/:id
-GET/DELETE /user/games/:hash
+GET/DELETE /user/games/:hash?profile=default
 ```
 A single item of the above result where a user has a save
 
@@ -87,15 +94,17 @@ GET/DELETE /user/games/:hash
     "hash":"asdadsasd",
     "created_at":"..",
     "updated_at":"..",
-    "parent" : { //Including parent 
-        "id":"uuid",
-        "hash":"asdadsasd",
-        "created_at":"..",
-        "updated_at":".."
-    },
-    //or
-    "parent_id":"uuid",
-    "unique_save_format": false //Means the save will work for this game and the parent
+    "meta": {
+        "parent" : { //Including parent 
+            "id":"uuid",
+            "hash":"asdadsasd",
+            "created_at":"..",
+            "updated_at":".."
+        },
+        //or
+        "parent_id":"uuid",
+        "unique_save_format": false //Means the save will work for this game and the parent
+    }
 }
 ```
 
@@ -104,6 +113,7 @@ GET/DELETE /user/games/:hash
 GET /games/:hash
 GET /games/:id
 GET /games/by_family/:id
+GET /games?page=1&per_page=10
 {
     "id": "uuid",
     "hash": "asdadsasd",
@@ -133,6 +143,24 @@ Allow user to submit changes, but must be reviewed and approved
 ```
 GET/DELETE/POST /user/games/:id/saves
 GET/DELETE/POST /user/games/:hash/saves
+[{
+    "id":"uuid",
+    "game_id":"uuid",
+    "sequntial_id":"uuid",
+    "sequence":"2",
+    "url":"http://path.to/save.zip",
+    "screenshot":"Base64;asdadsasd", //Maybe a url? it would need to be less than 100kb for embedded to be viable
+    "created_at":"..",
+    "updated_at":"..",
+    //Maybe include patch support? not necessisary for v1
+    "patch_from_last_save":"http://path.to/patch.zip",
+    "hash":"abc", //To verify the patch applies to your save
+}]
+```
+
+```
+GET/DELETE /user/games/:id/saves
+GET/DELETE /user/games/:hash/saves
 [{
     "id":"uuid",
     "game_id":"uuid",

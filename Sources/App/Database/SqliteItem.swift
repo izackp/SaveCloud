@@ -26,10 +26,19 @@ protocol SQLItem {
     func toRow() -> [Setter]
 }
 
+extension ExpressionType {
+    public func order(asc:Bool) -> Expressible {
+        if (asc) {
+            return self.asc
+        } else {
+            return self.desc
+        }
+    }
+}
 
 extension Connection {
     
-    static let unique_id = Expression<Int64>("unique_id")
+    //static let unique_id = Expression<Int64>("unique_id")
     
     func fetchAll<T>(_ type: T.Type) throws -> [T] where T : SQLItem {
         let table = type.getTable()
@@ -41,7 +50,7 @@ extension Connection {
     func delete<T>(_ type: T.Type, item:T) throws where T : SQLItem {
         try delete(type, uuid: item.id)
     }
-    
+    /*
     func first<T>(_ type: T.Type, uniqueId:Int64) throws -> T? where T : SQLItem {
         let table = type.getTable()
         let filter = table.filter(Connection.unique_id == uniqueId)
@@ -63,7 +72,7 @@ extension Connection {
         let filter = table.filter(Connection.unique_id == uniqueId)
         let query = filter.update(setter)
         try self.run(query)
-    }
+    }*/
     
     //update, upsert, and insert doesn't support sub-objects..
     func update<T>(_ type: T.Type, item:T) throws where T : SQLItem {
@@ -127,6 +136,25 @@ extension Connection {
         return list
     }
     
+    func fetchPaged<T>(_ type: T.Type, _ pageInfo:PageInfo, predicate:Expression<Bool>) throws -> [T] where T : SQLItem {
+        let table = type.getTable()
+        let filter = table.filter(predicate)
+        let asc = pageInfo.sortByAscending
+        let sorted = switch (pageInfo.sortBy) {
+            case .id:
+                filter.order(Connection.id.order(asc: asc))
+            case .createdAt:
+                filter.order(Connection.createdAt.order(asc: asc))
+            case .updatedAt:
+                filter.order(Connection.updatedAt.order(asc: asc))
+            case .date:
+                filter.order(Connection.updatedAt.order(asc: asc)) //TODO: Deceptful we don't support this
+        }
+        let rowIterator = try self.prepareRowIterator(sorted)
+        let list:[T] = try rowIterator.map({ return try type.toItemFull(self, $0) })
+        return list
+    }
+    
     func deleteAll<T>(_ type: T.Type, predicate:Expression<Bool>) throws where T : SQLItem {
         let table = type.getTable()
         let filter = table.filter(predicate)
@@ -144,7 +172,8 @@ extension Connection {
 
 extension Connection {
     static let id = Expression<UUID>("id")
-    static let updatedAt = Expression<Date>("updatedAt")
+    static let updatedAt = Expression<Date>("updated_at")
+    static let createdAt = Expression<Date>("created_at")
     
     func count<T>(_ type: T.Type) throws -> Int where T : SQLItem {
         let table = type.getTable()
