@@ -94,6 +94,38 @@ extension Connection {
         try self.run(query)
     }
     
+    func generateUniqueId<T>(_ type: T.Type) throws -> UUID where T : SQLItem {
+        let table = type.getTable()
+        for i in 0..<5 {
+            let id = UUID.init()
+            let filter = table.filter(Connection.id == id)
+            let count = try self.scalar(filter.count)
+            if (count == 0) {
+                return id
+            }
+        }
+        throw AppError("Unable to generate unique id")
+    }
+    
+    //Assumes id is the first setter returned from toRow
+    //UUID collision should never happen, but I overengineered a solution anyways.
+    //Probably will cause more trouble than it solves considering it depends on assumptions
+    func insertWithRetry<T>(_ type: T.Type, item:T) throws -> UUID? where T : SQLItem {
+        let table = type.getTable()
+        do {
+            let query = table.insert(item.toRow())
+            try self.run(query)
+            return nil
+        } catch Result.error(let message, let code, let statement) where code == 19 {
+            let uuid = try generateUniqueId(type)
+            var rows:[Setter] = Array(item.toRow().suffix(from: 1))
+            rows.append(Connection.id <- uuid)
+            let query = table.insert(rows)
+            try self.run(query)
+            return uuid
+        }
+    }
+    
     func first<T>(_ type: T.Type, predicate:Expression<Bool>) throws -> T? where T : SQLItem {
         let table = type.getTable()
         let filter = table.filter(predicate)
@@ -135,8 +167,8 @@ extension Connection {
         let list:[T] = try rowIterator.map({ return try type.toItemFull(self, $0) })
         return list
     }
-    
-    func fetchPaged<T>(_ type: T.Type, _ pageInfo:PageInfo, predicate:Expression<Bool>) throws -> [T] where T : SQLItem {
+    /*
+    func fetchPaged<T>(_ type: T.Type, _ pageInfo:PageInfo<>, predicate:Expression<Bool>) throws -> [T] where T : SQLItem {
         let table = type.getTable()
         let filter = table.filter(predicate)
         let asc = pageInfo.sortByAscending
@@ -153,7 +185,7 @@ extension Connection {
         let rowIterator = try self.prepareRowIterator(sorted)
         let list:[T] = try rowIterator.map({ return try type.toItemFull(self, $0) })
         return list
-    }
+    }*/
     
     func deleteAll<T>(_ type: T.Type, predicate:Expression<Bool>) throws where T : SQLItem {
         let table = type.getTable()

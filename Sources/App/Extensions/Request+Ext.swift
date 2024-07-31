@@ -40,11 +40,28 @@ extension Request {
         return claims.userId
     }
     
-    func getPageInfo() throws -> PageInfo {
+    func getPageInfo<T: LosslessStringConvertible & DefaultConstructible>() throws -> PageInfo<T> {
         let page:UInt? = self.parameters.get("page")
         let perPage:UInt? = self.parameters.get("per_page")
-        let sortBy:PageSortBy? = self.parameters.get("sort_by")
+        let sortBy:T
+        if let sortByParam = self.parameters.get("sort_by") { //TODO: Sanitize
+            if let matching = T(sortByParam) {
+                sortBy = matching
+            } else {
+                throw AppError("Can't sort by field: \(sortByParam)")
+            }
+        } else {
+            sortBy = T()
+        }
         let asc:Bool? = self.parameters.get("asc")
         return PageInfo(page: page, perPage: perPage, sortBy: sortBy, sortByAscending: asc)
+    }
+    
+    func getSearchField<T: LosslessStringConvertible & DefaultConstructible>(field:T, name:String) throws -> SearchQuery<T>? {
+        guard let search:String = self.parameters.get("\(name)_search") else {
+            return nil
+        }
+        
+        return SearchQuery(searchBy: field, value: search)
     }
 }

@@ -67,9 +67,9 @@ struct LoginForm: Plot.Component {
     if (!verified) {
         return WelcomePage(error: "Incorrect password").wrapHTML().response()
     }
-    let newSession = try createSession(req, user.id, user.isAdmin, connection)
+    let newSession = try createSession(req, user.id, user.isAdmin, hours24, UUID.init(), connection)
     req.session.authenticate(newSession)
-    req.auth.login(user)
+    //req.auth.login(user)
     
     return req.redirect(to: "/", redirectType: .normal)
 }

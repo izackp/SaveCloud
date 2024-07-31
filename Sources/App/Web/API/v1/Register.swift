@@ -60,9 +60,11 @@ struct ApiRegisterRequest: Content, IValidate {
     let numUsers = try connection.count(User.self)
     let isAdmin = numUsers == 0
     let date = Date()
-    let newUser = User(id: UUID.init(), username:contents.username, email: contents.email, passwordHash: passwordHash.encodedString(), isAdmin: isAdmin, createdAt: date, updatedAt: date)
-    
-    try connection.insert(User.self, item: newUser)
+    var newUser = User(id: UUID.init(), username:contents.username, email: contents.email, passwordHash: passwordHash.encodedString(), isAdmin: isAdmin, createdAt: date, updatedAt: date)
+    if let newUUID = try connection.insertWithRetry(User.self, item: newUser) {
+        newUser.id = newUUID
+    }
+
     /*
     //TODO: Build with SEC-CH-UA-PLATFORM etc
     let userAgent = req.headers.first(name: .userAgent)

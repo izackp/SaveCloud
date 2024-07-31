@@ -107,7 +107,7 @@ struct RegisterForm: Plot.Component, IHtmlHeader {
     //TODO: Odd if empty
     
     let expirationDate = date.advanced(by: 24 * 60 * 60)
-    let newSession = AuthSession(id: UUID.init(), user: newUser.id, deviceName: userAgent, location: nil, ipAddress: ipAddress, isAdmin: isAdmin, createdAt: date, updatedAt: date, expiresAt: expirationDate)
+    let newSession = AuthSession(id: UUID.init(), refreshToken: UUID.init(), user: newUser.id, deviceName: userAgent, location: nil, ipAddress: ipAddress, isAdmin: isAdmin, createdAt: date, updatedAt: date, expiresAt: expirationDate)
     try connection.insert(AuthSession.self, item: newSession)
     
     req.session.authenticate(newSession)

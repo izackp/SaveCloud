@@ -8,6 +8,65 @@
 import Vapor
 import SQLite
 
+final class GameMetaCreate: Content, IValidate {
+    internal init(id: UUID?, familyId: UUID? = nil, baseGameId: UUID? = nil, hashedFileName: String? = nil, xxhash64: String? = nil, name: String, version: String? = nil, breaksSaveFormatFromPreviousVersion: Bool, breaksSaveFormatFromBaseGame: Bool) {
+        self.id = id
+        self.familyId = familyId
+        self.baseGameId = baseGameId
+        self.hashedFileName = hashedFileName
+        self.xxhash64 = xxhash64
+        self.name = name
+        self.version = version
+        self.breaksSaveFormatFromPreviousVersion = breaksSaveFormatFromPreviousVersion
+        self.breaksSaveFormatFromBaseGame = breaksSaveFormatFromBaseGame
+    }
+
+    var id: UUID?
+    var familyId: UUID?
+    var baseGameId: UUID?
+    var hashedFileName: String?
+    var xxhash64: String?
+    var name: String
+    var version: String?
+    var breaksSaveFormatFromPreviousVersion: Bool
+    var breaksSaveFormatFromBaseGame: Bool
+    
+    func toGameMeta(_ date:Date) -> GameMeta {
+        return GameMeta(id: id ?? UUID(), name: name, breaksSaveFormatFromPreviousVersion: breaksSaveFormatFromPreviousVersion, breaksSaveFormatFromBaseGame: breaksSaveFormatFromBaseGame, createdAt: date, updatedAt: date)
+    }
+    
+    func iterateErrors(_ index:inout Int) -> String? {
+        switch index {
+            case 0:
+                index += 1
+                if let hashedFileName = hashedFileName, hashedFileName.isEmpty {
+                    return "hashedFileName is empty"
+                }
+                fallthrough
+            case 1:
+                index += 1
+                if let xxhash64 = xxhash64, xxhash64.isEmpty {
+                    return "xxhash64 is empty"
+                }
+                fallthrough
+            case 2:
+                index += 1
+                if name.isEmpty {
+                    return "name is empty"
+                }
+                fallthrough
+            case 3:
+                index += 1
+                if let version = version, version.isEmpty {
+                    return "version is empty"
+                }
+                fallthrough
+            default:
+                return nil
+        }
+    }
+}
+
 final class GameMeta: Content, SQLItem {
     internal init(id: UUID, familyId: UUID? = nil, baseGameId: UUID? = nil, hashedFileName: String? = nil, xxhash64: String? = nil, name: String, version: String? = nil, breaksSaveFormatFromPreviousVersion: Bool, breaksSaveFormatFromBaseGame: Bool, createdAt: Date, updatedAt: Date) {
         self.id = id
@@ -55,41 +114,9 @@ final class GameMeta: Content, SQLItem {
     var breaksSaveFormatFromBaseGame: Bool
     var createdAt: Date
     var updatedAt: Date
-
 }
 
-/*
- 
 
- ```
- GET /games/:hash
- GET /games/:id
- GET /games/by_family/:id
- {
-     "id": "uuid",
-     "hash": "asdadsasd",
-     "name": "The Battle for Wesnoth",
-     "version": "1.18.0",
-     "platform": "windows",
-     "family_id": "uuid",
-     "created_at": "..",
-     "updated_at": "..",
-     "patched_game_info": {
-         "base_game" : { //For when the game is a mod/patch of an existing game
-             "id": "uuid",
-             "hash": "asdadsasd",
-             "created_at": "..",
-             "updated_at": "..",
-             etc
-         },
-         //or
-         "base_game_id": "uuid",
-         "breaks_save_format": true
-     },
-     "breaks_save_format": false
- }
- ```
- */
 
 class TBLGameMeta {
     static let table = Table("game_meta")
@@ -100,6 +127,7 @@ class TBLGameMeta {
     static let hashedFileName = Expression<String?>("hashed_file_name")
     static let xxhash64 = Expression<String?>("xxhash64")
     static let name = Expression<String>("name")
+    static let name_lc = Expression<String>("name_lc") //lower in sqlite lite only works for ascii
     static let version = Expression<String?>("version")
     static let breaksSaveFormatFromPreviousVersion = Expression<Bool>("breaks_save_format_from_previous_version")
     static let breaksSaveFormatFromBaseGame = Expression<Bool>("breaks_save_format_from_base_game")
@@ -154,6 +182,52 @@ class TBLGameMeta {
     
     static func first(_ con:Connection, uuid:UUID) throws -> GameMeta? {
         return try con.first(GameMeta.self, uuid: uuid)
+    }
+    
+    static func fetchPaged(_ pageInfo:PageInfo<GameMetaSortField>, onlyBaseGames:Bool, searchList:[SearchQuery<GameMetaSearchField>], existingCon:Connection? = nil) throws -> [GameMeta] {
+        var filter:QueryType = table
+        for eachSearch in searchList {
+            filter = switch (eachSearch.searchBy) {
+                case .id:
+                    table.filter(TBLGameMeta.id == UUID(eachSearch.value)!)
+                case .name:
+                    table.filter(TBLGameMeta.name == eachSearch.value)
+                case .familyId:
+                    table.order(TBLGameMeta.familyId == UUID(eachSearch.value)!)
+                case .hashedFileName:
+                    table.order(TBLGameMeta.hashedFileName == eachSearch.value)
+                case .xxhash64:
+                    table.order(TBLGameMeta.xxhash64 == eachSearch.value)
+                case .version:
+                    table.order(TBLGameMeta.version == eachSearch.value)
+            }
+        }
+        if (onlyBaseGames) {
+            filter = filter.filter(TBLGameMeta.baseGameId == nil)
+        }
+        let asc = pageInfo.sortByAscending
+        let sorted = switch (pageInfo.sortBy) {
+            case .id:
+                filter.order(Connection.id.order(asc: asc))
+            case .createdAt:
+                filter.order(Connection.createdAt.order(asc: asc))
+            case .updatedAt:
+                filter.order(Connection.updatedAt.order(asc: asc))
+            case .name:
+                table.order(TBLGameMeta.name.order(asc: asc))
+        }
+        let con = try Database.getConnection(existingCon)
+        let limited = sorted.limit(Int(pageInfo.perPage), offset: Int(pageInfo.perPage*pageInfo.page))
+        let rowIterator = try con.prepareRowIterator(limited)
+        
+        let list:[GameMeta] = try rowIterator.map({ return try toItem($0) })
+        return list
+    }
+    
+    static func replaceBaseGameId(_ con:Connection, targetUUID:UUID, replaceWith:UUID?) throws {
+        let filtered = table.filter(TBLGameMeta.baseGameId == targetUUID)
+        let query = filtered.update(TBLGameMeta.baseGameId <- replaceWith)
+        try con.run(query)
     }
 }
 

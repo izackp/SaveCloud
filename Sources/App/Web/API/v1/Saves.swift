@@ -7,15 +7,12 @@
 
 import Vapor
 import SQLite
-import Argon2Swift
 
-
-
-//GET/DELETE /user/:user_id/profile/:profile_id/games/:game_id/saves?page=0;per_page=10;sort_by=date_desc
-//GET/DELETE /user/:user_id/profile/:profile_id/saves?game_hash=xyz;page=0;per_page=10;sort_by=date_desc
+//GET/DELETE /user/:user_id/profile/:profile_id/games/:game_id/saves?page=0&per_page=10&sort_by=date&asc=false
+//GET/DELETE /user/:user_id/profile/:profile_id/saves?game_hash=xyz&page=0&per_page=10&sort_by=date&asc=false
 @Sendable func apiGETSaves(req: Request) async throws -> [Save] {
     let userId = try req.expectValidUserId()
-    let pageInfo = try req.getPageInfo()
+    let pageInfo:PageInfo<SaveSortField> = try req.getPageInfo()
     let profileId:UUID? = req.parameters.get("profile_id")
     let gameId:UUID? = req.parameters.get("game_id")
     
@@ -26,7 +23,7 @@ import Argon2Swift
 
 @Sendable func apiDELETESaves(req: Request) async throws {
     let userId = try req.expectValidUserId()
-    let pageInfo = try req.getPageInfo()
+    let pageInfo:PageInfo<SaveSortField> = try req.getPageInfo()
     let profileId:UUID? = req.parameters.get("profile_id")
     let gameId:UUID? = req.parameters.get("game_id")
     

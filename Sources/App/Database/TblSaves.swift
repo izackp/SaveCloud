@@ -143,7 +143,7 @@ class TblSave {
                 self.updatedAt <- item.updatedAt]
     }
     
-    static func fetchPaged(_ pageInfo:PageInfo, userId:UUID, profileId:UUID?, gameId:UUID?, existingCon:Connection? = nil) throws -> [Save] {
+    static func fetchPaged(_ pageInfo:PageInfo<SaveSortField>, userId:UUID, profileId:UUID?, gameId:UUID?, existingCon:Connection? = nil) throws -> [Save] {
         var filter = table.filter(TblSave.userId == userId)
         if let profileId = profileId {
             filter = table.filter(TblSave.profileId == profileId)

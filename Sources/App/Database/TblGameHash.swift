@@ -92,5 +92,11 @@ class TBLGameHash {
     static func first(_ con:Connection, uuid:UUID) throws -> GameHash? {
         return try con.first(GameHash.self, uuid: uuid)
     }
+    
+    static func replaceGameMeta(_ con:Connection, targetUUID:UUID, replaceWith:UUID?) throws {
+        let filtered = table.filter(TBLGameHash.gameMetaId == targetUUID)
+        let query = filtered.update(TBLGameHash.gameMetaId <- replaceWith)
+        try con.run(query)
+    }
 }
 
