@@ -10,7 +10,7 @@ import SQLite
 /*
  
  ```
- GET /games/:hash
+ GET /games?hash=xyz
  GET /games/:id
  GET /games/by_family/:id
  {
@@ -40,15 +40,24 @@ import SQLite
  */
 
 //GET /games?family_id_search=abc&page=0&per_page=10&sort_by=name&asc=1
+//GET /user/:user_id/profile/:profile_id/games?family_id_search=abc&page=0&per_page=10&sort_by=name&asc=1
 @Sendable func apiGETGameList(req: Request) async throws -> [GameMeta] {
+    let userId = try req.validUserIdIfExists()
+    let profileId:UUID? = req.parameters.get("profile_id")
     //
     let pageInfo:PageInfo<GameMetaSortField> = try req.getPageInfo()
     let searches = GameMetaSearchField.searchFieldsInRequest(req)
     let onlyBaseGames = req.parameters.get("base_games") == "1"
     
     //let connection = try Database.getConnection()
-    let listSaves = try TBLGameMeta.fetchPaged(pageInfo, onlyBaseGames: onlyBaseGames, searchList: searches)
-    return listSaves
+    if let userId = userId {
+        let listUserGameIds = try TBLSave.fe
+        let listSaves = try TBLGameMeta.fetchPaged(pageInfo, onlyBaseGames: onlyBaseGames, searchList: searches)
+        return listSaves
+    } else {
+        let listSaves = try TBLGameMeta.fetchPaged(pageInfo, onlyBaseGames: onlyBaseGames, searchList: searches)
+        return listSaves
+    }
 }
 
 //GET /games/:game_id

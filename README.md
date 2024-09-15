@@ -2,8 +2,8 @@
 Api to upload and save files associated with games to the cloud. 
 
 #### Questions
-Do we handle files ourselves or use solutions like Amazon s3 / garage (https://garagehq.deuxfleurs.fr/)? 
-it would simplify complicated features like backup and mirrors
+Do we handle files ourselves or use solutions like Amazon s3 / garage ([https://garagehq.deuxfleurs.fr](https://garagehq.deuxfleurs.fr))? 
+it would simplify complicated features like backup and mirrors, but make it more difficult to self host. 
 
 Do we keep file history?
 Do we diff saves? it would be necessary if we keep history for large games like minecraft
@@ -20,7 +20,18 @@ Clients would be able to compare and submit patches on a per file basis as well 
 How do we handle games with the same save format? Lets say there is a graphics only mod or a translation of a game, it will have
 a different hash but the save file is still the same and relevant. 
 
-Sometimes the same game can be stored in different formats. We need to support multiple hashes for one game
+Sometimes the same game can be stored in different formats (nintendo 64: z64, n64, v64). We need to support multiple hashes for one game.
+
+Lets say we need to hash multiple files to determine a game + version or variation, what if we're wrong. What if the game removes or changes that file. How do we build the hash?
+The hash needs to be able to be built in a game agnostic way. Perhaps a feature full solution requires a game detection mechanism the providing unique ways to identify the game. 
+
+what if the game allows mods which modifies the save file?
+Games like skyrim usually have something built-in to check if the current modlist is compatible
+
+### TODO:
+* Dont actually delete data. Add a 'deleted_at' date or move it to a new table. Hide the data then perhaps delete it after 30 days.
+* Make we don't allow users to change game meta data, but we should be able to allow them to submit change requests
+* We can probably allow hashes to point to different games if the hash only has associated saves beloing to that user
 
 ### Goals
 * REST / HTTP API 

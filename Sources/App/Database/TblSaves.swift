@@ -25,9 +25,10 @@ import SQLite
 import Vapor
 
 final class Save: Content, SQLItem {
-    internal init(id: UUID, gameId: UUID, sequentialId: UUID, profileId: UUID, userId: UUID, url: String, fileSize: Int, sourceDevice: String? = nil, screenshot: Data? = nil, name: String? = nil, date: Date? = nil, createdAt: Date, updatedAt: Date) {
+    internal init(id: UUID, gameHashId: UUID, gameMetaId: UUID?, sequentialId: UUID, profileId: UUID, userId: UUID, url: String, fileSize: Int, sourceDevice: String? = nil, screenshot: Data? = nil, name: String? = nil, date: Date? = nil, createdAt: Date, updatedAt: Date) {
         self.id = id
-        self.gameId = gameId
+        self.gameHashId = gameHashId
+        self.gameMetaId = gameMetaId
         self.sequentialId = sequentialId
         self.profileId = profileId
         self.userId = userId
@@ -62,7 +63,8 @@ final class Save: Content, SQLItem {
     }
     
     var id: UUID
-    var gameId: UUID
+    var gameHashId: UUID
+    var gameMetaId: UUID?
     var sequentialId: UUID
     var profileId: UUID
     var userId: UUID
@@ -80,7 +82,8 @@ class TblSave {
     static let table = Table("save")
     
     static let id = Connection.id
-    static let gameId = Expression<UUID>("game_id")
+    static let gameHashId = Expression<UUID>("game_hash_id")
+    static let gameMetaId = Expression<UUID?>("game_meta_id")
     static let sequentialId = Expression<UUID>("sequential_id")
     static let profileId = Expression<UUID>("profile_id")
     static let userId = Expression<UUID>("user_id")
@@ -96,7 +99,8 @@ class TblSave {
     static func createQuery() -> String {
         return table.create(ifNotExists: true) { t in
             t.column(id, primaryKey: true)
-            t.column(gameId)
+            t.column(gameHashId)
+            t.column(gameMetaId)
             t.column(sequentialId)
             t.column(profileId)
             t.column(userId)
@@ -114,7 +118,8 @@ class TblSave {
     static func toItem(_ row:Row) throws -> Save {
         let result = Save(
             id: try row.get(id),
-            gameId: try row.get(gameId),
+            gameHashId: try row.get(gameHashId),
+            gameMetaId: try row.get(gameMetaId),
             sequentialId: try row.get(sequentialId),
             profileId: try row.get(profileId),
             userId: try row.get(userId),
@@ -131,7 +136,8 @@ class TblSave {
     
     static func toRow(_ item:Save) -> [SQLite.Setter] {
         return [self.id <- item.id,
-                self.gameId <- item.gameId,
+                self.gameHashId <- item.gameHashId,
+                self.gameMetaId <- item.gameMetaId,
                 self.sequentialId <- item.sequentialId,
                 self.profileId <- item.profileId,
                 self.url <- item.url,
@@ -143,13 +149,13 @@ class TblSave {
                 self.updatedAt <- item.updatedAt]
     }
     
-    static func fetchPaged(_ pageInfo:PageInfo<SaveSortField>, userId:UUID, profileId:UUID?, gameId:UUID?, existingCon:Connection? = nil) throws -> [Save] {
+    static func fetchPaged(_ pageInfo:PageInfo<SaveSortField>, userId:UUID, profileId:UUID?, gameHashId:UUID?, existingCon:Connection? = nil) throws -> [Save] {
         var filter = table.filter(TblSave.userId == userId)
         if let profileId = profileId {
             filter = table.filter(TblSave.profileId == profileId)
         }
-        if let gameId = gameId {
-            filter = table.filter(TblSave.gameId == gameId)
+        if let gameHashId = gameHashId {
+            filter = table.filter(TblSave.gameHashId == gameHashId)
         }
         let asc = pageInfo.sortByAscending
         let sorted = switch (pageInfo.sortBy) {
@@ -170,17 +176,60 @@ class TblSave {
         return list
     }
     
-    static func deleteAll(userId:UUID, profileId:UUID?, gameId:UUID?, existingCon:Connection? = nil) throws {
+    static func fetchPaged(_ pageInfo:PageInfo<SaveSortField>, userId:UUID, profileId:UUID?, gameHashIdList:[UUID], existingCon:Connection? = nil) throws -> [Save] {
         var filter = table.filter(TblSave.userId == userId)
         if let profileId = profileId {
             filter = table.filter(TblSave.profileId == profileId)
         }
-        if let gameId = gameId {
-            filter = table.filter(TblSave.gameId == gameId)
+        if gameHashIdList.count > 1 {
+            filter = table.filter(gameHashIdList.contains(TblSave.gameHashId))
+        } else if let first = gameHashIdList.first {
+            filter = table.filter(TblSave.gameHashId == first)
+        }
+        let asc = pageInfo.sortByAscending
+        let sorted = switch (pageInfo.sortBy) {
+            case .id:
+                filter.order(Connection.id.order(asc: asc))
+            case .createdAt:
+                filter.order(Connection.createdAt.order(asc: asc))
+            case .updatedAt:
+                filter.order(Connection.updatedAt.order(asc: asc))
+            case .date:
+                filter.order(TblSave.date.order(asc: asc))
+        }
+        let con = try Database.getConnection(existingCon)
+        let limited = sorted.limit(Int(pageInfo.perPage), offset: Int(pageInfo.perPage*pageInfo.page))
+        let rowIterator = try con.prepareRowIterator(limited)
+        
+        let list:[Save] = try rowIterator.map({ return try toItem($0) })
+        return list
+    }
+    
+    static func deleteAll(userId:UUID, profileId:UUID?, gameHashIdList:[UUID], existingCon:Connection? = nil) throws {
+        var filter = table.filter(TblSave.userId == userId)
+        if let profileId = profileId {
+            filter = table.filter(TblSave.profileId == profileId)
+        }
+        if gameHashIdList.count > 1 {
+            filter = table.filter(gameHashIdList.contains(TblSave.gameHashId))
+        } else if let first = gameHashIdList.first {
+            filter = table.filter(TblSave.gameHashId == first)
         }
         let con = try Database.getConnection(existingCon)
         let query = filter.delete()
         try con.run(query)
+    }
+    
+    static func fetchAllGameIds(userId:UUID, profileId:UUID?, existingCon:Connection? = nil) throws -> [UUID] {
+        var filter = table.filter(TblSave.userId == userId)
+        if let profileId = profileId {
+            filter = table.filter(TblSave.profileId == profileId)
+        }
+        let con = try Database.getConnection(existingCon)
+        let rowIterator = try con.prepareRowIterator(filter)
+        
+        let list:[UUID] = try rowIterator.compactMap({ return try $0.get(gameMetaId) })
+        return list
     }
 }
 

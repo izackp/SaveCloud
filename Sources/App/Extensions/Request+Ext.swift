@@ -40,6 +40,20 @@ extension Request {
         return claims.userId
     }
     
+    func validUserIdIfExists() throws -> UUID? {
+        let pathId:UUID? = self.parameters.get("user_id")
+        guard let pathId = pathId else { return nil }
+        
+        guard let claims:JWTClaims = self.auth.get() else {
+            throw Abort(.internalServerError)
+        }
+        
+        if (pathId != claims.userId && !claims.admin) {
+            throw Abort(.unauthorized)
+        }
+        return pathId
+    }
+    
     func getPageInfo<T: LosslessStringConvertible & DefaultConstructible>() throws -> PageInfo<T> {
         let page:UInt? = self.parameters.get("page")
         let perPage:UInt? = self.parameters.get("per_page")

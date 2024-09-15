@@ -93,10 +93,31 @@ class TBLGameHash {
         return try con.first(GameHash.self, uuid: uuid)
     }
     
+    static func first(_ con:Connection, hash:String) throws -> GameHash? {
+        return try con.first(GameHash.self, predicate: TBLGameHash.xxhash64 == hash)
+    }
+    
     static func replaceGameMeta(_ con:Connection, targetUUID:UUID, replaceWith:UUID?) throws {
-        let filtered = table.filter(TBLGameHash.gameMetaId == targetUUID)
-        let query = filtered.update(TBLGameHash.gameMetaId <- replaceWith)
-        try con.run(query)
+        try con.transaction {
+            
+            let filtered = table.filter(TBLGameHash.gameMetaId == targetUUID)
+            let query = filtered.update(TBLGameHash.gameMetaId <- replaceWith)
+            try con.run(query)
+            
+            let filteredSaveTbl = TblSave.table.filter(TblSave.gameMetaId == targetUUID)
+            let query2 = filteredSaveTbl.update(TblSave.gameMetaId <- replaceWith)
+            try con.run(query2)
+        }
+        
+    }
+    
+    static func fetchList(gameMetaId:UUID, existingCon:Connection? = nil) throws -> [GameHash] {
+        var filter = table.filter(TBLGameHash.gameMetaId == gameMetaId)
+        let con = try Database.getConnection(existingCon)
+        let rowIterator = try con.prepareRowIterator(filter)
+        
+        let list:[GameHash] = try rowIterator.map({ return try toItem($0) })
+        return list
     }
 }
 
