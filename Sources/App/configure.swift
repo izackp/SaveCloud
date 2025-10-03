@@ -17,8 +17,8 @@ public let defaultCipherSuites = [
     "!MD5",
     ].joined(separator: ":")
 
-public var jwtPrivateKey:Data = Data()
-public var jwtPublicKey:Data = Data()
+nonisolated(unsafe) public var jwtPrivateKey:Data = Data()
+nonisolated(unsafe) public var jwtPublicKey:Data = Data()
 
 //TODO: Maybe this can go into app storage?
 public func loadKeys(_ directory:String) throws {

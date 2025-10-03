@@ -31,3 +31,4 @@ struct NavBar: Plot.Component {
         }.id("sidebar")
     }
 }
+

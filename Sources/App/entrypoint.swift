@@ -8,14 +8,15 @@ enum Entrypoint {
         try LoggingSystem.bootstrap(from: &env)
         
         let app = try await Application.make(env)
-        defer { app.shutdown() }
         
         do {
             try await configure(app)
         } catch {
             app.logger.report(error: error)
+            try await app.asyncShutdown()
             throw error
         }
         try await app.execute()
+        try await app.asyncShutdown()
     }
 }

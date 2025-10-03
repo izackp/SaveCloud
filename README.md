@@ -39,6 +39,19 @@ Games like skyrim usually have something built-in to check if the current modlis
 * C library to make integration easy as well as a cli client
 
 
+### License
+
+The license is a modified version of the PolyForm Noncommercial License (1.0.0) to add more non-commercial and non-ai use stipulations. Basically, if you're not making money then it's free to use. Depending on the project, I am open to distributing this source under a different license.
+
+### Contributions
+
+All contributors must agree to the CLA within. It is primarily based on Apache's ICLA. 
+
+By signing off your git commits you are agreeing the CLA within the repository inside the file CLA.txt. 
+
+You can sign off your commits via the signoff flag `git commit --signoff`
+
+
 ### Napkin API
 
 
