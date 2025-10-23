@@ -5,10 +5,10 @@
 //  Created by Isaac Paul on 5/23/24.
 //
 
-import Plot
 import Vapor
 import Argon2Swift
 import SQLite
+import HRW
 
 struct ChangePasswordRequest: Content {
     let password_current: String
@@ -27,62 +27,45 @@ struct ChangePasswordRequest: Content {
     }
 }
 
-struct ChangePasswordForm: Plot.Component {
-    let user:User
-    let error:String?
-    var body: Component {
-        Form(url: "/user/change_password", method: HTMLFormMethod.post, contentType: HTMLFormContentType.urlEncoded) {
-            FieldSet {
-                H2("Change Password:")
-                Label("Current Password") {
-                    PasswordInput(name:"password_current")
-                        .class("password-input")
-                }
-                .class("password-label")
-                Label("New Password:") {
-                    PasswordInput()
-                        .class("password-input")
-                }
-                .class("password-label")
-                Label("Re-enter New Password:") {
-                    PasswordInput(name:"password_confirmation")
-                        .class("password-input")
-                }
-                .class("password-label")
-                if let error = error {
-                    Label("Error:") {
-                        Node.br()
-                        Text(error)
-                    }
-                }
-                SubmitButton("Submit")
-            }
+struct ChangePasswordForm {
+    let binding:ChangePasswordFormBinding
+    let rootNode:Form
+    
+    public init(_ app:Application, error:String?) throws {
+        let nodes = try app.readHtmlFromFile("ChangePasswordForm.html")
+        let rootNode = nodes.first as! Form
+        binding = try ChangePasswordFormBinding(rootNode: rootNode)
+        self.rootNode = rootNode
+        if let error = error {
+            binding.span_error.addChild(HTMLText(content: error))
+            binding.error_container.globalAttributes[.style] = ""
         }
     }
 }
 
 @Sendable func changePassword(req: Request) async throws -> Response {
     let connection = try Database.getConnection()
+    let app = req.application
     guard
         let session = try req.fetchSession(),
         let user = try connection.first(User.self, uuid:session.user) else {
-        return WelcomePage(error:"Session doesn't exist").wrapHTML().response()
+        return try WelcomePage(app, users: [], error:"Session doesn't exist").rootNode.response()
     }
     
     let contents = try req.content.decode(ChangePasswordRequest.self)
     let error = contents.validate()
     if let error = error {
-        let response = EditUserPage(user: user, userEditError: error, passwordEditError: error).wrapHTML()
+        let response = try EditUserPage(app, user: user, userEditError: error, passwordEditError: error).rootNode
         return response.response()
     }
     if (contents.password != contents.password_confirmation) {
-        let response = EditUserPage(user: user, userEditError: nil, passwordEditError: "Passwords do not match.").wrapHTML()
+        let response = try EditUserPage(app, user: user, userEditError: nil, passwordEditError: "Passwords do not match.").rootNode
         return response.response()
     }
     
     let verified = try Argon2Swift.verifyHashString(password: contents.password_current, hash: user.passwordHash ?? "")
     if (!verified) {
-        return EditUserPage(user: user, userEditError: nil, passwordEditError: "Password is incorrect.").wrapHTML().response()
+        return try EditUserPage(app, user: user, userEditError: nil, passwordEditError: "Password is incorrect.").rootNode.response()
     }
     
     let salt = Salt.newSalt()
@@ -90,7 +73,7 @@ struct ChangePasswordForm: Plot.Component {
     
     try connection.updateField(User.self, uuid: user.id, setter: TblUser.passwordHash <- passwordHash)
     
-    let response = EditUserPage(user: user, userEditError: nil, passwordEditError: nil).wrapHTML()
+    let response = try EditUserPage(app, user: user, userEditError: nil, passwordEditError: nil).rootNode
     return response.response()
 }
 

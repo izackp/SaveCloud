@@ -68,18 +68,18 @@ final class AuthSession: Content, SQLItem, SessionAuthenticatable {
 }
  
 class TBLSession {
-    static let table = Table("session")
+    nonisolated(unsafe) static let table = Table("session")
     
-    static let id = Expression<UUID>("id")
-    static let refreshToken = Expression<UUID?>("refreshToken")
-    static let user = Expression<UUID>("user")
-    static let deviceName = Expression<String?>("device_name")
-    static let location = Expression<String?>("location")
-    static let ipAddress = Expression<String>("ipAddress")
-    static let isAdmin = Expression<Bool>("is_admin")
-    static let createdAt = Expression<Date>("created_at")
-    static let updatedAt = Expression<Date>("updated_at")
-    static let expiresAt = Expression<Date>("expires_at")
+    nonisolated(unsafe) static let id = Expression<UUID>("id")
+    nonisolated(unsafe) static let refreshToken = Expression<UUID?>("refreshToken")
+    nonisolated(unsafe) static let user = Expression<UUID>("user")
+    nonisolated(unsafe) static let deviceName = Expression<String?>("device_name")
+    nonisolated(unsafe) static let location = Expression<String?>("location")
+    nonisolated(unsafe) static let ipAddress = Expression<String>("ipAddress")
+    nonisolated(unsafe) static let isAdmin = Expression<Bool>("is_admin")
+    nonisolated(unsafe) static let createdAt = Expression<Date>("created_at")
+    nonisolated(unsafe) static let updatedAt = Expression<Date>("updated_at")
+    nonisolated(unsafe) static let expiresAt = Expression<Date>("expires_at")
     
     static func createQuery() -> String {
         return table.create(ifNotExists: true) { t in

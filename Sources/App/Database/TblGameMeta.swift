@@ -119,20 +119,20 @@ final class GameMeta: Content, SQLItem {
 
 
 class TBLGameMeta {
-    static let table = Table("game_meta")
+    nonisolated(unsafe) static let table = Table("game_meta")
     
-    static let id = Expression<UUID>("id")
-    static let familyId = Expression<UUID?>("family_id")
-    static let baseGameId = Expression<UUID?>("base_game_id")
-    static let hashedFileName = Expression<String?>("hashed_file_name")
-    static let xxhash64 = Expression<String?>("xxhash64")
-    static let name = Expression<String>("name")
-    static let name_lc = Expression<String>("name_lc") //lower in sqlite lite only works for ascii
-    static let version = Expression<String?>("version")
-    static let breaksSaveFormatFromPreviousVersion = Expression<Bool>("breaks_save_format_from_previous_version")
-    static let breaksSaveFormatFromBaseGame = Expression<Bool>("breaks_save_format_from_base_game")
-    static let createdAt = Expression<Date>("created_at")
-    static let updatedAt = Expression<Date>("updated_at")
+    nonisolated(unsafe) static let id = Expression<UUID>("id")
+    nonisolated(unsafe) static let familyId = Expression<UUID?>("family_id")
+    nonisolated(unsafe) static let baseGameId = Expression<UUID?>("base_game_id")
+    nonisolated(unsafe) static let hashedFileName = Expression<String?>("hashed_file_name")
+    nonisolated(unsafe) static let xxhash64 = Expression<String?>("xxhash64")
+    nonisolated(unsafe) static let name = Expression<String>("name")
+    nonisolated(unsafe) static let name_lc = Expression<String>("name_lc") //lower in sqlite lite only works for ascii
+    nonisolated(unsafe) static let version = Expression<String?>("version")
+    nonisolated(unsafe) static let breaksSaveFormatFromPreviousVersion = Expression<Bool>("breaks_save_format_from_previous_version")
+    nonisolated(unsafe) static let breaksSaveFormatFromBaseGame = Expression<Bool>("breaks_save_format_from_base_game")
+    nonisolated(unsafe) static let createdAt = Expression<Date>("created_at")
+    nonisolated(unsafe) static let updatedAt = Expression<Date>("updated_at")
     
     static func createQuery() -> String {
         return table.create(ifNotExists: true) { t in

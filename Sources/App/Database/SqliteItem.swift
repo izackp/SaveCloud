@@ -1,12 +1,12 @@
 //
-//  File.swift
+//  SQLItem.swift
 //  
 //
 //  Created by Isaac Paul on 5/10/24.
 //
 
 import Foundation
-import SQLite
+@preconcurrency import SQLite
 
 protocol SQLItem {
     //associatedtype IdType:Value = UInt64 where IdType.Datatype : Equatable
@@ -38,7 +38,7 @@ extension ExpressionType {
 
 extension Connection {
     
-    //static let unique_id = Expression<Int64>("unique_id")
+    //static let unique_id = SQLite.Expression<Int64>("unique_id")
     
     func fetchAll<T>(_ type: T.Type) throws -> [T] where T : SQLItem {
         let table = type.getTable()
@@ -126,7 +126,7 @@ extension Connection {
         }
     }
     
-    func first<T>(_ type: T.Type, predicate:Expression<Bool>) throws -> T? where T : SQLItem {
+    func first<T>(_ type: T.Type, predicate:SQLite.Expression<Bool>) throws -> T? where T : SQLItem {
         let table = type.getTable()
         let filter = table.filter(predicate)
         if let row = try self.pluck(filter) {
@@ -135,7 +135,7 @@ extension Connection {
         return nil
     }
     
-    func first<T>(_ type: T.Type, predicate:Expression<Bool?>) throws -> T? where T : SQLItem {
+    func first<T>(_ type: T.Type, predicate:SQLite.Expression<Bool?>) throws -> T? where T : SQLItem {
         let table = type.getTable()
         let filter = table.filter(predicate)
         if let row = try self.pluck(filter) {
@@ -144,7 +144,7 @@ extension Connection {
         return nil
     }
     
-    func filter<T>(_ type: T.Type, predicate:Expression<Bool>) throws -> [T] where T : SQLItem {
+    func filter<T>(_ type: T.Type, predicate:SQLite.Expression<Bool>) throws -> [T] where T : SQLItem {
         let table = type.getTable()
         let filter = table.filter(predicate)
         let rowIterator = try self.prepareRowIterator(filter)
@@ -152,7 +152,7 @@ extension Connection {
         return list
     }
     
-    func fetchAll<T>(_ type: T.Type, predicate:Expression<Bool>) throws -> [T] where T : SQLItem {
+    func fetchAll<T>(_ type: T.Type, predicate:SQLite.Expression<Bool>) throws -> [T] where T : SQLItem {
         let table = type.getTable()
         let filter = table.filter(predicate)
         let rowIterator = try self.prepareRowIterator(filter)
@@ -160,7 +160,7 @@ extension Connection {
         return list
     }
     
-    func fetchAll<T>(_ type: T.Type, predicate:Expression<Bool?>) throws -> [T] where T : SQLItem {
+    func fetchAll<T>(_ type: T.Type, predicate:SQLite.Expression<Bool?>) throws -> [T] where T : SQLItem {
         let table = type.getTable()
         let filter = table.filter(predicate)
         let rowIterator = try self.prepareRowIterator(filter)
@@ -168,7 +168,7 @@ extension Connection {
         return list
     }
     /*
-    func fetchPaged<T>(_ type: T.Type, _ pageInfo:PageInfo<>, predicate:Expression<Bool>) throws -> [T] where T : SQLItem {
+    func fetchPaged<T>(_ type: T.Type, _ pageInfo:PageInfo<>, predicate:SQLite.Expression<Bool>) throws -> [T] where T : SQLItem {
         let table = type.getTable()
         let filter = table.filter(predicate)
         let asc = pageInfo.sortByAscending
@@ -187,14 +187,14 @@ extension Connection {
         return list
     }*/
     
-    func deleteAll<T>(_ type: T.Type, predicate:Expression<Bool>) throws where T : SQLItem {
+    func deleteAll<T>(_ type: T.Type, predicate:SQLite.Expression<Bool>) throws where T : SQLItem {
         let table = type.getTable()
         let filter = table.filter(predicate)
         let query = filter.delete()
         try self.run(query)
     }
     
-    func deleteAll<T>(_ type: T.Type, predicate:Expression<Bool?>) throws where T : SQLItem {
+    func deleteAll<T>(_ type: T.Type, predicate:SQLite.Expression<Bool?>) throws where T : SQLItem {
         let table = type.getTable()
         let filter = table.filter(predicate)
         let query = filter.delete()
@@ -203,9 +203,9 @@ extension Connection {
 }
 
 extension Connection {
-    static let id = Expression<UUID>("id")
-    static let updatedAt = Expression<Date>("updated_at")
-    static let createdAt = Expression<Date>("created_at")
+    static let id = SQLite.Expression<UUID>("id")
+    static let updatedAt = SQLite.Expression<Date>("updated_at")
+    static let createdAt = SQLite.Expression<Date>("created_at")
     
     func count<T>(_ type: T.Type) throws -> Int where T : SQLItem {
         let table = type.getTable()
@@ -213,14 +213,14 @@ extension Connection {
         return count
     }
     
-    func count<T>(_ type: T.Type, predicate:Expression<Bool>) throws -> Int where T : SQLItem {
+    func count<T>(_ type: T.Type, predicate:SQLite.Expression<Bool>) throws -> Int where T : SQLItem {
         let table = type.getTable()
         let filter = table.filter(predicate)
         let count = try self.scalar(filter.count)
         return count
     }
     
-    func count<T>(_ type: T.Type, predicate:Expression<Bool?>) throws -> Int where T : SQLItem {
+    func count<T>(_ type: T.Type, predicate:SQLite.Expression<Bool?>) throws -> Int where T : SQLItem {
         let table = type.getTable()
         let filter = table.filter(predicate)
         let count = try self.scalar(filter.count)

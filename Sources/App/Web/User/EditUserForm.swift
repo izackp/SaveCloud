@@ -5,9 +5,9 @@
 //  Created by Isaac Paul on 5/23/24.
 //
 
-import Plot
 import Vapor
 import Argon2Swift
+import HRW
 
 struct EditUserRequest: Content {
     let username: String
@@ -29,47 +29,23 @@ struct EditUserRequest: Content {
     }
 }
 
-struct EditUserForm: Plot.Component {
-    let user:User
-    let error:String?
-    var body: Component {
-        Form(url: "/user/edit", method: HTMLFormMethod.post, contentType: HTMLFormContentType.urlEncoded) {
-            FieldSet {
-                H2("Edit User:")
-                Label("Username:") {
-                    TextField(name: "username", text: user.username, isRequired: true)
-                        .autoFocused()
-                        .autoComplete(false)
-                }
-                Label("Email:") {
-                    TextField(name: "email", text: user.email ?? "", isRequired: true)
-                }
-                if let passwordHash = user.passwordHash {
-                    Label("Password:") {
-                        Node.br()
-                        Text(passwordHash)
-                    }
-                }
-                Label("Created At:") {
-                    Node.br()
-                    Text(String(describing:user.createdAt))
-                }
-                Label("Updated At:") {
-                    Node.br()
-                    Text(String(describing:user.updatedAt))
-                }
-                Label("Password required to update:") {
-                    PasswordInput()
-                        .class("password-input")
-                }
-                if let error = error {
-                    Label("Error:") {
-                        Node.br()
-                        Text(error)
-                    }
-                }
-                SubmitButton("Update")
-            }
+struct EditUserForm {
+    let binding:EditUserFormBinding
+    let rootNode:Form
+    
+    public init(_ app:Application, user:User, error:String?) throws {
+        let nodes = try app.readHtmlFromFile("EditUserForm.html")
+        let rootNode = nodes.first as! Form
+        binding = try EditUserFormBinding(rootNode: rootNode)
+        self.rootNode = rootNode
+        
+        if let passwordHash = user.passwordHash {
+            binding.password_hash.addChild(HTMLText(content: passwordHash))
+            binding.password_container.globalAttributes[.style] = ""
+        }
+        if let error = error {
+            binding.span_error.addChild(HTMLText(content: error))
+            binding.error_container.globalAttributes[.style] = ""
         }
     }
 }
@@ -85,22 +61,23 @@ extension Request {
 
 @Sendable func editUser(req: Request) async throws -> Response {
     let connection = try Database.getConnection()
+    let app = req.application
     guard
         let session = try req.fetchSession(),
         let user = try connection.first(User.self, uuid:session.user) else {
-        return WelcomePage(error:"Session doesn't exist").wrapHTML().response()
+        return try WelcomePage(app, users:[], error:"Session doesn't exist").rootNode.response()
     }
     
     let contents = try req.content.decode(EditUserRequest.self)
     let error = contents.validate()
     if let error = error {
-        let response = EditUserPage(user: user, userEditError: error, passwordEditError: nil).wrapHTML()
+        let response = try EditUserPage(app, user: user, userEditError: error, passwordEditError: nil).rootNode
         return response.response()
     }
     
     let verified = try Argon2Swift.verifyHashString(password: contents.password, hash: user.passwordHash ?? "")
     if (!verified) {
-        return EditUserPage(user: user, userEditError: nil, passwordEditError: "Password is incorrect.").wrapHTML().response()
+        return try EditUserPage(app, user: user, userEditError: nil, passwordEditError: "Password is incorrect.").rootNode.response()
     }
     
     user.email = contents.email
@@ -108,6 +85,6 @@ extension Request {
     user.updatedAt = Date()
     try connection.update(User.self, item:user)
     
-    let response = EditUserPage(user: user, userEditError: nil, passwordEditError: nil).wrapHTML()
+    let response = try EditUserPage(app, user: user, userEditError: nil, passwordEditError: nil).rootNode
     return response.response()
 }

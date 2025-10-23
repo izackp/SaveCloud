@@ -45,13 +45,13 @@ final class UserProfile: Content, SQLItem {
 }
 
 class TblUserProfile {
-    static let table = Table("user_profile")
+    nonisolated(unsafe) static let table = Table("user_profile")
     
-    static let id = Connection.id
-    static let userId = Expression<UUID>("user_id")
-    static let name = Expression<String>("name")
-    static let createdAt = Expression<Date>("created_at")
-    static let updatedAt = Connection.updatedAt
+    nonisolated(unsafe) static let id = Connection.id
+    nonisolated(unsafe) static let userId = Expression<UUID>("user_id")
+    nonisolated(unsafe) static let name = Expression<String>("name")
+    nonisolated(unsafe) static let createdAt = Expression<Date>("created_at")
+    nonisolated(unsafe) static let updatedAt = Connection.updatedAt
     
     static func createQuery() -> String {
         return table.create(ifNotExists: true) { t in

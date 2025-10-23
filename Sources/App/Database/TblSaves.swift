@@ -79,22 +79,22 @@ final class Save: Content, SQLItem {
 }
 
 class TblSave {
-    static let table = Table("save")
+    nonisolated(unsafe) static let table = Table("save")
     
-    static let id = Connection.id
-    static let gameHashId = Expression<UUID>("game_hash_id")
-    static let gameMetaId = Expression<UUID?>("game_meta_id")
-    static let sequentialId = Expression<UUID>("sequential_id")
-    static let profileId = Expression<UUID>("profile_id")
-    static let userId = Expression<UUID>("user_id")
-    static let url = Expression<String>("url")
-    static let fileSize = Expression<Int>("file_size")
-    static let sourceDevice = Expression<String?>("source_device")
-    static let screenshot = Expression<Data?>("screenshot")
-    static let name = Expression<String?>("name")
-    static let date = Expression<Date?>("date")
-    static let createdAt = Expression<Date>("created_at")
-    static let updatedAt = Connection.updatedAt
+    nonisolated(unsafe) static let id = Connection.id
+    nonisolated(unsafe) static let gameHashId = Expression<UUID>("game_hash_id")
+    nonisolated(unsafe) static let gameMetaId = Expression<UUID?>("game_meta_id")
+    nonisolated(unsafe) static let sequentialId = Expression<UUID>("sequential_id")
+    nonisolated(unsafe) static let profileId = Expression<UUID>("profile_id")
+    nonisolated(unsafe) static let userId = Expression<UUID>("user_id")
+    nonisolated(unsafe) static let url = Expression<String>("url")
+    nonisolated(unsafe) static let fileSize = Expression<Int>("file_size")
+    nonisolated(unsafe) static let sourceDevice = Expression<String?>("source_device")
+    nonisolated(unsafe) static let screenshot = Expression<Data?>("screenshot")
+    nonisolated(unsafe) static let name = Expression<String?>("name")
+    nonisolated(unsafe) static let date = Expression<Date?>("date")
+    nonisolated(unsafe) static let createdAt = Expression<Date>("created_at")
+    nonisolated(unsafe) static let updatedAt = Connection.updatedAt
     
     static func createQuery() -> String {
         return table.create(ifNotExists: true) { t in

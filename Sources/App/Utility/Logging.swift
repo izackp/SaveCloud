@@ -289,10 +289,10 @@ public func initLoggingLock() {
     pthread_rwlock_init(&lock, nil)
 }
 
-fileprivate var lastMessage:String = ""
-fileprivate var lastMessageSize:Int = 0
-fileprivate var repeatCount:Int = 0
-fileprivate var lock = pthread_rwlock_t() //Had this as a function to avoid initLoggingLock but that seemed to cause a race condition
+nonisolated(unsafe) fileprivate var lastMessage:String = ""
+nonisolated(unsafe) fileprivate var lastMessageSize:Int = 0
+nonisolated(unsafe) fileprivate var repeatCount:Int = 0
+nonisolated(unsafe) fileprivate var lock = pthread_rwlock_t() //Had this as a function to avoid initLoggingLock but that seemed to cause a race condition
 
 public func writeToFile(_ message:String) {
     pthread_rwlock_wrlock(&lock)

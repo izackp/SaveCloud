@@ -6,27 +6,20 @@
 //
 
 import Vapor
-import Plot
+import HRW
 
-struct EditUserPage: Plot.Component, IHtmlHeader {
-    func header() -> String {
-        return "Edit User"
-    }
+struct EditUserPage {
+    let binding:EditUserPageBinding
+    let rootNode:Html
     
-    func css() -> String {
-        "/style.css"
-    }
-    
-    let user:User
-    let userEditError:String?
-    let passwordEditError:String?
-    var body: Component {
-        Div {
-            NavBar(admin: user.isAdmin)
-            Div() {
-                EditUserForm(user: user, error: userEditError)
-                ChangePasswordForm(user: user, error: passwordEditError)
-            }.id("nav_body")
-        }
+    public init(_ app:Application, user:User, userEditError:String?, passwordEditError:String?) throws {
+        let nodes = try app.readHtmlFromFile("EditUserPage.html")
+        let rootNode = nodes.first as! Html
+        binding = try EditUserPageBinding(rootNode: rootNode)
+        self.rootNode = rootNode
+        
+        binding.nav_bar.addChild(try NavBar(app, isAdmin:user.isAdmin).rootNode)
+        binding.edit_user_form.addChild(try EditUserForm(app, user:user, error:userEditError).rootNode)
+        binding.change_password_form.addChild(try ChangePasswordForm(app, error:passwordEditError).rootNode)
     }
 }

@@ -51,7 +51,7 @@ import SQLite
     
     //let connection = try Database.getConnection()
     if let userId = userId {
-        let listUserGameIds = try TBLSave.fe
+        let listUserGameIds = try TblSave.fetchAllGameIds(userId: userId, profileId: profileId)
         let listSaves = try TBLGameMeta.fetchPaged(pageInfo, onlyBaseGames: onlyBaseGames, searchList: searches)
         return listSaves
     } else {

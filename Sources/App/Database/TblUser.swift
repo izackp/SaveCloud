@@ -111,15 +111,15 @@ final class User: Content, SQLItem {
 }
 
 class TblUser {
-    static let table = Table("user")
+    nonisolated(unsafe) static let table = Table("user")
     
-    static let id = Connection.id
-    static let username = Expression<String>("username")
-    static let email = Expression<String?>("email")
-    static let passwordHash = Expression<String?>("password_hash")
-    static let isAdmin = Expression<Bool>("isAdmin")
-    static let createdAt = Expression<Date>("created_at")
-    static let updatedAt = Connection.updatedAt
+    nonisolated(unsafe) static let id = Connection.id
+    nonisolated(unsafe) static let username = Expression<String>("username")
+    nonisolated(unsafe) static let email = Expression<String?>("email")
+    nonisolated(unsafe) static let passwordHash = Expression<String?>("password_hash")
+    nonisolated(unsafe) static let isAdmin = Expression<Bool>("isAdmin")
+    nonisolated(unsafe) static let createdAt = Expression<Date>("created_at")
+    nonisolated(unsafe) static let updatedAt = Connection.updatedAt
     
     static func createQuery() -> String {
         return table.create(ifNotExists: true) { t in

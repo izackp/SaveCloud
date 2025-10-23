@@ -6,9 +6,9 @@
 //
 
 import Foundation
-import Plot
 import Vapor
 import Argon2Swift
+import HRW
 
 struct RegisterRequest: Content {
     let username: String
@@ -17,55 +17,26 @@ struct RegisterRequest: Content {
     let password_confirmation: String
 }
 
-struct RegisterForm: Plot.Component, IHtmlHeader {
-    func header() -> String {
-        "Registration"
-    }
-    
-    func css() -> String {
-        "/style.css"
-    }
-    
-    public init(error: String? = nil) {
-        self.error = error
-    }
-    
+struct RegisterForm {
+    let binding:RegistrationFormBinding
+    let rootNode:Nav
     let error:String?
     
-    var body: Component {
-        Div() {
-            Form(url: "/register", method: HTMLFormMethod.post, contentType: HTMLFormContentType.urlEncoded) {
-                FieldSet {
-                    Label("Username") {
-                        TextField(name: "username", isRequired: true)
-                            .autoFocused()
-                            .autoComplete(false)
-                    }
-                    Label("Email") {
-                        TextField(name: "email", isRequired: true)
-                    }
-                    Label("Password") {
-                        PasswordInput()
-                            .class("password-input")
-                    }
-                    .class("password-label")
-                    Label("Re-enter Password") {
-                        PasswordInput(name:"password_confirmation")
-                            .class("password-input")
-                    }
-                    .class("password-label")
-                    SubmitButton("Register")
-                }
-            }
-            if let error = error {
-                Paragraph(error)
-            }
-        }.class("content")
+    public init(_ app:Application, error: String? = nil) throws {
+        let nodes = try app.readHtmlFromFile("RegistrationForm.html")
+        let rootNode = nodes.first as! Nav
+        binding = try RegistrationFormBinding(rootNode:rootNode)
+        self.rootNode = rootNode
+        self.error = error
+        if let error = error {
+            binding.error_text.addChild(HTMLText(content: error))
+        }
     }
 }
 
 
 @Sendable func register(req: Request) async throws -> Response {//EventLoopFuture<AuthSession> {
+    let app = req.application
     let contents = try req.content.decode(RegisterRequest.self)
     var errors = [String]()
     //var usernameError = false
@@ -83,7 +54,7 @@ struct RegisterForm: Plot.Component, IHtmlHeader {
         //passwordError = true
     }
     if !errors.isEmpty {
-        let response = RegisterForm(error: errors.joined(separator: "\n")).wrapHTML()
+        let response = try RegisterForm(app, error: errors.joined(separator: "\n")).rootNode
         return response.response()
         //throw Abort(.unauthorized)
         //return some view

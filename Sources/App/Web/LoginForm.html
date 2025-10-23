@@ -1,0 +1,27 @@
+<form action="/login"
+      method="POST"
+      enctype="application/x-www-form-urlencoded">
+  <fieldset>
+    <label>
+      Username or Email
+      <input type="text"
+             name="email_or_username"
+             required
+             autofocus
+             autocomplete="off">
+    </label>
+
+    <label class="password-label">
+      Password
+      <input type="password"
+             name="password"
+             class="password-input"
+             required
+             minlength="8"
+             pattern="(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{8,}"
+             title="Must contain at least one number and one uppercase and lowercase letter, and at least 8 or more characters">
+    </label>
+
+    <button type="submit">Login</button>
+  </fieldset>
+</form>

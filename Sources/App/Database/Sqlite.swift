@@ -14,7 +14,7 @@ import SQLite
 
 class Database {
     static let fileName = "db.sqlite3"
-    static var path:String = ""
+    nonisolated(unsafe) static var path:String = ""
     static func initDB() throws {
         guard let path_ = NSSearchPathForDirectoriesInDomains(
             .documentDirectory, .userDomainMask, true
@@ -30,6 +30,8 @@ class Database {
         try db.run(TBLGameMeta.createQuery())
         try db.run(TBLGameHash.createQuery())
         try db.run(TblUserProfile.createQuery())
+        
+        //"a0343a07-9008-4ab9-bf97-661ba77b5cd9")
     }
     
     static func getConnection(_ existing:Connection? = nil) throws -> Connection {

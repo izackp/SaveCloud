@@ -49,14 +49,14 @@ final class GameHash: Content, SQLItem {
 
 
 class TBLGameHash {
-    static let table = Table("game_hash")
+    nonisolated(unsafe) static let table = Table("game_hash")
     
-    static let id = Expression<UUID>("id")
-    static let gameMetaId = Expression<UUID?>("game_meta_id")
-    static let hashedFileName = Expression<String>("hashed_file_name")
-    static let xxhash64 = Expression<String>("xxhash64")
-    static let createdAt = Expression<Date>("created_at")
-    static let updatedAt = Expression<Date>("updated_at")
+    nonisolated(unsafe) static let id = Expression<UUID>("id")
+    nonisolated(unsafe) static let gameMetaId = Expression<UUID?>("game_meta_id")
+    nonisolated(unsafe) static let hashedFileName = Expression<String>("hashed_file_name")
+    nonisolated(unsafe) static let xxhash64 = Expression<String>("xxhash64")
+    nonisolated(unsafe) static let createdAt = Expression<Date>("created_at")
+    nonisolated(unsafe) static let updatedAt = Expression<Date>("updated_at")
     
     static func createQuery() -> String {
         return table.create(ifNotExists: true) { t in

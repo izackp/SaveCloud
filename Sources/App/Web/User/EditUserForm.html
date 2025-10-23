@@ -1,0 +1,62 @@
+<form action="/user/edit"
+      method="POST"
+      enctype="application/x-www-form-urlencoded">
+  <fieldset>
+    <h2>Edit User:</h2>
+
+    <label for="username">
+      Username:
+      <input
+        type="text"
+        id="username"
+        name="username"
+        required
+        autofocus
+        autocomplete="off">
+    </label>
+
+    <label for="email">
+      Email:
+      <input
+        type="email"
+        id="email"
+        name="email"
+        required>
+    </label>
+
+    <label id="password_container" style="display:none">
+      Password:
+      <br>
+      <span id="password_hash"></span>
+    </label>
+
+    <label>
+      Created At:
+      <br>
+      <span id="created_at"></span>
+    </label>
+
+    <label>
+      Updated At:
+      <br>
+      <span id="updated_at"></span>
+    </label>
+
+    <label for="password">
+      Password required to update:
+      <input
+        type="password"
+        id="password"
+        name="password"
+        class="password-input">
+    </label>
+
+    <label id="error_container" style="display:none">
+      Error:
+      <br>
+      <span id="span_error"></span>
+    </label>
+
+    <button type="submit">Update</button>
+  </fieldset>
+</form>

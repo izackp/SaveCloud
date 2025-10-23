@@ -7,42 +7,51 @@
 
 import Vapor
 import Argon2Swift
-import Plot
+import HRW
+
+func internalError() -> Html {
+    let page = try! Html.init([:])
+    let body = try! Body([:])
+    let text = HTMLText(content: "Internal Error")
+    body.addChild(text)
+    page.children.append(body)
+    return page
+}
 
 func routes(_ app: Application) throws {
-    app.get { req async in
+    app.get { req async throws in
         let session = try? req.fetchSession() //TODO: Log error
         if let session = session {
-            return HomePage(admin: session.isAdmin).wrapHTML()
+            return try HomePage(app, isAdmin: session.isAdmin).rootNode
         } else {
             do {
                 let connection = try Database.getConnection()
                 let users = try connection.fetchAll(User.self)
-                return WelcomePage(error: nil, users: users).wrapHTML()
+                return try WelcomePage(app, users: users, error: nil).rootNode
             } catch {
                 
-                return WelcomePage(error: nil).wrapHTML()
+                return try WelcomePage(app, users: [], error: nil).rootNode
             }
         }
     }
-    
-    app.get { req async in
+    /*
+    app.get { req async throws in
         let session = try? req.fetchSession() //TODO: Log error
         if let session = session {
-            return HomePage(admin: session.isAdmin).wrapHTML()
+            return try HomePage(app, isAdmin: session.isAdmin).rootNode
         } else {
             do {
                 let connection = try Database.getConnection()
                 let users = try connection.fetchAll(User.self)
-                return WelcomePage(error: nil, users: users).wrapHTML()
+                return try WelcomePage(app, users: users, error: nil).rootNode
             } catch {
-                
-                return WelcomePage(error: nil).wrapHTML()
+                return try WelcomePage(app, users: [], error: nil).rootNode
             }
         }
     }
-    app.get("register") { req async in
-        RegisterForm().wrapHTML()
+    */
+    app.get("register") { req async throws in
+        try RegisterForm(app).rootNode
     }
 
     app.post("register", use: register(req:))
@@ -72,9 +81,9 @@ func routes(_ app: Application) throws {
         guard
             let session = try req.fetchSession(),
             let user = try connection.first(User.self, uuid:session.user) else {//TODO: Log error
-            return WelcomePage(error:"Session doesn't exist").wrapHTML().response()
+            return try WelcomePage(app, users: [], error:"Session doesn't exist").rootNode.response()
         }
-        return EditUserPage(user: user, userEditError: nil, passwordEditError: nil).wrapHTML().response()
+        return try EditUserPage(app, user: user, userEditError: nil, passwordEditError: nil).rootNode.response()
     }
     
 }

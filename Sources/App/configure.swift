@@ -35,6 +35,7 @@ public func configure(_ app: Application) async throws {
     try loadKeys(app.directory.publicDirectory)
     
     // Enable TLS.
+    /*
     app.http.server.configuration.responseCompression = .enabled
     var tlsConfiguration:TLSConfiguration = .makeServerConfiguration(
         certificateChain: try NIOSSLCertificate.fromPEMFile("\(app.directory.publicDirectory)localhost_root.pem").map { .certificate($0) },
@@ -43,7 +44,7 @@ public func configure(_ app: Application) async throws {
     tlsConfiguration.certificateVerification = .noHostnameVerification
     
     app.http.server.configuration.tlsConfiguration = tlsConfiguration
-    
+    */
     tryOrLog(SourceInfo(type:#file), {try Database.initDB()})
     app.middleware.use(FileMiddleware(publicDirectory: app.directory.publicDirectory))
     app.middleware.use(app.sessions.middleware)

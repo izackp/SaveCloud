@@ -4,7 +4,7 @@
 //
 //  Created by Isaac Paul on 5/10/24.
 //
-
+/*
 import Plot
 import Vapor
 
@@ -58,6 +58,41 @@ extension HTML: ResponseEncodable {
 }
 
 extension HTML: AsyncResponseEncodable {
+    public func encodeResponse(for request: Request) async -> Response {
+        return Response(self)
+    }
+}
+*/
+
+import HRW
+import Vapor
+
+extension Response.Body {
+    init(html: HTMLNode) {
+        let (_, asStr) = html.toString()
+        self.init(string: asStr)
+    }
+}
+
+extension Response {
+    convenience init(_ html: HTMLNode) {
+        self.init(status: .ok, headers: ["Content-Type": "text/html"], body: .init(html: html))
+    }
+}
+
+extension HTMLNode {
+    func response() -> Response {
+        Response(self)
+    }
+}
+
+extension HTMLNode: @retroactive ResponseEncodable {
+    public func encodeResponse(for request: Request) -> EventLoopFuture<Response> {
+        request.eventLoop.makeSucceededFuture(Response(self))
+    }
+}
+
+extension HTMLNode: @retroactive AsyncResponseEncodable {
     public func encodeResponse(for request: Request) async -> Response {
         return Response(self)
     }
