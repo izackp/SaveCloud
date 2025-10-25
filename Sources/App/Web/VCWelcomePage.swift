@@ -8,21 +8,17 @@
 import Vapor
 import HRW
 
-struct WelcomePage {
-    let binding:WelcomePageBinding
-    let rootNode:Html
-    
-    public init(_ app:Application, users: [User], error:String?) throws {
-        let nodes = try app.readHtmlFromFile("WelcomePage.html")
-        let rootNode = nodes.first as! Html
-        binding = try WelcomePageBinding(rootNode:rootNode)
-        self.rootNode = rootNode
+class VCWelcomePage : WelcomePage {
+    public init(users: [User], error:String?) throws {
+        try super.init()
+        let loginForm = try LoginForm().rootNode
+        self.login_form.addChild(loginForm)
         if let error = error {
-            binding.p_error.addChild(HTMLText(content: error))
-            binding.p_error.globalAttributes[.style] = ""
+            p_error.addChild(HTMLText(content: error))
+            p_error.globalAttributes[.style] = ""
         }
         for eachUser in users {
-            binding.table.children.append(try WelcomeTableRow(app, user:eachUser).rootNode)
+            table.children.append(try VCWelcomeTableRow(user:eachUser).rootNode)
         }
     }
 }

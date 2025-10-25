@@ -1,5 +1,6 @@
 import Vapor
 import Logging
+import HRW
 
 @main
 enum Entrypoint {
@@ -16,6 +17,8 @@ enum Entrypoint {
             try await app.asyncShutdown()
             throw error
         }
+        IHtmlNodeContainerUtility.sharedInstance.defaultBaseDir = "/Users/isaacpaul/Projects/swift-projects/SaveCloud/SaveCloud/Sources/App"
+        //IHtmlNodeContainerUtility.sharedInstance.defaultBaseDir = app.directory.viewsDirectory
         try await app.execute()
         try await app.asyncShutdown()
     }

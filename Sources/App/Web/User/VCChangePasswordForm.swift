@@ -27,45 +27,40 @@ struct ChangePasswordRequest: Content {
     }
 }
 
-struct ChangePasswordForm {
-    let binding:ChangePasswordFormBinding
-    let rootNode:Form
+class VCChangePasswordForm : ChangePasswordForm {
     
-    public init(_ app:Application, error:String?) throws {
-        let nodes = try app.readHtmlFromFile("ChangePasswordForm.html")
-        let rootNode = nodes.first as! Form
-        binding = try ChangePasswordFormBinding(rootNode: rootNode)
-        self.rootNode = rootNode
+    public init(error:String?) throws {
+        try super.init()
         if let error = error {
-            binding.span_error.addChild(HTMLText(content: error))
-            binding.error_container.globalAttributes[.style] = ""
+            span_error.addChild(HTMLText(content: error))
+            error_container.globalAttributes[.style] = ""
         }
     }
 }
 
 @Sendable func changePassword(req: Request) async throws -> Response {
     let connection = try Database.getConnection()
-    let app = req.application
+    //let app = req.application
     guard
         let session = try req.fetchSession(),
         let user = try connection.first(User.self, uuid:session.user) else {
-        return try WelcomePage(app, users: [], error:"Session doesn't exist").rootNode.response()
+        return try VCWelcomePage(users: [], error:"Session doesn't exist").rootNode.response()
     }
     
     let contents = try req.content.decode(ChangePasswordRequest.self)
     let error = contents.validate()
     if let error = error {
-        let response = try EditUserPage(app, user: user, userEditError: error, passwordEditError: error).rootNode
+        let response = try VCEditUserPage(user: user, userEditError: error, passwordEditError: error).rootNode
         return response.response()
     }
     if (contents.password != contents.password_confirmation) {
-        let response = try EditUserPage(app, user: user, userEditError: nil, passwordEditError: "Passwords do not match.").rootNode
+        let response = try VCEditUserPage(user: user, userEditError: nil, passwordEditError: "Passwords do not match.").rootNode
         return response.response()
     }
     
     let verified = try Argon2Swift.verifyHashString(password: contents.password_current, hash: user.passwordHash ?? "")
     if (!verified) {
-        return try EditUserPage(app, user: user, userEditError: nil, passwordEditError: "Password is incorrect.").rootNode.response()
+        return try VCEditUserPage(user: user, userEditError: nil, passwordEditError: "Password is incorrect.").rootNode.response()
     }
     
     let salt = Salt.newSalt()
@@ -73,7 +68,7 @@ struct ChangePasswordForm {
     
     try connection.updateField(User.self, uuid: user.id, setter: TblUser.passwordHash <- passwordHash)
     
-    let response = try EditUserPage(app, user: user, userEditError: nil, passwordEditError: nil).rootNode
+    let response = try VCEditUserPage(user: user, userEditError: nil, passwordEditError: nil).rootNode
     return response.response()
 }
 

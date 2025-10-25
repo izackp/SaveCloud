@@ -117,7 +117,7 @@ class TblUser {
     nonisolated(unsafe) static let username = Expression<String>("username")
     nonisolated(unsafe) static let email = Expression<String?>("email")
     nonisolated(unsafe) static let passwordHash = Expression<String?>("password_hash")
-    nonisolated(unsafe) static let isAdmin = Expression<Bool>("isAdmin")
+    nonisolated(unsafe) static let isAdmin = Expression<Bool>("is_admin")
     nonisolated(unsafe) static let createdAt = Expression<Date>("created_at")
     nonisolated(unsafe) static let updatedAt = Connection.updatedAt
     

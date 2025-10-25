@@ -17,19 +17,14 @@ struct RegisterRequest: Content {
     let password_confirmation: String
 }
 
-struct RegisterForm {
-    let binding:RegistrationFormBinding
-    let rootNode:Nav
+class VCRegistrationForm : RegistrationForm {
     let error:String?
     
-    public init(_ app:Application, error: String? = nil) throws {
-        let nodes = try app.readHtmlFromFile("RegistrationForm.html")
-        let rootNode = nodes.first as! Nav
-        binding = try RegistrationFormBinding(rootNode:rootNode)
-        self.rootNode = rootNode
+    public init(error: String? = nil) throws {
         self.error = error
+        try super.init()
         if let error = error {
-            binding.error_text.addChild(HTMLText(content: error))
+            error_text.addChild(HTMLText(content: error))
         }
     }
 }
@@ -54,7 +49,7 @@ struct RegisterForm {
         //passwordError = true
     }
     if !errors.isEmpty {
-        let response = try RegisterForm(app, error: errors.joined(separator: "\n")).rootNode
+        let response = try VCRegistrationForm(error: errors.joined(separator: "\n")).rootNode
         return response.response()
         //throw Abort(.unauthorized)
         //return some view

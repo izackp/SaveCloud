@@ -47,6 +47,11 @@ struct ApiRegisterRequest: Content, IValidate {
     
     let salt = Salt.newSalt()
     let passwordHash = try Argon2Swift.hashPasswordString(password: contents.password, salt: salt)
+    let encodedPassword = passwordHash.encodedString()
+    let verified = try Argon2Swift.verifyHashString(password: contents.password, hash: encodedPassword)
+    if (!verified) {
+        throw Abort(.badRequest, reason: "Unable to save password.")
+    }
     
     let connection = try Database.getConnection()
     let uniqueUsername = try connection.count(User.self, predicate: TblUser.username == contents.username) == 0
@@ -60,7 +65,7 @@ struct ApiRegisterRequest: Content, IValidate {
     let numUsers = try connection.count(User.self)
     let isAdmin = numUsers == 0
     let date = Date()
-    var newUser = User(id: UUID.init(), username:contents.username, email: contents.email, passwordHash: passwordHash.encodedString(), isAdmin: isAdmin, createdAt: date, updatedAt: date)
+    let newUser = User(id: UUID.init(), username:contents.username, email: contents.email, passwordHash: encodedPassword, isAdmin: isAdmin, createdAt: date, updatedAt: date)
     if let newUUID = try connection.insertWithRetry(User.self, item: newUser) {
         newUser.id = newUUID
     }

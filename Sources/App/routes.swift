@@ -22,15 +22,15 @@ func routes(_ app: Application) throws {
     app.get { req async throws in
         let session = try? req.fetchSession() //TODO: Log error
         if let session = session {
-            return try HomePage(app, isAdmin: session.isAdmin).rootNode
+            return try VCHomePage(isAdmin: session.isAdmin).rootNode
         } else {
             do {
                 let connection = try Database.getConnection()
                 let users = try connection.fetchAll(User.self)
-                return try WelcomePage(app, users: users, error: nil).rootNode
+                return try VCWelcomePage(users: users, error: nil).rootNode
             } catch {
                 
-                return try WelcomePage(app, users: [], error: nil).rootNode
+                return try VCWelcomePage(users: [], error: nil).rootNode
             }
         }
     }
@@ -51,7 +51,7 @@ func routes(_ app: Application) throws {
     }
     */
     app.get("register") { req async throws in
-        try RegisterForm(app).rootNode
+        try VCRegistrationForm().rootNode
     }
 
     app.post("register", use: register(req:))
@@ -81,9 +81,9 @@ func routes(_ app: Application) throws {
         guard
             let session = try req.fetchSession(),
             let user = try connection.first(User.self, uuid:session.user) else {//TODO: Log error
-            return try WelcomePage(app, users: [], error:"Session doesn't exist").rootNode.response()
+            return try VCWelcomePage(users: [], error:"Session doesn't exist").rootNode.response()
         }
-        return try EditUserPage(app, user: user, userEditError: nil, passwordEditError: nil).rootNode.response()
+        return try VCEditUserPage(user: user, userEditError: nil, passwordEditError: nil).rootNode.response()
     }
     
 }

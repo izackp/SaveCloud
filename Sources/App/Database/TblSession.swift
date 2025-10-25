@@ -71,11 +71,11 @@ class TBLSession {
     nonisolated(unsafe) static let table = Table("session")
     
     nonisolated(unsafe) static let id = Expression<UUID>("id")
-    nonisolated(unsafe) static let refreshToken = Expression<UUID?>("refreshToken")
+    nonisolated(unsafe) static let refreshToken = Expression<UUID?>("refresh_token")
     nonisolated(unsafe) static let user = Expression<UUID>("user")
     nonisolated(unsafe) static let deviceName = Expression<String?>("device_name")
     nonisolated(unsafe) static let location = Expression<String?>("location")
-    nonisolated(unsafe) static let ipAddress = Expression<String>("ipAddress")
+    nonisolated(unsafe) static let ipAddress = Expression<String>("ip_address")
     nonisolated(unsafe) static let isAdmin = Expression<Bool>("is_admin")
     nonisolated(unsafe) static let createdAt = Expression<Date>("created_at")
     nonisolated(unsafe) static let updatedAt = Expression<Date>("updated_at")

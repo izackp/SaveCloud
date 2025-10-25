@@ -8,16 +8,10 @@
 import Vapor
 import HRW
 
-struct HomePage {
-    let binding:HomePageBinding
-    let rootNode:Html
+class VCHomePage : HomePage {
     
-    public init(_ app:Application, isAdmin:Bool) throws {
-        let nodes = try app.readHtmlFromFile("HomePage.html")
-        let rootNode = nodes.first as! Html
-        binding = try HomePageBinding(rootNode: rootNode)
-        self.rootNode = rootNode
-        
-        binding.nav_bar.addChild(try NavBar(app, isAdmin: isAdmin).rootNode)
+    public init(isAdmin:Bool) throws {
+        try super.init()
+        nav_bar.addChild(try VCNavBar(isAdmin: isAdmin).rootNode)
     }
 }

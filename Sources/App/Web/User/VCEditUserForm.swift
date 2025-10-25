@@ -29,23 +29,17 @@ struct EditUserRequest: Content {
     }
 }
 
-struct EditUserForm {
-    let binding:EditUserFormBinding
-    let rootNode:Form
-    
-    public init(_ app:Application, user:User, error:String?) throws {
-        let nodes = try app.readHtmlFromFile("EditUserForm.html")
-        let rootNode = nodes.first as! Form
-        binding = try EditUserFormBinding(rootNode: rootNode)
-        self.rootNode = rootNode
-        
+class VCEditUserForm : EditUserForm {
+
+    public init(user:User, error:String?) throws {
+        try super.init()
         if let passwordHash = user.passwordHash {
-            binding.password_hash.addChild(HTMLText(content: passwordHash))
-            binding.password_container.globalAttributes[.style] = ""
+            password_hash.addChild(HTMLText(content: passwordHash))
+            password_container.globalAttributes[.style] = ""
         }
         if let error = error {
-            binding.span_error.addChild(HTMLText(content: error))
-            binding.error_container.globalAttributes[.style] = ""
+            span_error.addChild(HTMLText(content: error))
+            error_container.globalAttributes[.style] = ""
         }
     }
 }
@@ -61,23 +55,23 @@ extension Request {
 
 @Sendable func editUser(req: Request) async throws -> Response {
     let connection = try Database.getConnection()
-    let app = req.application
+    //let app = req.application
     guard
         let session = try req.fetchSession(),
         let user = try connection.first(User.self, uuid:session.user) else {
-        return try WelcomePage(app, users:[], error:"Session doesn't exist").rootNode.response()
+        return try VCWelcomePage(users:[], error:"Session doesn't exist").rootNode.response()
     }
     
     let contents = try req.content.decode(EditUserRequest.self)
     let error = contents.validate()
     if let error = error {
-        let response = try EditUserPage(app, user: user, userEditError: error, passwordEditError: nil).rootNode
+        let response = try VCEditUserPage(user: user, userEditError: error, passwordEditError: nil).rootNode
         return response.response()
     }
     
     let verified = try Argon2Swift.verifyHashString(password: contents.password, hash: user.passwordHash ?? "")
     if (!verified) {
-        return try EditUserPage(app, user: user, userEditError: nil, passwordEditError: "Password is incorrect.").rootNode.response()
+        return try VCEditUserPage(user: user, userEditError: nil, passwordEditError: "Password is incorrect.").rootNode.response()
     }
     
     user.email = contents.email
@@ -85,6 +79,6 @@ extension Request {
     user.updatedAt = Date()
     try connection.update(User.self, item:user)
     
-    let response = try EditUserPage(app, user: user, userEditError: nil, passwordEditError: nil).rootNode
+    let response = try VCEditUserPage(user: user, userEditError: nil, passwordEditError: nil).rootNode
     return response.response()
 }
