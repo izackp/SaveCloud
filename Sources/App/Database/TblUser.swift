@@ -128,20 +128,12 @@ final class User: Content, Codable, SQLItem {
         }
     }
 
-    convenience init(row: Row) {
-        self.init(
-            id: row[Self.id],
-            username: row[Self.username],
-            email: row[Self.email],
-            passwordHash: row[Self.password_hash],
-            isAdmin: row[Self.is_admin],
-            createdAt: row[Self.created_at],
-            updatedAt: row[Self.updated_at])
-    }
 
     static func first(_ con: DatabasePool, emailOrUsername: String) throws -> User? {
-        try con.first(User.self, predicate: username == emailOrUsername || email == emailOrUsername)
+        try con.unsafeReentrantWrite { db in
+            try User
+                .filter(username == emailOrUsername || email == emailOrUsername)
+                .fetchOne(db)
+        }
     }
 }
-
-typealias TblUser = User

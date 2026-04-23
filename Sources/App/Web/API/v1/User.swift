@@ -25,7 +25,9 @@ import Argon2Swift
     }
     
     let connection = try Database.getConnection()
-    guard let user = try connection.first(User.self, uuid: userId) else {
+    guard let user = try connection.unsafeReentrantWrite({ db in
+        try User.filter(id: userId).fetchOne(db)
+    }) else {
         throw Abort(.notFound)
     }
     return user.toPublicUser()
@@ -87,12 +89,18 @@ final class PutUser: Content, IValidate {
     }
     
     let connection = try Database.getConnection()
-    guard let matchingUser = try connection.first(User.self, uuid: id) else {
+    guard let matchingUser = try connection.unsafeReentrantWrite({ db in
+        try User.filter(id: id).fetchOne(db)
+    }) else {
         throw Abort(.notFound, reason: "User with id not found: \(id)")
     }
     var isDiff = false
     if let username = contents.username, (matchingUser.username != username) {
-        let uniqueUsername = try connection.count(User.self, predicate: TblUser.username == username) == 0
+        let uniqueUsername = try connection.unsafeReentrantWrite { db in
+            try User
+                .filter(User.username == username && User.id != id)
+                .fetchCount(db) == 0
+        }
         if (!uniqueUsername) {
             throw Abort(.badRequest, reason: "Username \(username) already exists")
         }
@@ -100,7 +108,11 @@ final class PutUser: Content, IValidate {
         isDiff = true
     }
     if let email = contents.email, (matchingUser.email != email) {
-        let uniqueEmail = try connection.count(User.self, predicate: TblUser.email == email) == 0
+        let uniqueEmail = try connection.unsafeReentrantWrite { db in
+            try User
+                .filter(User.email == email && User.id != id)
+                .fetchCount(db) == 0
+        }
         if (!uniqueEmail) {
             throw Abort(.badRequest, reason: "Email \(email) is already in use")
         }
@@ -115,7 +127,9 @@ final class PutUser: Content, IValidate {
         return matchingUser.toPublicUser()
     }
     matchingUser.updatedAt = Date()
-    try connection.update(User.self, item: matchingUser)
+    try connection.unsafeReentrantWrite { db in
+        try matchingUser.update(db)
+    }
     
     return matchingUser.toPublicUser()
 }
@@ -159,7 +173,9 @@ final class PasswordCheck: Content, IValidate {
     try contents.checkValdiation()
     
     let connection = try Database.getConnection()
-    guard let matchingUser = try connection.first(User.self, uuid: id) else {
+    guard let matchingUser = try connection.unsafeReentrantWrite({ db in
+        try User.filter(id: id).fetchOne(db)
+    }) else {
         throw Abort(.notFound, reason: "User with id not found: \(id)")
     }
     
@@ -168,9 +184,12 @@ final class PasswordCheck: Content, IValidate {
         throw Abort(.unauthorized, reason: "Incorrect password")
     }
     
-    try connection.transaction {
-        try connection.deleteAll(AuthSession.self, predicate: TBLSession.user == id)
-        try connection.delete(User.self, uuid: id)
+    try connection.unsafeReentrantWrite { db in
+        try db.inTransaction {
+            try AuthSession.filter(AuthSession.user == id).deleteAll(db)
+            try User.filter(id: id).deleteAll(db)
+            return .commit
+        }
         //TODO: Need to also delete saves, profiles, hashes
     }
     

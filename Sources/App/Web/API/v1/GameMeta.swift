@@ -51,7 +51,7 @@ import GRDB
     
     //let connection = try Database.getConnection()
     if let userId = userId {
-        let listUserGameIds = try TblSave.fetchAllGameIds(userId: userId, profileId: profileId)
+        let listUserGameIds = try Save.fetchAllGameIds(userId: userId, profileId: profileId)
         let listSaves = try GameMeta.fetchPaged(pageInfo, onlyBaseGames: onlyBaseGames, searchList: searches)
         return listSaves
     } else {
@@ -145,13 +145,13 @@ import GRDB
         }
         let parentId = target.baseGameId
         if let parentId = parentId, replaceWithParent {
-            try TBLGameHash.replaceGameMeta(connection, targetUUID: gameId, replaceWith: parentId)
+            try GameHash.replaceGameMeta(connection, targetUUID: gameId, replaceWith: parentId)
             try GameMeta.replaceBaseGameId(connection, targetUUID: gameId, replaceWith: parentId)
         } else if (allowRelBreak) {
-            try TBLGameHash.replaceGameMeta(connection, targetUUID: gameId, replaceWith: nil)
+            try GameHash.replaceGameMeta(connection, targetUUID: gameId, replaceWith: nil)
             try GameMeta.replaceBaseGameId(connection, targetUUID: gameId, replaceWith: nil)
         } else {
-            let hashCount = try connection.count(GameHash.self, predicate: TBLGameHash.gameMetaId == gameId)
+            let hashCount = try connection.count(GameHash.self, predicate: GameHash.gameMetaId == gameId)
             if (hashCount > 0) {
                 throw Abort(.forbidden, reason: "There are game hashes that depend on this game meta.")
             }

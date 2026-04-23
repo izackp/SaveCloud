@@ -37,7 +37,7 @@ struct UserSessionAuthenticator: AsyncSessionAuthenticator {
     ) async throws {
         
         let connection = try Database.getConnection()
-        guard let session = try TBLSession.first(connection, uuid: sessionID) else {
+        guard let session = try AuthSession.first(connection, uuid: sessionID) else {
             return
         }
         //req.auth.login(session)
@@ -69,7 +69,7 @@ struct UserCredentialsAuthenticator: AsyncCredentialsAuthenticator {
         try credentials.validate()
         
         let connection = try Database.getConnection()
-        guard let user = try TblUser.first(connection, emailOrUsername: credentials.email_or_username) else {
+        guard let user = try User.first(connection, emailOrUsername: credentials.email_or_username) else {
             throw Abort(.notFound)
         }
         

@@ -57,14 +57,4 @@ extension UserProfile {
             t.column(updated_at,    .date).notNull()
         }
     }
-
-    init(row: Row) {
-        id = row[Self.id]
-        userId = row[Self.user_id]
-        name = row[Self.name]
-        createdAt = row[Self.created_at]
-        updatedAt = row[Self.updated_at]
-    }
 }
-
-typealias TblUserProfile = UserProfile

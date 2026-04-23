@@ -19,7 +19,7 @@ import Argon2Swift
     guard let user = try connection.first(User.self, uuid: userId) else {
         throw Abort(.notFound)
     }
-    let profileList = try connection.fetchAll(UserProfile.self, predicate: TblUserProfile.userId == user.id)
+    let profileList = try connection.fetchAll(UserProfile.self, predicate: UserProfile.user_id == user.id)
     return profileList
 }
 
@@ -171,7 +171,7 @@ final class PostUserProfile: Content, IValidate {
         throw Abort(.unauthorized, reason: "You don't have permission to edit this user.")
     }
     try connection.transaction {
-        let firstSave = try connection.first(Save.self, predicate: TblSave.profileId == profileId)
+        let firstSave = try connection.first(Save.self, predicate: Save.profileId == profileId)
         if (firstSave != nil) {
             throw Abort(.badRequest, reason: "Can not delete profile that contains save data.")
         }

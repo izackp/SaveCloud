@@ -70,8 +70,6 @@ final class GameHash: Content, Codable, SQLItem {
     }
 }
 
-typealias TBLGameHash = GameHash
-
 extension GameHash {
     static let gameMetaId = game_meta_id
     static let hashedFileName = hashed_file_name
@@ -79,29 +77,36 @@ extension GameHash {
     static let updatedAt = updated_at
 
     static func first(_ con: DatabasePool, uuid: UUID) throws -> GameHash? {
-        try con.first(GameHash.self, uuid: uuid)
+        try con.unsafeReentrantWrite { db in
+            try GameHash.filter(id: uuid).fetchOne(db)
+        }
     }
 
     static func first(_ con: DatabasePool, hash: String) throws -> GameHash? {
-        try con.first(GameHash.self, predicate: xxhash64 == hash)
+        try con.unsafeReentrantWrite { db in
+            try GameHash.filter(xxhash64 == hash).fetchOne(db)
+        }
     }
 
     static func replaceGameMeta(_ con: DatabasePool, targetUUID: UUID, replaceWith: UUID?) throws {
-        try con.transaction {
-            try con.unsafeReentrantWrite { db in
+        try con.unsafeReentrantWrite { db in
+            try db.inTransaction {
                 _ = try GameHash
                     .filter(game_meta_id == targetUUID)
                     .updateAll(db, game_meta_id.set(to: replaceWith))
 
                 _ = try Save
-                    .filter(TblSave.gameMetaId == targetUUID)
-                    .updateAll(db, TblSave.gameMetaId.set(to: replaceWith))
+                    .filter(Save.gameMetaId == targetUUID)
+                    .updateAll(db, Save.gameMetaId.set(to: replaceWith))
+                return .commit
             }
         }
     }
 
     static func fetchList(gameMetaId: UUID, existingCon: DatabasePool? = nil) throws -> [GameHash] {
         let con = try Database.getConnection(existingCon)
-        return try con.fetchAll(GameHash.self, predicate: game_meta_id == gameMetaId)
+        return try con.unsafeReentrantWrite { db in
+            try GameHash.filter(game_meta_id == gameMetaId).fetchAll(db)
+        }
     }
 }

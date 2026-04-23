@@ -197,7 +197,9 @@ extension GameMeta {
     static let updatedAt = updated_at
 
     static func first(_ con: DatabasePool, uuid: UUID) throws -> GameMeta? {
-        try con.first(GameMeta.self, uuid: uuid)
+        try con.unsafeReentrantWrite { db in
+            try GameMeta.filter(id: uuid).fetchOne(db)
+        }
     }
 
     static func fetchPaged(_ pageInfo: PageInfo<GameMetaSortField>, onlyBaseGames: Bool, searchList: [SearchQuery<GameMetaSearchField>], existingCon: DatabasePool? = nil) throws -> [GameMeta] {

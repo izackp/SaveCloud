@@ -97,23 +97,9 @@ extension AuthSession {
         }
     }
 
-    init(row: Row) {
-        id = row[Self.id]
-        refreshToken = row[Self.refresh_token]
-        user = row[Self.user]
-        deviceName = row[Self.device_name]
-        location = row[Self.location]
-        ipAddress = row[Self.ip_address]
-        isAdmin = row[Self.is_admin]
-        createdAt = row[Self.created_at]
-        updatedAt = row[Self.updated_at]
-        expiresAt = row[Self.expires_at]
-    }
-
     static func first(_ con: DatabasePool, uuid: UUID) throws -> AuthSession? {
-        try con.first(AuthSession.self, uuid: uuid)
+        try con.unsafeReentrantWrite { db in
+            try AuthSession.filter(id: uuid).fetchOne(db)
+        }
     }
 }
-
-typealias TBLSession = AuthSession
-

@@ -134,8 +134,6 @@ final class Save: Content, Codable, SQLItem {
     }
 }
 
-typealias TblSave = Save
-
 extension Save {
     static let gameHashId = game_hash_id
     static let gameMetaId = game_meta_id

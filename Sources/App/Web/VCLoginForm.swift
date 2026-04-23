@@ -39,7 +39,7 @@ struct LoginRequest: Content {
     }
     
     let connection = try Database.getConnection()
-    guard let user = try TblUser.first(connection, emailOrUsername: loginRequest.email_or_username) else {
+    guard let user = try User.first(connection, emailOrUsername: loginRequest.email_or_username) else {
         return try VCWelcomePage(users: [], error: "Username Or Email not found").rootNode.response()
     }
     
@@ -53,4 +53,3 @@ struct LoginRequest: Content {
     
     return req.redirect(to: "/", redirectType: .normal)
 }
-

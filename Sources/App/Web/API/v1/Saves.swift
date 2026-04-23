@@ -25,7 +25,7 @@ import GRDB
     let connection = try Database.getConnection()
     let gameHashId:UUID?
     if let gameHash = gameHash {
-        let hashMap = try TBLGameHash.first(connection, hash: gameHash)
+        let hashMap = try GameHash.first(connection, hash: gameHash)
         guard let hashMap = hashMap else {
             throw Abort(.notFound, reason: "Can not find a game id that matches hash: \(gameHash)")
         }
@@ -37,7 +37,7 @@ import GRDB
     let hashIdListFromGameMeta:[UUID]
     if let gameMetaId = gameMetaId {
         //if (gameHash != nil) { throw Abort(.badRequest, reason: "Cant look up saves by both game hash and game id.") }
-        let matchingHashes = try TBLGameHash.fetchList(gameMetaId: gameMetaId, existingCon: connection)
+        let matchingHashes = try GameHash.fetchList(gameMetaId: gameMetaId, existingCon: connection)
         if let gameHash = gameHash {
             if (!matchingHashes.contains(where: { $0.xxhash64 == gameHash})) {
                 throw Abort(.notFound, reason: "Hash \(gameHash). Not found in game id: \(gameMetaId)")
@@ -50,7 +50,7 @@ import GRDB
         hashIdListFromGameMeta = []
     }
     
-    let listSaves = try TblSave.fetchPaged(pageInfo, userId: userId, profileId: profileId, gameHashIdList: hashIdListFromGameMeta, existingCon: connection)
+    let listSaves = try Save.fetchPaged(pageInfo, userId: userId, profileId: profileId, gameHashIdList: hashIdListFromGameMeta, existingCon: connection)
     return listSaves
 }
 
@@ -66,7 +66,7 @@ import GRDB
     let connection = try Database.getConnection()
     let gameHashId:UUID?
     if let gameHash = gameHash {
-        let hashMap = try TBLGameHash.first(connection, hash: gameHash)
+        let hashMap = try GameHash.first(connection, hash: gameHash)
         guard let hashMap = hashMap else {
             throw Abort(.notFound, reason: "Can not find a game id that matches hash: \(gameHash)")
         }
@@ -78,7 +78,7 @@ import GRDB
     let hashIdListFromGameMeta:[UUID]
     if let gameMetaId = gameMetaId {
         //if (gameHash != nil) { throw Abort(.badRequest, reason: "Cant look up saves by both game hash and game id.") }
-        let matchingHashes = try TBLGameHash.fetchList(gameMetaId: gameMetaId, existingCon: connection)
+        let matchingHashes = try GameHash.fetchList(gameMetaId: gameMetaId, existingCon: connection)
         if let gameHash = gameHash {
             if (!matchingHashes.contains(where: { $0.xxhash64 == gameHash})) {
                 throw Abort(.notFound, reason: "Hash \(gameHash). Not found in game id: \(gameMetaId)")
@@ -91,7 +91,7 @@ import GRDB
         //TODO: Scary.. 
         hashIdListFromGameMeta = []
     }
-    try TblSave.deleteAll(userId: userId, profileId: profileId, gameHashIdList: hashIdListFromGameMeta, existingCon: connection)
+    try Save.deleteAll(userId: userId, profileId: profileId, gameHashIdList: hashIdListFromGameMeta, existingCon: connection)
 }
 
 //GET/DELETE /save/:save_id

@@ -9,12 +9,12 @@ import Foundation
 import GRDB
 
 public struct DBInfo : Sendable, Codable, FetchableRecord, PersistableRecord, TableRecord {
-    public let dateFormatterServer = DateFormatter().apply {
+    public static let dateFormatterServer = DateFormatter().apply {
         $0.locale = Locale(identifier: "en_US_POSIX")
         $0.dateFormat = "yyyy-MM-dd'T'HH:mm:ss.SSSZ"
     }
-    public static let databaseDateDecodingStrategy = DatabaseDateDecodingStrategy.formatted(dateFormatterServer)
-    public static let databaseDateEncodingStrategy = DatabaseDateEncodingStrategy.formatted(dateFormatterServer)
+    public static let databaseDateDecodingStrategy = DatabaseDateDecodingStrategy.formatted(Self.dateFormatterServer)
+    public static let databaseDateEncodingStrategy = DatabaseDateEncodingStrategy.formatted(Self.dateFormatterServer)
     
     public var id:UUID
     public var version:Int

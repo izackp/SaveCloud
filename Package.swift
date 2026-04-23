@@ -33,7 +33,10 @@ let package = Package(
                 .product(name: "CRLogging", package: "CRLogging")
             ],
             //resources: [ .copy("Public/style.css"), ],
-            swiftSettings: swiftSettings
+            swiftSettings: swiftSettings,
+            plugins: [
+                .plugin(name: "BindingPlugin", package: "HRW")
+            ]
         ),
         .testTarget(
             name: "AppTests",

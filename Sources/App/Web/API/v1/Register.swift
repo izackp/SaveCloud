@@ -54,20 +54,26 @@ struct ApiRegisterRequest: Content, IValidate {
     }
     
     let connection = try Database.getConnection()
-    let uniqueUsername = try connection.count(User.self, predicate: TblUser.username == contents.username) == 0
+    let uniqueUsername = try connection.unsafeReentrantWrite { db in
+        try User.filter(User.username == contents.username).fetchCount(db) == 0
+    }
     if (!uniqueUsername) {
         throw Abort(.badRequest, reason: "Username \(contents.username) already exists")
     }
-    let uniqueEmail = try connection.count(User.self, predicate: TblUser.email == contents.email) == 0
+    let uniqueEmail = try connection.unsafeReentrantWrite { db in
+        try User.filter(User.email == contents.email).fetchCount(db) == 0
+    }
     if (!uniqueEmail) {
         throw Abort(.badRequest, reason: "Email \(contents.username) is already in use")
     }
-    let numUsers = try connection.count(User.self)
+    let numUsers = try connection.unsafeReentrantWrite { db in
+        try User.fetchCount(db)
+    }
     let isAdmin = numUsers == 0
     let date = Date()
     let newUser = User(id: UUID.init(), username:contents.username, email: contents.email, passwordHash: encodedPassword, isAdmin: isAdmin, createdAt: date, updatedAt: date)
-    if let newUUID = try connection.insertWithRetry(User.self, item: newUser) {
-        newUser.id = newUUID
+    try connection.unsafeReentrantWrite { db in
+        try newUser.insert(db)
     }
 
     /*
