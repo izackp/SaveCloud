@@ -25,7 +25,7 @@ import Argon2Swift
     }
     
     let connection = try Database.getConnection()
-    guard let user = try connection.unsafeReentrantWrite({ db in
+    guard let user = try connection.read({ db in
         try User.filter(id: userId).fetchOne(db)
     }) else {
         throw Abort(.notFound)
@@ -89,14 +89,14 @@ final class PutUser: Content, IValidate {
     }
     
     let connection = try Database.getConnection()
-    guard let matchingUser = try connection.unsafeReentrantWrite({ db in
+    guard let matchingUser = try connection.read({ db in
         try User.filter(id: id).fetchOne(db)
     }) else {
         throw Abort(.notFound, reason: "User with id not found: \(id)")
     }
     var isDiff = false
     if let username = contents.username, (matchingUser.username != username) {
-        let uniqueUsername = try connection.unsafeReentrantWrite { db in
+        let uniqueUsername = try connection.read { db in
             try User
                 .filter(User.username == username && User.id != id)
                 .fetchCount(db) == 0
@@ -108,7 +108,7 @@ final class PutUser: Content, IValidate {
         isDiff = true
     }
     if let email = contents.email, (matchingUser.email != email) {
-        let uniqueEmail = try connection.unsafeReentrantWrite { db in
+        let uniqueEmail = try connection.read { db in
             try User
                 .filter(User.email == email && User.id != id)
                 .fetchCount(db) == 0
@@ -127,7 +127,7 @@ final class PutUser: Content, IValidate {
         return matchingUser.toPublicUser()
     }
     matchingUser.updatedAt = Date()
-    try connection.unsafeReentrantWrite { db in
+    try connection.write { db in
         try matchingUser.update(db)
     }
     
@@ -173,7 +173,7 @@ final class PasswordCheck: Content, IValidate {
     try contents.checkValdiation()
     
     let connection = try Database.getConnection()
-    guard let matchingUser = try connection.unsafeReentrantWrite({ db in
+    guard let matchingUser = try connection.read({ db in
         try User.filter(id: id).fetchOne(db)
     }) else {
         throw Abort(.notFound, reason: "User with id not found: \(id)")
@@ -184,7 +184,7 @@ final class PasswordCheck: Content, IValidate {
         throw Abort(.unauthorized, reason: "Incorrect password")
     }
     
-    try connection.unsafeReentrantWrite { db in
+    try connection.write { db in
         try db.inTransaction {
             try AuthSession.filter(AuthSession.user == id).deleteAll(db)
             try User.filter(id: id).deleteAll(db)

@@ -197,7 +197,7 @@ extension GameMeta {
     static let updatedAt = updated_at
 
     static func first(_ con: DatabasePool, uuid: UUID) throws -> GameMeta? {
-        try con.unsafeReentrantWrite { db in
+        try con.read { db in
             try GameMeta.filter(id: uuid).fetchOne(db)
         }
     }
@@ -254,7 +254,7 @@ extension GameMeta {
         }
 
         let con = try Database.getConnection(existingCon)
-        return try con.unsafeReentrantWrite { db in
+        return try con.read { db in
             try sorted
                 .limit(Int(pageInfo.perPage), offset: Int(pageInfo.perPage * pageInfo.page))
                 .fetchAll(db)
@@ -262,7 +262,7 @@ extension GameMeta {
     }
 
     static func replaceBaseGameId(_ con: DatabasePool, targetUUID: UUID, replaceWith: UUID?) throws {
-        try con.unsafeReentrantWrite { db in
+        try con.write { db in
             _ = try GameMeta
                 .filter(base_game_id == targetUUID)
                 .updateAll(db, base_game_id.set(to: replaceWith))

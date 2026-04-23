@@ -98,7 +98,7 @@ extension AuthSession {
     }
 
     static func first(_ con: DatabasePool, uuid: UUID) throws -> AuthSession? {
-        try con.unsafeReentrantWrite { db in
+        try con.read { db in
             try AuthSession.filter(id: uuid).fetchOne(db)
         }
     }

@@ -66,7 +66,7 @@ class VCChangePasswordForm : ChangePasswordForm {
     let salt = Salt.newSalt()
     let passwordHash = try Argon2Swift.hashPasswordString(password: contents.password, salt: salt).encodedString()
     
-    try connection.unsafeReentrantWrite { db in
+    try connection.write { db in
         _ = try User
             .filter(User.id == user.id)
             .updateAll(

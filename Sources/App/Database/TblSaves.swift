@@ -198,7 +198,7 @@ extension Save {
     static func fetchPaged(_ pageInfo: PageInfo<SaveSortField>, userId: UUID, profileId: UUID?, gameHashId: UUID?, existingCon: DatabasePool? = nil) throws -> [Save] {
         let con = try Database.getConnection(existingCon)
         let request = applySort(baseRequest(userId: userId, profileId: profileId, gameHashId: gameHashId), pageInfo: pageInfo)
-        return try con.unsafeReentrantWrite { db in
+        return try con.read { db in
             try request
                 .limit(Int(pageInfo.perPage), offset: Int(pageInfo.perPage * pageInfo.page))
                 .fetchAll(db)
@@ -208,7 +208,7 @@ extension Save {
     static func fetchPaged(_ pageInfo: PageInfo<SaveSortField>, userId: UUID, profileId: UUID?, gameHashIdList: [UUID], existingCon: DatabasePool? = nil) throws -> [Save] {
         let con = try Database.getConnection(existingCon)
         let request = applySort(baseRequest(userId: userId, profileId: profileId, gameHashIdList: gameHashIdList), pageInfo: pageInfo)
-        return try con.unsafeReentrantWrite { db in
+        return try con.read { db in
             try request
                 .limit(Int(pageInfo.perPage), offset: Int(pageInfo.perPage * pageInfo.page))
                 .fetchAll(db)
@@ -217,14 +217,14 @@ extension Save {
 
     static func deleteAll(userId: UUID, profileId: UUID?, gameHashIdList: [UUID], existingCon: DatabasePool? = nil) throws {
         let con = try Database.getConnection(existingCon)
-        try con.unsafeReentrantWrite { db in
+        try con.write { db in
             _ = try baseRequest(userId: userId, profileId: profileId, gameHashIdList: gameHashIdList).deleteAll(db)
         }
     }
 
     static func fetchAllGameIds(userId: UUID, profileId: UUID?, existingCon: DatabasePool? = nil) throws -> [UUID] {
         let con = try Database.getConnection(existingCon)
-        return try con.unsafeReentrantWrite { db in
+        return try con.read { db in
             try baseRequest(userId: userId, profileId: profileId, gameHashIdList: [])
                 .select(game_meta_id)
                 .fetchAll(db)

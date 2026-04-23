@@ -77,19 +77,19 @@ extension GameHash {
     static let updatedAt = updated_at
 
     static func first(_ con: DatabasePool, uuid: UUID) throws -> GameHash? {
-        try con.unsafeReentrantWrite { db in
+        try con.read { db in
             try GameHash.filter(id: uuid).fetchOne(db)
         }
     }
 
     static func first(_ con: DatabasePool, hash: String) throws -> GameHash? {
-        try con.unsafeReentrantWrite { db in
+        try con.read { db in
             try GameHash.filter(xxhash64 == hash).fetchOne(db)
         }
     }
 
     static func replaceGameMeta(_ con: DatabasePool, targetUUID: UUID, replaceWith: UUID?) throws {
-        try con.unsafeReentrantWrite { db in
+        try con.write { db in
             try db.inTransaction {
                 _ = try GameHash
                     .filter(game_meta_id == targetUUID)
@@ -105,7 +105,7 @@ extension GameHash {
 
     static func fetchList(gameMetaId: UUID, existingCon: DatabasePool? = nil) throws -> [GameHash] {
         let con = try Database.getConnection(existingCon)
-        return try con.unsafeReentrantWrite { db in
+        return try con.read { db in
             try GameHash.filter(game_meta_id == gameMetaId).fetchAll(db)
         }
     }

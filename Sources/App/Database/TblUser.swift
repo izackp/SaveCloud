@@ -130,7 +130,7 @@ final class User: Content, Codable, SQLItem {
 
 
     static func first(_ con: DatabasePool, emailOrUsername: String) throws -> User? {
-        try con.unsafeReentrantWrite { db in
+        try con.read { db in
             try User
                 .filter(username == emailOrUsername || email == emailOrUsername)
                 .fetchOne(db)
