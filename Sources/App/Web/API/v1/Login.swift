@@ -74,7 +74,7 @@ struct JWTClaims: Claims, Authenticatable {
     try contents.checkValdiation()
     
     let connection = try Database.getConnection()
-    guard let user = try User.first(connection, emailOrUsername: contents.emailOrUsername()) else {
+    guard let user = try await User.first(connection, emailOrUsername: contents.emailOrUsername()) else {
         throw Abort(.notFound, reason: "Username Or Email not found")
     }
     
@@ -93,7 +93,7 @@ struct JWTClaims: Claims, Authenticatable {
 @Sendable func apiLoginJWT(req: Request) async throws -> LoginPair {
     let user = try await apiLogin(req: req)
     let refreshToken = UUID()
-    let newSession = try createSession(req, user.id, user.isAdmin, 365 * 24 * 60 * 60, refreshToken)
+    let newSession = try await createSession(req, user.id, user.isAdmin, 365 * 24 * 60 * 60, refreshToken)
     
     let authToken = try generateJWT(userId: user.id, sessionId: newSession.id, refreshToken: refreshToken, admin: user.isAdmin)
     let result = LoginPair(token: authToken, user: user)
@@ -122,46 +122,46 @@ func generateJWT(userId: UUID, sessionId: UUID, refreshToken:UUID, admin: Bool) 
     let sessionId = jwt.claims.sessionId
     
     let connection = try Database.getConnection()
-    guard let session = try connection.read({ db in
+    guard let session = try await connection.read({ db in
         try AuthSession.filter(id: sessionId).fetchOne(db)
     }) else {
         throw Abort(.unauthorized)
     }
     if (session.refreshToken == nil) {
         //TODO: Log shananigans
-        try connection.write { db in
+        _ = try await connection.write { db in
             try AuthSession.filter(id: sessionId).deleteAll(db)
         }
         throw Abort(.unauthorized)
     }
     if (session.refreshToken != contents.refreshToken) {
         //TODO: Log shananigans
-        try connection.write { db in
+        _ = try await connection.write { db in
             try AuthSession.filter(id: sessionId).deleteAll(db)
         }
         throw Abort(.unauthorized)
     }
-    
+
     if (session.isExpired()) {
-        try connection.write { db in
+        _ = try await connection.write { db in
             try AuthSession.filter(id: sessionId).deleteAll(db)
         }
         throw Abort(.unauthorized)
     }
-    
-    guard let user = try connection.read({ db in
+
+    guard let user = try await connection.read({ db in
         try User.filter(id: session.user).fetchOne(db)
     }) else {
         //TODO: Log
         throw Abort(.notFound, reason: "User doesnt exist")
     }
-    
+
     let publicUser = user.toPublicUser()
     let newRefreshToken = UUID()
     let newToken = try generateJWT(userId: user.id, sessionId: sessionId, refreshToken: newRefreshToken, admin: user.isAdmin)
-    try connection.write { db in
+    try await connection.write { db in
         _ = try AuthSession
-            .filter(AuthSession.id == sessionId)
+            .filter(id: sessionId)
             .updateAll(
                 db,
                 AuthSession.refresh_token.set(to: newRefreshToken),

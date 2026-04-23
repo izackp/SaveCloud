@@ -9,8 +9,8 @@ import Foundation
 import Vapor
 import GRDB
 
-final class AuthSession: Content, Codable, SessionAuthenticatable, SQLItem {
-    public var sessionID: UUID { id }
+struct AuthSession: Content, Codable, SessionAuthenticatable, SQLItem, Identifiable, Sendable {
+    public var sessionID: SessionID { id }
     
     typealias SessionID = UUID
     
@@ -25,7 +25,7 @@ final class AuthSession: Content, Codable, SessionAuthenticatable, SQLItem {
     var updatedAt: Date
     var expiresAt: Date
     
-    public init(id: UUID, refreshToken: UUID?, user: UUID, deviceName: String? = nil, location: String? = nil, ipAddress:String, isAdmin: Bool, createdAt: Date, updatedAt: Date, expiresAt: Date) {
+    init(id: UUID, refreshToken: UUID?, user: UUID, deviceName: String? = nil, location: String? = nil, ipAddress:String, isAdmin: Bool, createdAt: Date, updatedAt: Date, expiresAt: Date) {
         self.id = id
         self.refreshToken = refreshToken
         self.user = user
@@ -97,8 +97,8 @@ extension AuthSession {
         }
     }
 
-    static func first(_ con: DatabasePool, uuid: UUID) throws -> AuthSession? {
-        try con.read { db in
+    static func first(_ con: DatabasePool, uuid: UUID) async throws -> AuthSession? {
+        try await con.read { db in
             try AuthSession.filter(id: uuid).fetchOne(db)
         }
     }

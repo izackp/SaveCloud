@@ -67,7 +67,9 @@ import GRDB
     }
     
     let connection = try Database.getConnection()
-    guard let result = try connection.first(GameMeta.self, uuid: gameId) else {
+    guard let result = try await connection.read({ db in
+        try GameMeta.filter(id: gameId).fetchOne(db)
+    }) else {
         throw Abort(.notFound)
     }
     return result
@@ -90,17 +92,23 @@ import GRDB
     contents.id = gameId
     
     let connection = try Database.getConnection()
-    guard let existing = try connection.first(GameMeta.self, uuid: gameId) else {
+    guard let existing = try await connection.read({ db in
+        try GameMeta.filter(id: gameId).fetchOne(db)
+    }) else {
         throw Abort(.notFound)
     }
     
     let date = Date()
-    let newGameMeta = contents.toGameMeta(date)
+    var newGameMeta = contents.toGameMeta(date)
     newGameMeta.id = existing.id
     newGameMeta.createdAt = existing.createdAt
+    let updatedGameMeta = newGameMeta
     
-    try connection.update(GameMeta.self, item: newGameMeta)
-    return newGameMeta
+    return try await connection.write { db in
+        let gameMeta = updatedGameMeta
+        try gameMeta.update(db)
+        return gameMeta
+    }
 }
 
 //POST /games
@@ -117,11 +125,13 @@ import GRDB
     let newGameMeta = contents.toGameMeta(date)
     
     let connection = try Database.getConnection()
-    try connection.insert(GameMeta.self, item: newGameMeta) //TODO: If UUID not provided by user, and the
-    //UUID already exists then we should retry with a new UUID
-    //TODO: Check if sqlite does this automatically
-    
-    return newGameMeta
+    return try await connection.write { db in
+        var gameMeta = newGameMeta
+        try gameMeta.insert(db)//TODO: If UUID not provided by user, and the
+        //UUID already exists then we should retry with a new UUID
+        //TODO: Check if sqlite does this automatically
+        return gameMeta
+    }
 }
 
 //DELETE /games/:game_id?replace_with_parent=1&allow_break=1
@@ -139,28 +149,28 @@ import GRDB
     let allowRelBreak = req.parameters.get("allow_break") == "1"
     
     let connection = try Database.getConnection()
-    try connection.transaction {
-        guard let target = try connection.first(GameMeta.self, uuid: gameId) else {
+    try await connection.write { db in
+        guard let target = try GameMeta.filter(id: gameId).fetchOne(db) else {
             throw Abort(.notFound)
         }
         let parentId = target.baseGameId
         if let parentId = parentId, replaceWithParent {
-            try GameHash.replaceGameMeta(connection, targetUUID: gameId, replaceWith: parentId)
-            try GameMeta.replaceBaseGameId(connection, targetUUID: gameId, replaceWith: parentId)
+            try GameHash.replaceGameMeta(db, targetUUID: gameId, replaceWith: parentId)
+            try GameMeta.replaceBaseGameId(db, targetUUID: gameId, replaceWith: parentId)
         } else if (allowRelBreak) {
-            try GameHash.replaceGameMeta(connection, targetUUID: gameId, replaceWith: nil)
-            try GameMeta.replaceBaseGameId(connection, targetUUID: gameId, replaceWith: nil)
+            try GameHash.replaceGameMeta(db, targetUUID: gameId, replaceWith: nil)
+            try GameMeta.replaceBaseGameId(db, targetUUID: gameId, replaceWith: nil)
         } else {
-            let hashCount = try connection.count(GameHash.self, predicate: GameHash.gameMetaId == gameId)
+            let hashCount = try GameHash.filter(GameHash.gameMetaId == gameId).fetchCount(db)
             if (hashCount > 0) {
                 throw Abort(.forbidden, reason: "There are game hashes that depend on this game meta.")
             }
             
-            let metaCount = try connection.count(GameMeta.self, predicate: GameMeta.baseGameId == gameId)
+            let metaCount = try GameMeta.filter(GameMeta.baseGameId == gameId).fetchCount(db)
             if (metaCount > 0) {
                 throw Abort(.forbidden, reason: "This game meta has other dependents as children.")
             }
-            try connection.delete(GameMeta.self, uuid: gameId)
+            try GameMeta.filter(id: gameId).deleteAll(db)
         }
     }
 }

@@ -65,7 +65,7 @@ final class PublicUser: Codable, Content, IValidate {
     }
 }
 
-final class User: Content, Codable, SQLItem {
+struct User: Content, Codable, SQLItem, Identifiable, Sendable {
 
     var id: UUID
     var username: String
@@ -75,7 +75,7 @@ final class User: Content, Codable, SQLItem {
     var createdAt: Date
     var updatedAt: Date
     
-    public init(id: UUID, username:String, email: String? = nil, passwordHash: String? = nil, isAdmin:Bool, createdAt: Date, updatedAt: Date) {
+    init(id: UUID, username:String, email: String? = nil, passwordHash: String? = nil, isAdmin:Bool, createdAt: Date, updatedAt: Date) {
         self.id = id
         self.username = username
         self.email = email
@@ -128,9 +128,8 @@ final class User: Content, Codable, SQLItem {
         }
     }
 
-
-    static func first(_ con: DatabasePool, emailOrUsername: String) throws -> User? {
-        try con.read { db in
+    static func first(_ con: DatabasePool, emailOrUsername: String) async throws -> User? {
+        try await con.read { db in
             try User
                 .filter(username == emailOrUsername || email == emailOrUsername)
                 .fetchOne(db)

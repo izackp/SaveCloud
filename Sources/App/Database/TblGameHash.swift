@@ -8,7 +8,7 @@
 import Vapor
 import GRDB
 
-final class GameHash: Content, Codable, SQLItem {
+final class GameHash: Content, Codable, SQLItem, Identifiable {
     internal init(id: UUID, gameMetaId: UUID? = nil, hashedFileName: String, xxhash64: String, createdAt: Date, updatedAt: Date) {
         self.id = id
         self.gameMetaId = gameMetaId
@@ -60,14 +60,6 @@ final class GameHash: Content, Codable, SQLItem {
         }
     }
 
-    init(row: Row) {
-        id = row[Self.id]
-        gameMetaId = row[Self.game_meta_id]
-        hashedFileName = row[Self.hashed_file_name]
-        xxhash64 = row[Self.xxhash64]
-        createdAt = row[Self.created_at]
-        updatedAt = row[Self.updated_at]
-    }
 }
 
 extension GameHash {
@@ -75,6 +67,16 @@ extension GameHash {
     static let hashedFileName = hashed_file_name
     static let createdAt = created_at
     static let updatedAt = updated_at
+
+    static func replaceGameMeta(_ db: GRDB.Database, targetUUID: UUID, replaceWith: UUID?) throws {
+        _ = try GameHash
+            .filter(GameHash.gameMetaId == targetUUID)
+            .updateAll(db, GameHash.gameMetaId.set(to: replaceWith))
+
+        _ = try Save
+            .filter(Save.gameMetaId == targetUUID)
+            .updateAll(db, Save.gameMetaId.set(to: replaceWith))
+    }
 
     static func first(_ con: DatabasePool, uuid: UUID) throws -> GameHash? {
         try con.read { db in
@@ -90,16 +92,7 @@ extension GameHash {
 
     static func replaceGameMeta(_ con: DatabasePool, targetUUID: UUID, replaceWith: UUID?) throws {
         try con.write { db in
-            try db.inTransaction {
-                _ = try GameHash
-                    .filter(game_meta_id == targetUUID)
-                    .updateAll(db, game_meta_id.set(to: replaceWith))
-
-                _ = try Save
-                    .filter(Save.gameMetaId == targetUUID)
-                    .updateAll(db, Save.gameMetaId.set(to: replaceWith))
-                return .commit
-            }
+            try replaceGameMeta(db, targetUUID: targetUUID, replaceWith: replaceWith)
         }
     }
 

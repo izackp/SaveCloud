@@ -78,7 +78,7 @@ final class GameMetaCreate: Content, IValidate {
     }
 }
 
-final class GameMeta: Content, Codable, SQLItem {
+struct GameMeta: Content, Codable, SQLItem, Identifiable, Sendable {
     internal init(id: UUID, familyId: UUID? = nil, baseGameId: UUID? = nil, hashedFileName: String? = nil, xxhash64: String? = nil, name: String, version: String? = nil, breaksSaveFormatFromPreviousVersion: Bool, breaksSaveFormatFromBaseGame: Bool, createdAt: Date, updatedAt: Date) {
         self.id = id
         self.familyId = familyId
@@ -172,22 +172,15 @@ final class GameMeta: Content, Codable, SQLItem {
         container[Self.updated_at] = updatedAt
     }
 
-    init(row: Row) {
-        id = row[Self.id]
-        familyId = row[Self.family_id]
-        baseGameId = row[Self.base_game_id]
-        hashedFileName = row[Self.hashed_file_name]
-        xxhash64 = row[Self.xxhash64]
-        name = row[Self.name]
-        version = row[Self.version]
-        breaksSaveFormatFromPreviousVersion = row[Self.breaks_save_format_from_previous_version]
-        breaksSaveFormatFromBaseGame = row[Self.breaks_save_format_from_base_game]
-        createdAt = row[Self.created_at]
-        updatedAt = row[Self.updated_at]
-    }
 }
 
 extension GameMeta {
+    static func replaceBaseGameId(_ db: GRDB.Database, targetUUID: UUID, replaceWith: UUID?) throws {
+        _ = try GameMeta
+            .filter(GameMeta.baseGameId == targetUUID)
+            .updateAll(db, GameMeta.baseGameId.set(to: replaceWith))
+    }
+
     static let familyId = family_id
     static let baseGameId = base_game_id
     static let hashedFileName = hashed_file_name
@@ -263,9 +256,7 @@ extension GameMeta {
 
     static func replaceBaseGameId(_ con: DatabasePool, targetUUID: UUID, replaceWith: UUID?) throws {
         try con.write { db in
-            _ = try GameMeta
-                .filter(base_game_id == targetUUID)
-                .updateAll(db, base_game_id.set(to: replaceWith))
+            try replaceBaseGameId(db, targetUUID: targetUUID, replaceWith: replaceWith)
         }
     }
 }

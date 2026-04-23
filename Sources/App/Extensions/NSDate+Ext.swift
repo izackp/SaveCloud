@@ -27,15 +27,15 @@ public extension DateFormatter {
 
 public extension Date {
     
-    public func toString() -> String {
+    func toString() -> String {
         return toStringMainThread()
     }
     
-    public func toStringMainThread() -> String {
+    func toStringMainThread() -> String {
         return formatter.string(from: self)
     }
     
-    public func toStringThreadSafe() -> String {
+    func toStringThreadSafe() -> String {
         let safeFormatter = DateFormatter().apply {
             $0.locale = Locale(identifier: "en_US_POSIX")
             $0.dateFormat = "yyyy-MM-dd'T'HH:mm:ss.SSSZ"
@@ -45,20 +45,20 @@ public extension Date {
 }
 
 public extension String {
-    public func toDate() -> Date? {
+    func toDate() -> Date? {
         return toDateMainThread()
     }
     
-    public func toDateBackup() -> Date? {
+    func toDateBackup() -> Date? {
         return toDateBackupMainThread()
     }
     
-    public func toDateBackupMainThread() -> Date? {
+    func toDateBackupMainThread() -> Date? {
         let spacesInsteadOfT = self.replacingOccurrences(of: " ", with: "T")
         return formatterBackup.date(from: spacesInsteadOfT)
     }
     
-    public func toDateMainThread() -> Date? {
+    func toDateMainThread() -> Date? {
         return formatter.date(from: self)
     }
     /* Sometimes returns null...
@@ -70,7 +70,7 @@ public extension String {
         return safeFormatter.date(from: self)
     }*/
     
-    public func expectDate() throws -> Date {
+    func expectDate() throws -> Date {
         if let result = toDate() {
             return result
         }

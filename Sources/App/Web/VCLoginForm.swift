@@ -39,7 +39,7 @@ struct LoginRequest: Content {
     }
     
     let connection = try Database.getConnection()
-    guard let user = try User.first(connection, emailOrUsername: loginRequest.email_or_username) else {
+    guard let user = try await User.first(connection, emailOrUsername: loginRequest.email_or_username) else {
         return try VCWelcomePage(users: [], error: "Username Or Email not found").rootNode.response()
     }
     
@@ -47,7 +47,7 @@ struct LoginRequest: Content {
     if (!verified) {
         return try VCWelcomePage(users: [], error: "Incorrect password").rootNode.response()
     }
-    let newSession = try createSession(req, user.id, user.isAdmin, hours24, UUID.init(), connection)
+    let newSession = try await createSession(req, user.id, user.isAdmin, hours24, UUID.init(), connection)
     req.session.authenticate(newSession)
     //req.auth.login(user)
     

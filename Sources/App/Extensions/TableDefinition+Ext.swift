@@ -10,12 +10,12 @@ import GRDB
 public extension TableDefinition {
     
     @discardableResult
-    public func column(_ col: Column, _ type: GRDB.Database.ColumnType? = nil) -> ColumnDefinition {
+    func column(_ col: Column, _ type: GRDB.Database.ColumnType? = nil) -> ColumnDefinition {
         return self.column(col.name, type)
     }
     
     @discardableResult
-    public func column(_ col: CodingKey, _ type: GRDB.Database.ColumnType? = nil) -> ColumnDefinition {
+    func column(_ col: CodingKey, _ type: GRDB.Database.ColumnType? = nil) -> ColumnDefinition {
         return self.column(col.stringValue, type)
     }
 }

@@ -24,7 +24,7 @@
 import GRDB
 import Vapor
 
-final class Save: Content, Codable, SQLItem {
+struct Save: Content, Codable, SQLItem, Identifiable, Sendable {
     internal init(id: UUID, gameHashId: UUID, gameMetaId: UUID?, sequentialId: UUID, profileId: UUID, userId: UUID, url: String, fileSize: Int, sourceDevice: String? = nil, screenshot: Data? = nil, name: String? = nil, date: Date? = nil, createdAt: Date, updatedAt: Date) {
         self.id = id
         self.gameHashId = gameHashId
@@ -116,22 +116,6 @@ final class Save: Content, Codable, SQLItem {
         }
     }
 
-    init(row: Row) {
-        id = row[Self.id]
-        gameHashId = row[Self.game_hash_id]
-        gameMetaId = row[Self.game_meta_id]
-        sequentialId = row[Self.sequential_id]
-        profileId = row[Self.profile_id]
-        userId = row[Self.user_id]
-        url = row[Self.url]
-        fileSize = row[Self.file_size]
-        sourceDevice = row[Self.source_device]
-        screenshot = row[Self.screenshot]
-        name = row[Self.name]
-        date = row[Self.date]
-        createdAt = row[Self.created_at]
-        updatedAt = row[Self.updated_at]
-    }
 }
 
 extension Save {

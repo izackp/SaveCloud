@@ -16,10 +16,14 @@ import Argon2Swift
     let userId:UUID = try req.expectValidUserId()
     
     let connection = try Database.getConnection()
-    guard let user = try connection.first(User.self, uuid: userId) else {
+    guard let user = try await connection.read({ db in
+        try User.filter(id: userId).fetchOne(db)
+    }) else {
         throw Abort(.notFound)
     }
-    let profileList = try connection.fetchAll(UserProfile.self, predicate: UserProfile.user_id == user.id)
+    let profileList = try await connection.read { db in
+        try UserProfile.filter(UserProfile.user_id == user.id).fetchAll(db)
+    }
     return profileList
 }
 
@@ -96,27 +100,30 @@ final class PostUserProfile: Content, IValidate {
         throw Abort(.unauthorized, reason: "Cannot create a profile for another user.")
     }
     
-    let id:UUID
-    let userDefinedId:Bool
-    if let profileId = contents.id {
-        id = profileId
-        userDefinedId = true
-    } else {
-        id = UUID.init()
-        userDefinedId = false
-    }
+    let userDefinedId = contents.id != nil
+    let id = contents.id ?? UUID()
     let date = Date()
-    var userProfile = UserProfile(id: id, userId: userId, name: contents.name, createdAt: date, updatedAt: date)
+    let userProfile = UserProfile(id: id, userId: userId, name: contents.name, createdAt: date, updatedAt: date)
     let connection = try Database.getConnection()
-    if (userDefinedId) {
-        try connection.insert(UserProfile.self, item: userProfile)
-    } else {
-        if let newUUID = try connection.insertWithRetry(UserProfile.self, item: userProfile) {
-            userProfile.id = newUUID
+    return try await connection.write { db in
+        var profile = userProfile
+        if userDefinedId {
+            try profile.insert(db)
+            return profile
         }
+
+        for attempt in 0..<5 {
+            do {
+                try profile.insert(db)
+                return profile
+            } catch let error as DatabaseError where error.resultCode == .SQLITE_CONSTRAINT && attempt < 4 {
+                profile.id = UUID()
+            }
+        }
+
+        try profile.insert(db)
+        return profile
     }
-    
-    return userProfile
 }
 
 //PUT /user/:user_id/profile/:profile_id
@@ -132,7 +139,9 @@ final class PostUserProfile: Content, IValidate {
     }
     
     let connection = try Database.getConnection()
-    guard let matchingUserProfile = try connection.first(UserProfile.self, uuid: profileId) else {
+    guard var matchingUserProfile = try await connection.read({ db in
+        try UserProfile.filter(id: profileId).fetchOne(db)
+    }) else {
         throw Abort(.notFound, reason: "Profile with id not found: \(profileId)")
     }
     
@@ -142,9 +151,12 @@ final class PostUserProfile: Content, IValidate {
     }
     matchingUserProfile.updatedAt = Date()
     matchingUserProfile.name = contents.name
-    try connection.update(UserProfile.self, item: matchingUserProfile)
-    
-    return matchingUserProfile
+    let updatedProfile = matchingUserProfile
+    return try await connection.write { db in
+        let profile = updatedProfile
+        try profile.update(db)
+        return profile
+    }
 }
 
 @Sendable func apiDELETEUserProfile(req: Request) async throws {
@@ -162,7 +174,9 @@ final class PostUserProfile: Content, IValidate {
     }
     
     let connection = try Database.getConnection()
-    guard let matchingUserProfile = try connection.first(UserProfile.self, uuid: profileId) else {
+    guard let matchingUserProfile = try await connection.read({ db in
+        try UserProfile.filter(id: profileId).fetchOne(db)
+    }) else {
         throw Abort(.notFound, reason: "Profile with id not found: \(profileId)")
     }
     
@@ -170,12 +184,12 @@ final class PostUserProfile: Content, IValidate {
     if (!allowed) {
         throw Abort(.unauthorized, reason: "You don't have permission to edit this user.")
     }
-    try connection.transaction {
-        let firstSave = try connection.first(Save.self, predicate: Save.profileId == profileId)
+    try await connection.write { db in
+        let firstSave = try Save.filter(Save.profileId == profileId).fetchOne(db)
         if (firstSave != nil) {
             throw Abort(.badRequest, reason: "Can not delete profile that contains save data.")
         }
         
-        try connection.delete(UserProfile.self, uuid: profileId)
+        try UserProfile.filter(id: profileId).deleteAll(db)
     }
 }

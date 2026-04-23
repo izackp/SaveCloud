@@ -54,26 +54,27 @@ struct ApiRegisterRequest: Content, IValidate {
     }
     
     let connection = try Database.getConnection()
-    let uniqueUsername = try connection.read { db in
+    let uniqueUsername = try await connection.read { db in
         try User.filter(User.username == contents.username).fetchCount(db) == 0
     }
     if (!uniqueUsername) {
         throw Abort(.badRequest, reason: "Username \(contents.username) already exists")
     }
-    let uniqueEmail = try connection.read { db in
+    let uniqueEmail = try await connection.read { db in
         try User.filter(User.email == contents.email).fetchCount(db) == 0
     }
     if (!uniqueEmail) {
         throw Abort(.badRequest, reason: "Email \(contents.username) is already in use")
     }
-    let numUsers = try connection.read { db in
+    let numUsers = try await connection.read { db in
         try User.fetchCount(db)
     }
     let isAdmin = numUsers == 0
     let date = Date()
-    let newUser = User(id: UUID.init(), username:contents.username, email: contents.email, passwordHash: encodedPassword, isAdmin: isAdmin, createdAt: date, updatedAt: date)
-    try connection.write { db in
-        try newUser.insert(db)
+    let newUser = try await connection.write { db in
+        var user = User(id: UUID.init(), username:contents.username, email: contents.email, passwordHash: encodedPassword, isAdmin: isAdmin, createdAt: date, updatedAt: date)
+        try user.insert(db)
+        return user
     }
 
     /*

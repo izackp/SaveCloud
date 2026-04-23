@@ -57,14 +57,19 @@ class VCRegistrationForm : RegistrationForm {
     
     let salt = Salt.newSalt()
     let passwordHash = try Argon2Swift.hashPasswordString(password: contents.password, salt: salt)
+    let encodedPassword = passwordHash.encodedString()
     
     let connection = try Database.getConnection()
-    let numUsers = try connection.count(User.self)
+    let numUsers = try await connection.read { db in
+        try User.fetchCount(db)
+    }
     let isAdmin = numUsers == 0
     let date = Date()
-    let newUser = User(id: UUID.init(), username:contents.username, email: contents.email, passwordHash: passwordHash.encodedString(), isAdmin: isAdmin, createdAt: date, updatedAt: date)
-    
-    try connection.insert(User.self, item: newUser)
+    let newUser = try await connection.write { db in
+        var user = User(id: UUID.init(), username:contents.username, email: contents.email, passwordHash: encodedPassword, isAdmin: isAdmin, createdAt: date, updatedAt: date)
+        try user.insert(db)
+        return user
+    }
     
     //TODO: Build with SEC-CH-UA-PLATFORM etc
     let userAgent = req.headers.first(name: .userAgent)
@@ -73,8 +78,11 @@ class VCRegistrationForm : RegistrationForm {
     //TODO: Odd if empty
     
     let expirationDate = date.advanced(by: 24 * 60 * 60)
-    let newSession = AuthSession(id: UUID.init(), refreshToken: UUID.init(), user: newUser.id, deviceName: userAgent, location: nil, ipAddress: ipAddress, isAdmin: isAdmin, createdAt: date, updatedAt: date, expiresAt: expirationDate)
-    try connection.insert(AuthSession.self, item: newSession)
+    let newSession = try await connection.write { db in
+        var session = AuthSession(id: UUID.init(), refreshToken: UUID.init(), user: newUser.id, deviceName: userAgent, location: nil, ipAddress: ipAddress, isAdmin: isAdmin, createdAt: date, updatedAt: date, expiresAt: expirationDate)
+        try session.insert(db)
+        return session
+    }
     
     req.session.authenticate(newSession)
     

@@ -102,7 +102,9 @@ import GRDB
     }
     
     let connection = try Database.getConnection()
-    guard let result = try connection.first(Save.self, uuid: saveId) else {
+    guard let result = try await connection.read({ db in
+        try Save.filter(id: saveId).fetchOne(db)
+    }) else {
         throw Abort(.notFound)
     }
     if (result.userId != userId && !isAdmin) {
@@ -114,7 +116,9 @@ import GRDB
 @Sendable func apiDELETESave(req: Request) async throws {
     let save = try await apiGETSave(req: req)
     let connection = try Database.getConnection()
-    try connection.delete(Save.self, uuid: save.id)
+    _ = try await connection.write { db in
+        try Save.filter(id: save.id).deleteAll(db)
+    }
 }
 /*
 @Sendable func upload(req: Request) throws {

@@ -20,13 +20,15 @@ func internalError() -> Html {
 
 func routes(_ app: Application) throws {
     app.get { req async throws in
-        let session = try? req.fetchSession() //TODO: Log error
+        let session = try? await req.fetchSession() //TODO: Log error
         if let session = session {
             return try VCHomePage(isAdmin: session.isAdmin).rootNode
         } else {
             do {
                 let connection = try Database.getConnection()
-                let users = try connection.fetchAll(User.self)
+                let users = try await connection.read { db in
+                    try User.fetchAll(db)
+                }
                 return try VCWelcomePage(users: users, error: nil).rootNode
             } catch {
                 
@@ -79,8 +81,10 @@ func routes(_ app: Application) throws {
     userSessGroup.get("user", "edit") { req async throws in
         let connection = try Database.getConnection()
         guard
-            let session = try req.fetchSession(),
-            let user = try connection.first(User.self, uuid:session.user) else {//TODO: Log error
+            let session = try await req.fetchSession(),
+            let user = try await connection.read({ db in
+                try User.filter(id: session.user).fetchOne(db)
+            }) else {//TODO: Log error
             return try VCWelcomePage(users: [], error:"Session doesn't exist").rootNode.response()
         }
         return try VCEditUserPage(user: user, userEditError: nil, passwordEditError: nil).rootNode.response()
@@ -95,4 +99,3 @@ func signOut(
     req.session.unauthenticate(AuthenticatedUser.self)
     return req.redirect(to: "/")
 }
-

@@ -25,7 +25,7 @@ import Argon2Swift
     }
     
     let connection = try Database.getConnection()
-    guard let user = try connection.read({ db in
+    guard let user = try await connection.read({ db in
         try User.filter(id: userId).fetchOne(db)
     }) else {
         throw Abort(.notFound)
@@ -89,14 +89,14 @@ final class PutUser: Content, IValidate {
     }
     
     let connection = try Database.getConnection()
-    guard let matchingUser = try connection.read({ db in
+    guard var matchingUser = try await connection.read({ db in
         try User.filter(id: id).fetchOne(db)
     }) else {
         throw Abort(.notFound, reason: "User with id not found: \(id)")
     }
     var isDiff = false
     if let username = contents.username, (matchingUser.username != username) {
-        let uniqueUsername = try connection.read { db in
+        let uniqueUsername = try await connection.read { db in
             try User
                 .filter(User.username == username && User.id != id)
                 .fetchCount(db) == 0
@@ -108,7 +108,7 @@ final class PutUser: Content, IValidate {
         isDiff = true
     }
     if let email = contents.email, (matchingUser.email != email) {
-        let uniqueEmail = try connection.read { db in
+        let uniqueEmail = try await connection.read { db in
             try User
                 .filter(User.email == email && User.id != id)
                 .fetchCount(db) == 0
@@ -127,11 +127,14 @@ final class PutUser: Content, IValidate {
         return matchingUser.toPublicUser()
     }
     matchingUser.updatedAt = Date()
-    try connection.write { db in
-        try matchingUser.update(db)
+    let updatedUser = matchingUser
+    let savedUser = try await connection.write { db in
+        let user = updatedUser
+        try user.update(db)
+        return user
     }
     
-    return matchingUser.toPublicUser()
+    return savedUser.toPublicUser()
 }
 
 final class PasswordCheck: Content, IValidate {
@@ -173,7 +176,7 @@ final class PasswordCheck: Content, IValidate {
     try contents.checkValdiation()
     
     let connection = try Database.getConnection()
-    guard let matchingUser = try connection.read({ db in
+    guard let matchingUser = try await connection.read({ db in
         try User.filter(id: id).fetchOne(db)
     }) else {
         throw Abort(.notFound, reason: "User with id not found: \(id)")
@@ -184,12 +187,9 @@ final class PasswordCheck: Content, IValidate {
         throw Abort(.unauthorized, reason: "Incorrect password")
     }
     
-    try connection.write { db in
-        try db.inTransaction {
-            try AuthSession.filter(AuthSession.user == id).deleteAll(db)
-            try User.filter(id: id).deleteAll(db)
-            return .commit
-        }
+    try await connection.write { db in
+        try AuthSession.filter(AuthSession.user == id).deleteAll(db)
+        try User.filter(id: id).deleteAll(db)
         //TODO: Need to also delete saves, profiles, hashes
     }
     

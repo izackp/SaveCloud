@@ -42,8 +42,10 @@ class VCChangePasswordForm : ChangePasswordForm {
     let connection = try Database.getConnection()
     //let app = req.application
     guard
-        let session = try req.fetchSession(),
-        let user = try connection.first(User.self, uuid:session.user) else {
+        let session = try await req.fetchSession(),
+        let user = try await connection.read({ db in
+            try User.filter(id: session.user).fetchOne(db)
+        }) else {
         return try VCWelcomePage(users: [], error:"Session doesn't exist").rootNode.response()
     }
     
@@ -66,9 +68,9 @@ class VCChangePasswordForm : ChangePasswordForm {
     let salt = Salt.newSalt()
     let passwordHash = try Argon2Swift.hashPasswordString(password: contents.password, salt: salt).encodedString()
     
-    try connection.write { db in
+    try await connection.write { db in
         _ = try User
-            .filter(User.id == user.id)
+            .filter(id: user.id)
             .updateAll(
                 db,
                 User.password_hash.set(to: passwordHash),

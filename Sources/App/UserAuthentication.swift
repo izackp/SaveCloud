@@ -37,7 +37,7 @@ struct UserSessionAuthenticator: AsyncSessionAuthenticator {
     ) async throws {
         
         let connection = try Database.getConnection()
-        guard let session = try AuthSession.first(connection, uuid: sessionID) else {
+        guard let session = try await AuthSession.first(connection, uuid: sessionID) else {
             return
         }
         //req.auth.login(session)
@@ -69,7 +69,7 @@ struct UserCredentialsAuthenticator: AsyncCredentialsAuthenticator {
         try credentials.validate()
         
         let connection = try Database.getConnection()
-        guard let user = try User.first(connection, emailOrUsername: credentials.email_or_username) else {
+        guard let user = try await User.first(connection, emailOrUsername: credentials.email_or_username) else {
             throw Abort(.notFound)
         }
         
@@ -78,7 +78,7 @@ struct UserCredentialsAuthenticator: AsyncCredentialsAuthenticator {
             throw Abort(.unauthorized) //AppError("Wrong Password") {"reason":"App.AppError","error":true}
         }
         let hours24:TimeInterval = 24 * 60 * 60
-        let newSession = try createSession(req, user.id, user.isAdmin, hours24, nil, connection)
+        let newSession = try await createSession(req, user.id, user.isAdmin, hours24, nil, connection)
         
         req.session.authenticate(newSession)
     }
@@ -86,12 +86,12 @@ struct UserCredentialsAuthenticator: AsyncCredentialsAuthenticator {
 
 public let hours24:TimeInterval = 24 * 60 * 60
 
-func createSession(_ req: Request, _ userId:UUID, _ isAdmin:Bool, _ expiresIn:TimeInterval = hours24, _ refreshToken:UUID?) throws -> AuthSession {
+func createSession(_ req: Request, _ userId:UUID, _ isAdmin:Bool, _ expiresIn:TimeInterval = hours24, _ refreshToken:UUID?) async throws -> AuthSession {
     let connection = try Database.getConnection()
-    return try createSession(req, userId, isAdmin, expiresIn, refreshToken, connection)
+    return try await createSession(req, userId, isAdmin, expiresIn, refreshToken, connection)
 }
 
-func createSession(_ req: Request, _ userId:UUID, _ isAdmin:Bool, _ expiresIn:TimeInterval = hours24, _ refreshToken:UUID?, _ connection:DatabasePool) throws -> AuthSession {
+func createSession(_ req: Request, _ userId:UUID, _ isAdmin:Bool, _ expiresIn:TimeInterval = hours24, _ refreshToken:UUID?, _ connection:DatabasePool) async throws -> AuthSession {
     //TODO: Build with SEC-CH-UA-PLATFORM etc
     let userAgent = req.headers.first(name: .userAgent)
     //TODO: Add ip address field
@@ -100,6 +100,9 @@ func createSession(_ req: Request, _ userId:UUID, _ isAdmin:Bool, _ expiresIn:Ti
     let date = Date()
     let expirationDate:Date = date.advanced(by: expiresIn)
     let newSession = AuthSession(id: UUID.init(), refreshToken: refreshToken, user: userId, deviceName: userAgent, location: nil, ipAddress: ipAddress, isAdmin: isAdmin, createdAt: date, updatedAt: date, expiresAt: expirationDate)
-    try connection.insert(AuthSession.self, item: newSession)
-    return newSession
+    return try await connection.write { db in
+        var session = newSession
+        try session.insert(db)
+        return session
+    }
 }
