@@ -1,15 +1,21 @@
 //
-//  File.swift
-//  
+//  UserProfile.swift
+//
 //
 //  Created by Isaac Paul on 6/28/24.
 //
 
-import SQLite
+import GRDB
 import Vapor
 
-final class UserProfile: Content, SQLItem {
-    internal init(id: UUID, userId: UUID, name: String, createdAt: Date, updatedAt: Date) {
+final class UserProfile : Codable, Content, SQLItem {
+    var id: UUID
+    var userId: UUID
+    var name: String
+    var createdAt: Date
+    var updatedAt: Date
+    
+    public init(id: UUID, userId: UUID, name: String, createdAt: Date, updatedAt: Date) {
         self.id = id
         self.userId = userId
         self.name = name
@@ -17,69 +23,48 @@ final class UserProfile: Content, SQLItem {
         self.updatedAt = updatedAt
     }
     
-    static func getTable() -> SQLite.Table {
-        return TblUserProfile.table
+    enum CodingKeys: String, CodingKey {
+        case id
+        case userId = "user_id"
+        case name
+        case createdAt = "created_at"
+        case updatedAt = "updated_at"
     }
-    
-    static func upsertConflictColumn() -> SQLite.Expressible {
-        return TblUserProfile.id
-    }
-    
-    static func toItem(_ row: SQLite.Row) throws -> UserProfile {
-        return try TblUserProfile.toItem(row)
-    }
-    
-    static func toItemFull(_ con: SQLite.Connection, _ row: SQLite.Row) throws -> UserProfile {
-        return try TblUserProfile.toItem(row)
-    }
-    
-    func toRow() -> [SQLite.Setter] {
-        TblUserProfile.toRow(self)
-    }
-    
-    var id: UUID
-    var userId: UUID
-    var name: String
-    var createdAt: Date
-    var updatedAt: Date
 }
 
-class TblUserProfile {
-    nonisolated(unsafe) static let table = Table("user_profile")
+extension UserProfile {
+    //MARK: - DATABASE
+    static var databaseTableName: String { get {
+        return "user_profile"
+    } }
     
-    nonisolated(unsafe) static let id = Connection.id
-    nonisolated(unsafe) static let userId = Expression<UUID>("user_id")
-    nonisolated(unsafe) static let name = Expression<String>("name")
-    nonisolated(unsafe) static let createdAt = Expression<Date>("created_at")
-    nonisolated(unsafe) static let updatedAt = Connection.updatedAt
+    static let id            = Column(UserProfile.CodingKeys.id)
+    static let user_id       = Column(UserProfile.CodingKeys.userId)
+    static let name          = Column(UserProfile.CodingKeys.name)
+    static let created_at    = Column(UserProfile.CodingKeys.createdAt)
+    static let updated_at    = Column(UserProfile.CodingKeys.updatedAt)
     
-    static func createQuery() -> String {
-        return table.create(ifNotExists: true) { t in
-            t.column(id, primaryKey: true)
-            t.column(userId)
-            t.column(name)
-            t.column(createdAt)
-            t.column(updatedAt)
+    static func createTable(db: GRDB.Database) throws {
+        if (try db.tableExists(databaseTableName)) {
+            return
+        }
+        
+        try db.create(table: databaseTableName) { t in
+            t.column(id,            .blob).primaryKey()
+            t.column(user_id,       .blob).notNull()
+            t.column(name,          .text).notNull()
+            t.column(created_at,    .date).notNull()
+            t.column(updated_at,    .date).notNull()
         }
     }
-    
-    static func toItem(_ row:Row) throws -> UserProfile {
-        let result = UserProfile(
-            id: try row.get(id),
-            userId: try row.get(userId),
-            name: try row.get(name),
-            createdAt: try row.get(createdAt),
-            updatedAt: try row.get(updatedAt))
-        return result
-    }
-    
-    static func toRow(_ item:UserProfile) -> [SQLite.Setter] {
-        return [self.id <- item.id,
-                self.userId <- item.userId,
-                self.name <- item.name,
-                self.createdAt <- item.createdAt,
-                self.updatedAt <- item.updatedAt]
+
+    init(row: Row) {
+        id = row[Self.id]
+        userId = row[Self.user_id]
+        name = row[Self.name]
+        createdAt = row[Self.created_at]
+        updatedAt = row[Self.updated_at]
     }
 }
 
-
+typealias TblUserProfile = UserProfile

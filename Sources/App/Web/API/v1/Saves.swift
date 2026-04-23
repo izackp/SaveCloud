@@ -6,7 +6,7 @@
 //
 
 import Vapor
-import SQLite
+import GRDB
 
 /*
  There is a bit of an issue with hashes.

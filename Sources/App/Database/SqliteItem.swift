@@ -1,260 +1,141 @@
 //
 //  SQLItem.swift
-//  
+//
 //
 //  Created by Isaac Paul on 5/10/24.
 //
 
 import Foundation
-@preconcurrency import SQLite
+import GRDB
 
-protocol SQLItem {
-    //associatedtype IdType:Value = UInt64 where IdType.Datatype : Equatable
-    var id:UUID {
-        get
-    }
-    
-    var updatedAt:Date {
-        get
-    }
-    
-    static func getTable() -> Table
-    static func upsertConflictColumn() -> Expressible
-    static func toItem(_ row:Row) throws -> Self
-    static func toItemFull(_ con:Connection, _ row:Row) throws -> Self
-    
-    func toRow() -> [Setter]
+protocol SQLItem: FetchableRecord, MutablePersistableRecord, TableRecord {
+    var id: UUID { get set }
+    var updatedAt: Date { get }
 }
 
-extension ExpressionType {
-    public func order(asc:Bool) -> Expressible {
-        if (asc) {
-            return self.asc
-        } else {
-            return self.desc
+extension DatabasePool {
+    func insert<T>(_ type: T.Type, item: T) throws where T: SQLItem {
+        try unsafeReentrantWrite { db in
+            var item = item
+            try item.insert(db)
         }
     }
-}
 
-extension Connection {
-    
-    //static let unique_id = SQLite.Expression<Int64>("unique_id")
-    
-    func fetchAll<T>(_ type: T.Type) throws -> [T] where T : SQLItem {
-        let table = type.getTable()
-        let rowIterator = try self.prepareRowIterator(table)
-        let list:[T] = try rowIterator.map({ return try type.toItemFull(self, $0) })
-        return list
-    }
-    
-    func delete<T>(_ type: T.Type, item:T) throws where T : SQLItem {
-        try delete(type, uuid: item.id)
-    }
-    /*
-    func first<T>(_ type: T.Type, uniqueId:Int64) throws -> T? where T : SQLItem {
-        let table = type.getTable()
-        let filter = table.filter(Connection.unique_id == uniqueId)
-        if let row = try self.pluck(filter) {
-            return try type.toItemFull(self, row)
-        }
-        return nil
-    }
-    
-    func delete<T>(_ type: T.Type, uniqueId:Int64) throws where T : SQLItem {
-        let table = type.getTable()
-        let filter = table.filter(Connection.unique_id == uniqueId)
-        let query = filter.delete()
-        try self.run(query)
-    }
-    
-    func updateField<T>(_ type: T.Type, uniqueId:Int64, setter:Setter) throws where T : SQLItem {
-        let table = type.getTable()
-        let filter = table.filter(Connection.unique_id == uniqueId)
-        let query = filter.update(setter)
-        try self.run(query)
-    }*/
-    
-    //update, upsert, and insert doesn't support sub-objects..
-    func update<T>(_ type: T.Type, item:T) throws where T : SQLItem {
-        let table = type.getTable()
-        let filter = table.filter(Connection.id == item.id)
-        let query = filter.update(item.toRow())
-        try self.run(query)
-    }
-    
-    func upsert<T>(_ type: T.Type, item:T) throws where T : SQLItem {
-        let table = type.getTable()
-        let query = table.upsert(item.toRow(), onConflictOf: type.upsertConflictColumn())
-        try self.run(query)
-    }
-    
-    func insert<T>(_ type: T.Type, item:T) throws where T : SQLItem {
-        let table = type.getTable()
-        let query = table.insert(item.toRow())
-        try self.run(query)
-    }
-    
-    func generateUniqueId<T>(_ type: T.Type) throws -> UUID where T : SQLItem {
-        let table = type.getTable()
-        for i in 0..<5 {
-            let id = UUID.init()
-            let filter = table.filter(Connection.id == id)
-            let count = try self.scalar(filter.count)
-            if (count == 0) {
-                return id
+    func insertWithRetry<T>(_ type: T.Type, item: T) throws -> UUID? where T: SQLItem {
+        try unsafeReentrantWrite { db in
+            var item = item
+            do {
+                try item.insert(db)
+                return nil
+            } catch let error as DatabaseError
+                where error.extendedResultCode.primaryResultCode == .SQLITE_CONSTRAINT
+            {
+                // UUID collisions should be rare, but callers expect a retry path here.
+                for _ in 0..<5 {
+                    item.id = UUID()
+                    do {
+                        try item.insert(db)
+                        return item.id
+                    } catch let retryError as DatabaseError
+                        where retryError.extendedResultCode.primaryResultCode == .SQLITE_CONSTRAINT
+                    {
+                        continue
+                    }
+                }
+                throw AppError("Unable to generate unique id")
             }
         }
-        throw AppError("Unable to generate unique id")
     }
-    
-    //Assumes id is the first setter returned from toRow
-    //UUID collision should never happen, but I overengineered a solution anyways.
-    //Probably will cause more trouble than it solves considering it depends on assumptions
-    func insertWithRetry<T>(_ type: T.Type, item:T) throws -> UUID? where T : SQLItem {
-        let table = type.getTable()
-        do {
-            let query = table.insert(item.toRow())
-            try self.run(query)
-            return nil
-        } catch Result.error(let message, let code, let statement) where code == 19 {
-            let uuid = try generateUniqueId(type)
-            var rows:[Setter] = Array(item.toRow().suffix(from: 1))
-            rows.append(Connection.id <- uuid)
-            let query = table.insert(rows)
-            try self.run(query)
-            return uuid
-        }
-    }
-    
-    func first<T>(_ type: T.Type, predicate:SQLite.Expression<Bool>) throws -> T? where T : SQLItem {
-        let table = type.getTable()
-        let filter = table.filter(predicate)
-        if let row = try self.pluck(filter) {
-            return try type.toItemFull(self, row)
-        }
-        return nil
-    }
-    
-    func first<T>(_ type: T.Type, predicate:SQLite.Expression<Bool?>) throws -> T? where T : SQLItem {
-        let table = type.getTable()
-        let filter = table.filter(predicate)
-        if let row = try self.pluck(filter) {
-            return try type.toItemFull(self, row)
-        }
-        return nil
-    }
-    
-    func filter<T>(_ type: T.Type, predicate:SQLite.Expression<Bool>) throws -> [T] where T : SQLItem {
-        let table = type.getTable()
-        let filter = table.filter(predicate)
-        let rowIterator = try self.prepareRowIterator(filter)
-        let list:[T] = try rowIterator.map({ return try type.toItemFull(self, $0) })
-        return list
-    }
-    
-    func fetchAll<T>(_ type: T.Type, predicate:SQLite.Expression<Bool>) throws -> [T] where T : SQLItem {
-        let table = type.getTable()
-        let filter = table.filter(predicate)
-        let rowIterator = try self.prepareRowIterator(filter)
-        let list:[T] = try rowIterator.map({ return try type.toItemFull(self, $0) })
-        return list
-    }
-    
-    func fetchAll<T>(_ type: T.Type, predicate:SQLite.Expression<Bool?>) throws -> [T] where T : SQLItem {
-        let table = type.getTable()
-        let filter = table.filter(predicate)
-        let rowIterator = try self.prepareRowIterator(filter)
-        let list:[T] = try rowIterator.map({ return try type.toItemFull(self, $0) })
-        return list
-    }
-    /*
-    func fetchPaged<T>(_ type: T.Type, _ pageInfo:PageInfo<>, predicate:SQLite.Expression<Bool>) throws -> [T] where T : SQLItem {
-        let table = type.getTable()
-        let filter = table.filter(predicate)
-        let asc = pageInfo.sortByAscending
-        let sorted = switch (pageInfo.sortBy) {
-            case .id:
-                filter.order(Connection.id.order(asc: asc))
-            case .createdAt:
-                filter.order(Connection.createdAt.order(asc: asc))
-            case .updatedAt:
-                filter.order(Connection.updatedAt.order(asc: asc))
-            case .date:
-                filter.order(Connection.updatedAt.order(asc: asc)) //TODO: Deceptful we don't support this
-        }
-        let rowIterator = try self.prepareRowIterator(sorted)
-        let list:[T] = try rowIterator.map({ return try type.toItemFull(self, $0) })
-        return list
-    }*/
-    
-    func deleteAll<T>(_ type: T.Type, predicate:SQLite.Expression<Bool>) throws where T : SQLItem {
-        let table = type.getTable()
-        let filter = table.filter(predicate)
-        let query = filter.delete()
-        try self.run(query)
-    }
-    
-    func deleteAll<T>(_ type: T.Type, predicate:SQLite.Expression<Bool?>) throws where T : SQLItem {
-        let table = type.getTable()
-        let filter = table.filter(predicate)
-        let query = filter.delete()
-        try self.run(query)
-    }
-}
 
-extension Connection {
-    static let id = SQLite.Expression<UUID>("id")
-    static let updatedAt = SQLite.Expression<Date>("updated_at")
-    static let createdAt = SQLite.Expression<Date>("created_at")
-    
-    func count<T>(_ type: T.Type) throws -> Int where T : SQLItem {
-        let table = type.getTable()
-        let count = try self.scalar(table.count)
-        return count
-    }
-    
-    func count<T>(_ type: T.Type, predicate:SQLite.Expression<Bool>) throws -> Int where T : SQLItem {
-        let table = type.getTable()
-        let filter = table.filter(predicate)
-        let count = try self.scalar(filter.count)
-        return count
-    }
-    
-    func count<T>(_ type: T.Type, predicate:SQLite.Expression<Bool?>) throws -> Int where T : SQLItem {
-        let table = type.getTable()
-        let filter = table.filter(predicate)
-        let count = try self.scalar(filter.count)
-        return count
-    }
-    
-    func first<T>(_ type: T.Type, uuid:UUID) throws -> T? where T : SQLItem {
-        let table = type.getTable()
-        let filter = table.filter(Connection.id == uuid)
-        if let row = try self.pluck(filter) {
-            return try type.toItemFull(self, row)
+    func update<T>(_ type: T.Type, item: T) throws where T: SQLItem {
+        try unsafeReentrantWrite { db in
+            var item = item
+            try item.update(db)
         }
-        return nil
     }
-    
-    func delete<T>(_ type: T.Type, uuid:UUID) throws where T : SQLItem {
-        let table = type.getTable()
-        let filter = table.filter(Connection.id == uuid)
-        let query = filter.delete()
-        try self.run(query)
+
+    func upsert<T>(_ type: T.Type, item: T) throws where T: SQLItem {
+        try unsafeReentrantWrite { db in
+            var item = item
+            try item.upsert(db)
+        }
     }
-    
-    func updateField<T>(_ type: T.Type, uuid:UUID, setter:Setter) throws where T : SQLItem {
-        let table = type.getTable()
-        let filter = table.filter(Connection.id == uuid)
-        let query = filter.update(setter, Connection.updatedAt <- Date())
-        try self.run(query)
+
+    func delete<T>(_ type: T.Type, item: T) throws where T: SQLItem {
+        try delete(type, uuid: item.id)
     }
-    
-    //update, upsert, and insert doesn't support sub-objects..
-    func updateS<T>(_ type: T.Type, item:T) throws where T : SQLItem {
-        let table = type.getTable()
-        let filter = table.filter(Connection.id == item.id)
-        let query = filter.update(item.toRow())
-        try self.run(query)
+
+    func delete<T>(_ type: T.Type, uuid: UUID) throws where T: SQLItem {
+        try unsafeReentrantWrite { db in
+            _ = try type.filter(Column("id") == uuid).deleteAll(db)
+        }
+    }
+
+    func deleteAll<T>(_ type: T.Type, predicate: any SQLExpressible) throws where T: SQLItem {
+        try unsafeReentrantWrite { db in
+            _ = try type.filter(predicate.sqlExpression).deleteAll(db)
+        }
+    }
+
+    func first<T>(_ type: T.Type, uuid: UUID) throws -> T? where T: SQLItem {
+        try unsafeReentrantWrite { db in
+            try type.filter(Column("id") == uuid).fetchOne(db)
+        }
+    }
+
+    func first<T>(_ type: T.Type, predicate: any SQLExpressible) throws -> T? where T: SQLItem {
+        try unsafeReentrantWrite { db in
+            try type.filter(predicate.sqlExpression).fetchOne(db)
+        }
+    }
+
+    func fetchAll<T>(_ type: T.Type) throws -> [T] where T: SQLItem {
+        try unsafeReentrantWrite { db in
+            try type.fetchAll(db)
+        }
+    }
+
+    func fetchAll<T>(_ type: T.Type, predicate: any SQLExpressible) throws -> [T] where T: SQLItem {
+        try unsafeReentrantWrite { db in
+            try type.filter(predicate.sqlExpression).fetchAll(db)
+        }
+    }
+
+    func count<T>(_ type: T.Type) throws -> Int where T: SQLItem {
+        try unsafeReentrantWrite { db in
+            try type.fetchCount(db)
+        }
+    }
+
+    func count<T>(_ type: T.Type, predicate: any SQLExpressible) throws -> Int where T: SQLItem {
+        try unsafeReentrantWrite { db in
+            try type.filter(predicate.sqlExpression).fetchCount(db)
+        }
+    }
+
+    func updateField<T>(
+        _ type: T.Type,
+        uuid: UUID,
+        columnName: String,
+        value: (any DatabaseValueConvertible)?
+    ) throws where T: SQLItem {
+        try unsafeReentrantWrite { db in
+            _ = try type
+                .filter(Column("id") == uuid)
+                .updateAll(
+                    db,
+                    Column(columnName).set(to: value),
+                    Column("updated_at").set(to: Date())
+                )
+        }
+    }
+
+    func transaction(_ updates: @escaping () throws -> Void) throws {
+        try unsafeReentrantWrite { db in
+            try db.inTransaction {
+                try updates()
+                return .commit
+            }
+        }
     }
 }

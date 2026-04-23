@@ -6,7 +6,7 @@
 //
 
 import Vapor
-import SQLite
+import GRDB
 
 final class GameMetaCreate: Content, IValidate {
     internal init(id: UUID?, familyId: UUID? = nil, baseGameId: UUID? = nil, hashedFileName: String? = nil, xxhash64: String? = nil, name: String, version: String? = nil, breaksSaveFormatFromPreviousVersion: Bool, breaksSaveFormatFromBaseGame: Bool) {
@@ -30,44 +30,55 @@ final class GameMetaCreate: Content, IValidate {
     var version: String?
     var breaksSaveFormatFromPreviousVersion: Bool
     var breaksSaveFormatFromBaseGame: Bool
-    
-    func toGameMeta(_ date:Date) -> GameMeta {
-        return GameMeta(id: id ?? UUID(), name: name, breaksSaveFormatFromPreviousVersion: breaksSaveFormatFromPreviousVersion, breaksSaveFormatFromBaseGame: breaksSaveFormatFromBaseGame, createdAt: date, updatedAt: date)
+
+    func toGameMeta(_ date: Date) -> GameMeta {
+        GameMeta(
+            id: id ?? UUID(),
+            familyId: familyId,
+            baseGameId: baseGameId,
+            hashedFileName: hashedFileName,
+            xxhash64: xxhash64,
+            name: name,
+            version: version,
+            breaksSaveFormatFromPreviousVersion: breaksSaveFormatFromPreviousVersion,
+            breaksSaveFormatFromBaseGame: breaksSaveFormatFromBaseGame,
+            createdAt: date,
+            updatedAt: date)
     }
-    
-    func iterateErrors(_ index:inout Int) -> String? {
+
+    func iterateErrors(_ index: inout Int) -> String? {
         switch index {
-            case 0:
-                index += 1
-                if let hashedFileName = hashedFileName, hashedFileName.isEmpty {
-                    return "hashedFileName is empty"
-                }
-                fallthrough
-            case 1:
-                index += 1
-                if let xxhash64 = xxhash64, xxhash64.isEmpty {
-                    return "xxhash64 is empty"
-                }
-                fallthrough
-            case 2:
-                index += 1
-                if name.isEmpty {
-                    return "name is empty"
-                }
-                fallthrough
-            case 3:
-                index += 1
-                if let version = version, version.isEmpty {
-                    return "version is empty"
-                }
-                fallthrough
-            default:
-                return nil
+        case 0:
+            index += 1
+            if let hashedFileName = hashedFileName, hashedFileName.isEmpty {
+                return "hashedFileName is empty"
+            }
+            fallthrough
+        case 1:
+            index += 1
+            if let xxhash64 = xxhash64, xxhash64.isEmpty {
+                return "xxhash64 is empty"
+            }
+            fallthrough
+        case 2:
+            index += 1
+            if name.isEmpty {
+                return "name is empty"
+            }
+            fallthrough
+        case 3:
+            index += 1
+            if let version = version, version.isEmpty {
+                return "version is empty"
+            }
+            fallthrough
+        default:
+            return nil
         }
     }
 }
 
-final class GameMeta: Content, SQLItem {
+final class GameMeta: Content, Codable, SQLItem {
     internal init(id: UUID, familyId: UUID? = nil, baseGameId: UUID? = nil, hashedFileName: String? = nil, xxhash64: String? = nil, name: String, version: String? = nil, breaksSaveFormatFromPreviousVersion: Bool, breaksSaveFormatFromBaseGame: Bool, createdAt: Date, updatedAt: Date) {
         self.id = id
         self.familyId = familyId
@@ -81,27 +92,6 @@ final class GameMeta: Content, SQLItem {
         self.createdAt = createdAt
         self.updatedAt = updatedAt
     }
-    
-    static func getTable() -> SQLite.Table {
-        return TBLGameMeta.table
-    }
-    
-    static func upsertConflictColumn() -> SQLite.Expressible {
-        return TBLGameMeta.id
-    }
-    
-    static func toItem(_ row: SQLite.Row) throws -> GameMeta {
-        return try TBLGameMeta.toItem(row)
-    }
-    
-    static func toItemFull(_ con: SQLite.Connection, _ row: SQLite.Row) throws -> GameMeta {
-        return try TBLGameMeta.toItem(row)
-    }
-    
-    func toRow() -> [SQLite.Setter] {
-        TBLGameMeta.toRow(self)
-    }
-    
 
     var id: UUID
     var familyId: UUID?
@@ -114,120 +104,166 @@ final class GameMeta: Content, SQLItem {
     var breaksSaveFormatFromBaseGame: Bool
     var createdAt: Date
     var updatedAt: Date
-}
 
+    enum CodingKeys: String, CodingKey {
+        case id
+        case familyId = "family_id"
+        case baseGameId = "base_game_id"
+        case hashedFileName = "hashed_file_name"
+        case xxhash64
+        case name
+        case version
+        case breaksSaveFormatFromPreviousVersion = "breaks_save_format_from_previous_version"
+        case breaksSaveFormatFromBaseGame = "breaks_save_format_from_base_game"
+        case createdAt = "created_at"
+        case updatedAt = "updated_at"
+    }
 
+    static var databaseTableName: String {
+        "game_meta"
+    }
 
-class TBLGameMeta {
-    nonisolated(unsafe) static let table = Table("game_meta")
-    
-    nonisolated(unsafe) static let id = Expression<UUID>("id")
-    nonisolated(unsafe) static let familyId = Expression<UUID?>("family_id")
-    nonisolated(unsafe) static let baseGameId = Expression<UUID?>("base_game_id")
-    nonisolated(unsafe) static let hashedFileName = Expression<String?>("hashed_file_name")
-    nonisolated(unsafe) static let xxhash64 = Expression<String?>("xxhash64")
-    nonisolated(unsafe) static let name = Expression<String>("name")
-    nonisolated(unsafe) static let name_lc = Expression<String>("name_lc") //lower in sqlite lite only works for ascii
-    nonisolated(unsafe) static let version = Expression<String?>("version")
-    nonisolated(unsafe) static let breaksSaveFormatFromPreviousVersion = Expression<Bool>("breaks_save_format_from_previous_version")
-    nonisolated(unsafe) static let breaksSaveFormatFromBaseGame = Expression<Bool>("breaks_save_format_from_base_game")
-    nonisolated(unsafe) static let createdAt = Expression<Date>("created_at")
-    nonisolated(unsafe) static let updatedAt = Expression<Date>("updated_at")
-    
-    static func createQuery() -> String {
-        return table.create(ifNotExists: true) { t in
-            t.column(id, primaryKey: true)
-            t.column(familyId)
-            t.column(baseGameId)
-            t.column(hashedFileName)
-            t.column(xxhash64)
-            t.column(name)
-            t.column(version)
-            t.column(breaksSaveFormatFromPreviousVersion)
-            t.column(breaksSaveFormatFromBaseGame)
-            t.column(createdAt)
-            t.column(updatedAt)
+    static let id = Column(CodingKeys.id)
+    static let family_id = Column(CodingKeys.familyId)
+    static let base_game_id = Column(CodingKeys.baseGameId)
+    static let hashed_file_name = Column(CodingKeys.hashedFileName)
+    static let xxhash64 = Column(CodingKeys.xxhash64)
+    static let name = Column(CodingKeys.name)
+    static let name_lc = Column("name_lc") //lower in sqlite lite only works for ascii
+    static let version = Column(CodingKeys.version)
+    static let breaks_save_format_from_previous_version = Column(CodingKeys.breaksSaveFormatFromPreviousVersion)
+    static let breaks_save_format_from_base_game = Column(CodingKeys.breaksSaveFormatFromBaseGame)
+    static let created_at = Column(CodingKeys.createdAt)
+    static let updated_at = Column(CodingKeys.updatedAt)
+
+    static func createTable(db: GRDB.Database) throws {
+        if try db.tableExists(databaseTableName) {
+            return
+        }
+
+        try db.create(table: databaseTableName) { t in
+            t.column(id, .blob).primaryKey()
+            t.column(family_id, .blob)
+            t.column(base_game_id, .blob)
+            t.column(hashed_file_name, .text)
+            t.column(xxhash64, .text)
+            t.column(name, .text).notNull()
+            t.column(name_lc, .text).notNull()
+            t.column(version, .text)
+            t.column(breaks_save_format_from_previous_version, .boolean).notNull()
+            t.column(breaks_save_format_from_base_game, .boolean).notNull()
+            t.column(created_at, .date).notNull()
+            t.column(updated_at, .date).notNull()
         }
     }
-    
-    static func toItem(_ row:Row) throws -> GameMeta {
-        let result = GameMeta(
-            id: try row.get(id),
-            familyId: try row.get(familyId),
-            baseGameId: try row.get(baseGameId),
-            hashedFileName: try row.get(hashedFileName),
-            xxhash64: try row.get(xxhash64),
-            name: try row.get(name),
-            version: try row.get(version),
-            breaksSaveFormatFromPreviousVersion: try row.get(breaksSaveFormatFromPreviousVersion),
-            breaksSaveFormatFromBaseGame: try row.get(breaksSaveFormatFromBaseGame),
-            createdAt: try row.get(createdAt),
-            updatedAt: try row.get(updatedAt))
-        return result
+
+    func encode(to container: inout PersistenceContainer) {
+        container[Self.id] = id
+        container[Self.family_id] = familyId
+        container[Self.base_game_id] = baseGameId
+        container[Self.hashed_file_name] = hashedFileName
+        container[Self.xxhash64] = xxhash64
+        container[Self.name] = name
+        container[Self.name_lc] = name.lowercased()
+        container[Self.version] = version
+        container[Self.breaks_save_format_from_previous_version] = breaksSaveFormatFromPreviousVersion
+        container[Self.breaks_save_format_from_base_game] = breaksSaveFormatFromBaseGame
+        container[Self.created_at] = createdAt
+        container[Self.updated_at] = updatedAt
     }
-    
-    static func toRow(_ item:GameMeta) -> [SQLite.Setter] {
-        return [self.id <- item.id,
-                self.familyId <- item.familyId,
-                self.baseGameId <- item.baseGameId,
-                self.hashedFileName <- item.hashedFileName,
-                self.xxhash64 <- item.xxhash64,
-                self.name <- item.name,
-                self.version <- item.version,
-                self.breaksSaveFormatFromPreviousVersion <- item.breaksSaveFormatFromPreviousVersion,
-                self.breaksSaveFormatFromBaseGame <- item.breaksSaveFormatFromBaseGame,
-                self.createdAt <- item.createdAt,
-                self.updatedAt <- item.updatedAt]
+
+    init(row: Row) {
+        id = row[Self.id]
+        familyId = row[Self.family_id]
+        baseGameId = row[Self.base_game_id]
+        hashedFileName = row[Self.hashed_file_name]
+        xxhash64 = row[Self.xxhash64]
+        name = row[Self.name]
+        version = row[Self.version]
+        breaksSaveFormatFromPreviousVersion = row[Self.breaks_save_format_from_previous_version]
+        breaksSaveFormatFromBaseGame = row[Self.breaks_save_format_from_base_game]
+        createdAt = row[Self.created_at]
+        updatedAt = row[Self.updated_at]
     }
-    
-    static func first(_ con:Connection, uuid:UUID) throws -> GameMeta? {
-        return try con.first(GameMeta.self, uuid: uuid)
+}
+
+extension GameMeta {
+    static let familyId = family_id
+    static let baseGameId = base_game_id
+    static let hashedFileName = hashed_file_name
+    static let breaksSaveFormatFromPreviousVersion = breaks_save_format_from_previous_version
+    static let breaksSaveFormatFromBaseGame = breaks_save_format_from_base_game
+    static let createdAt = created_at
+    static let updatedAt = updated_at
+
+    static func first(_ con: DatabasePool, uuid: UUID) throws -> GameMeta? {
+        try con.first(GameMeta.self, uuid: uuid)
     }
-    
-    static func fetchPaged(_ pageInfo:PageInfo<GameMetaSortField>, onlyBaseGames:Bool, searchList:[SearchQuery<GameMetaSearchField>], existingCon:Connection? = nil) throws -> [GameMeta] {
-        var filter:QueryType = table
+
+    static func fetchPaged(_ pageInfo: PageInfo<GameMetaSortField>, onlyBaseGames: Bool, searchList: [SearchQuery<GameMetaSearchField>], existingCon: DatabasePool? = nil) throws -> [GameMeta] {
+        var filter: QueryInterfaceRequest<GameMeta> = all()
         for eachSearch in searchList {
-            filter = switch (eachSearch.searchBy) {
-                case .id:
-                    table.filter(TBLGameMeta.id == UUID(eachSearch.value)!)
-                case .name:
-                    table.filter(TBLGameMeta.name == eachSearch.value)
-                case .familyId:
-                    table.order(TBLGameMeta.familyId == UUID(eachSearch.value)!)
-                case .hashedFileName:
-                    table.order(TBLGameMeta.hashedFileName == eachSearch.value)
-                case .xxhash64:
-                    table.order(TBLGameMeta.xxhash64 == eachSearch.value)
-                case .version:
-                    table.order(TBLGameMeta.version == eachSearch.value)
+            switch eachSearch.searchBy {
+            case .id:
+                if let value = UUID(eachSearch.value) {
+                    filter = filter.filter(id == value)
+                }
+            case .name:
+                filter = filter.filter(name == eachSearch.value)
+            case .familyId:
+                if let value = UUID(eachSearch.value) {
+                    filter = filter.filter(family_id == value)
+                }
+            case .hashedFileName:
+                filter = filter.filter(hashed_file_name == eachSearch.value)
+            case .xxhash64:
+                filter = filter.filter(xxhash64 == eachSearch.value)
+            case .version:
+                filter = filter.filter(version == eachSearch.value)
             }
         }
-        if (onlyBaseGames) {
-            filter = filter.filter(TBLGameMeta.baseGameId == nil)
+        if onlyBaseGames {
+            filter = filter.filter(base_game_id == nil)
         }
-        let asc = pageInfo.sortByAscending
-        let sorted = switch (pageInfo.sortBy) {
+
+        let sorted: QueryInterfaceRequest<GameMeta>
+        if pageInfo.sortByAscending {
+            sorted = switch pageInfo.sortBy {
             case .id:
-                filter.order(Connection.id.order(asc: asc))
+                filter.order(id.asc)
             case .createdAt:
-                filter.order(Connection.createdAt.order(asc: asc))
+                filter.order(created_at.asc)
             case .updatedAt:
-                filter.order(Connection.updatedAt.order(asc: asc))
+                filter.order(updated_at.asc)
             case .name:
-                table.order(TBLGameMeta.name.order(asc: asc))
+                filter.order(name.asc)
+            }
+        } else {
+            sorted = switch pageInfo.sortBy {
+            case .id:
+                filter.order(id.desc)
+            case .createdAt:
+                filter.order(created_at.desc)
+            case .updatedAt:
+                filter.order(updated_at.desc)
+            case .name:
+                filter.order(name.desc)
+            }
         }
+
         let con = try Database.getConnection(existingCon)
-        let limited = sorted.limit(Int(pageInfo.perPage), offset: Int(pageInfo.perPage*pageInfo.page))
-        let rowIterator = try con.prepareRowIterator(limited)
-        
-        let list:[GameMeta] = try rowIterator.map({ return try toItem($0) })
-        return list
+        return try con.unsafeReentrantWrite { db in
+            try sorted
+                .limit(Int(pageInfo.perPage), offset: Int(pageInfo.perPage * pageInfo.page))
+                .fetchAll(db)
+        }
     }
-    
-    static func replaceBaseGameId(_ con:Connection, targetUUID:UUID, replaceWith:UUID?) throws {
-        let filtered = table.filter(TBLGameMeta.baseGameId == targetUUID)
-        let query = filtered.update(TBLGameMeta.baseGameId <- replaceWith)
-        try con.run(query)
+
+    static func replaceBaseGameId(_ con: DatabasePool, targetUUID: UUID, replaceWith: UUID?) throws {
+        try con.unsafeReentrantWrite { db in
+            _ = try GameMeta
+                .filter(base_game_id == targetUUID)
+                .updateAll(db, base_game_id.set(to: replaceWith))
+        }
     }
 }
-

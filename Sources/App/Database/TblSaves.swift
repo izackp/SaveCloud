@@ -21,10 +21,10 @@
  }]
  */
 
-import SQLite
+import GRDB
 import Vapor
 
-final class Save: Content, SQLItem {
+final class Save: Content, Codable, SQLItem {
     internal init(id: UUID, gameHashId: UUID, gameMetaId: UUID?, sequentialId: UUID, profileId: UUID, userId: UUID, url: String, fileSize: Int, sourceDevice: String? = nil, screenshot: Data? = nil, name: String? = nil, date: Date? = nil, createdAt: Date, updatedAt: Date) {
         self.id = id
         self.gameHashId = gameHashId
@@ -41,27 +41,7 @@ final class Save: Content, SQLItem {
         self.createdAt = createdAt
         self.updatedAt = updatedAt
     }
-    
-    static func getTable() -> SQLite.Table {
-        return TblSave.table
-    }
-    
-    static func upsertConflictColumn() -> SQLite.Expressible {
-        return TblSave.id
-    }
-    
-    static func toItem(_ row: SQLite.Row) throws -> Save {
-        return try TblSave.toItem(row)
-    }
-    
-    static func toItemFull(_ con: SQLite.Connection, _ row: SQLite.Row) throws -> Save {
-        return try TblSave.toItem(row)
-    }
-    
-    func toRow() -> [SQLite.Setter] {
-        TblSave.toRow(self)
-    }
-    
+
     var id: UUID
     var gameHashId: UUID
     var gameMetaId: UUID?
@@ -76,160 +56,181 @@ final class Save: Content, SQLItem {
     var date: Date?
     var createdAt: Date
     var updatedAt: Date
-}
 
-class TblSave {
-    nonisolated(unsafe) static let table = Table("save")
-    
-    nonisolated(unsafe) static let id = Connection.id
-    nonisolated(unsafe) static let gameHashId = Expression<UUID>("game_hash_id")
-    nonisolated(unsafe) static let gameMetaId = Expression<UUID?>("game_meta_id")
-    nonisolated(unsafe) static let sequentialId = Expression<UUID>("sequential_id")
-    nonisolated(unsafe) static let profileId = Expression<UUID>("profile_id")
-    nonisolated(unsafe) static let userId = Expression<UUID>("user_id")
-    nonisolated(unsafe) static let url = Expression<String>("url")
-    nonisolated(unsafe) static let fileSize = Expression<Int>("file_size")
-    nonisolated(unsafe) static let sourceDevice = Expression<String?>("source_device")
-    nonisolated(unsafe) static let screenshot = Expression<Data?>("screenshot")
-    nonisolated(unsafe) static let name = Expression<String?>("name")
-    nonisolated(unsafe) static let date = Expression<Date?>("date")
-    nonisolated(unsafe) static let createdAt = Expression<Date>("created_at")
-    nonisolated(unsafe) static let updatedAt = Connection.updatedAt
-    
-    static func createQuery() -> String {
-        return table.create(ifNotExists: true) { t in
-            t.column(id, primaryKey: true)
-            t.column(gameHashId)
-            t.column(gameMetaId)
-            t.column(sequentialId)
-            t.column(profileId)
-            t.column(userId)
-            t.column(url)
-            t.column(fileSize)
-            t.column(sourceDevice)
-            t.column(screenshot)
-            t.column(name)
-            t.column(date)
-            t.column(createdAt)
-            t.column(updatedAt)
+    enum CodingKeys: String, CodingKey {
+        case id
+        case gameHashId = "game_hash_id"
+        case gameMetaId = "game_meta_id"
+        case sequentialId = "sequential_id"
+        case profileId = "profile_id"
+        case userId = "user_id"
+        case url
+        case fileSize = "file_size"
+        case sourceDevice = "source_device"
+        case screenshot
+        case name
+        case date
+        case createdAt = "created_at"
+        case updatedAt = "updated_at"
+    }
+
+    static var databaseTableName: String {
+        "save"
+    }
+
+    static let id = Column(CodingKeys.id)
+    static let game_hash_id = Column(CodingKeys.gameHashId)
+    static let game_meta_id = Column(CodingKeys.gameMetaId)
+    static let sequential_id = Column(CodingKeys.sequentialId)
+    static let profile_id = Column(CodingKeys.profileId)
+    static let user_id = Column(CodingKeys.userId)
+    static let url = Column(CodingKeys.url)
+    static let file_size = Column(CodingKeys.fileSize)
+    static let source_device = Column(CodingKeys.sourceDevice)
+    static let screenshot = Column(CodingKeys.screenshot)
+    static let name = Column(CodingKeys.name)
+    static let date = Column(CodingKeys.date)
+    static let created_at = Column(CodingKeys.createdAt)
+    static let updated_at = Column(CodingKeys.updatedAt)
+
+    static func createTable(db: GRDB.Database) throws {
+        if try db.tableExists(databaseTableName) {
+            return
+        }
+
+        try db.create(table: databaseTableName) { t in
+            t.column(id, .blob).primaryKey()
+            t.column(game_hash_id, .blob).notNull()
+            t.column(game_meta_id, .blob)
+            t.column(sequential_id, .blob).notNull()
+            t.column(profile_id, .blob).notNull()
+            t.column(user_id, .blob).notNull()
+            t.column(url, .text).notNull()
+            t.column(file_size, .integer).notNull()
+            t.column(source_device, .text)
+            t.column(screenshot, .blob)
+            t.column(name, .text)
+            t.column(date, .date)
+            t.column(created_at, .date).notNull()
+            t.column(updated_at, .date).notNull()
         }
     }
-    
-    static func toItem(_ row:Row) throws -> Save {
-        let result = Save(
-            id: try row.get(id),
-            gameHashId: try row.get(gameHashId),
-            gameMetaId: try row.get(gameMetaId),
-            sequentialId: try row.get(sequentialId),
-            profileId: try row.get(profileId),
-            userId: try row.get(userId),
-            url: try row.get(url),
-            fileSize: try row.get(fileSize),
-            sourceDevice: try row.get(sourceDevice),
-            screenshot: try row.get(screenshot),
-            name: try row.get(name),
-            date: try row.get(date),
-            createdAt: try row.get(createdAt),
-            updatedAt: try row.get(updatedAt))
-        return result
-    }
-    
-    static func toRow(_ item:Save) -> [SQLite.Setter] {
-        return [self.id <- item.id,
-                self.gameHashId <- item.gameHashId,
-                self.gameMetaId <- item.gameMetaId,
-                self.sequentialId <- item.sequentialId,
-                self.profileId <- item.profileId,
-                self.url <- item.url,
-                self.fileSize <- item.fileSize,
-                self.screenshot <- item.screenshot,
-                self.name <- item.name,
-                self.date <- item.date,
-                self.createdAt <- item.createdAt,
-                self.updatedAt <- item.updatedAt]
-    }
-    
-    static func fetchPaged(_ pageInfo:PageInfo<SaveSortField>, userId:UUID, profileId:UUID?, gameHashId:UUID?, existingCon:Connection? = nil) throws -> [Save] {
-        var filter = table.filter(TblSave.userId == userId)
-        if let profileId = profileId {
-            filter = table.filter(TblSave.profileId == profileId)
-        }
-        if let gameHashId = gameHashId {
-            filter = table.filter(TblSave.gameHashId == gameHashId)
-        }
-        let asc = pageInfo.sortByAscending
-        let sorted = switch (pageInfo.sortBy) {
-            case .id:
-                filter.order(Connection.id.order(asc: asc))
-            case .createdAt:
-                filter.order(Connection.createdAt.order(asc: asc))
-            case .updatedAt:
-                filter.order(Connection.updatedAt.order(asc: asc))
-            case .date:
-                filter.order(TblSave.date.order(asc: asc))
-        }
-        let con = try Database.getConnection(existingCon)
-        let limited = sorted.limit(Int(pageInfo.perPage), offset: Int(pageInfo.perPage*pageInfo.page))
-        let rowIterator = try con.prepareRowIterator(limited)
-        
-        let list:[Save] = try rowIterator.map({ return try toItem($0) })
-        return list
-    }
-    
-    static func fetchPaged(_ pageInfo:PageInfo<SaveSortField>, userId:UUID, profileId:UUID?, gameHashIdList:[UUID], existingCon:Connection? = nil) throws -> [Save] {
-        var filter = table.filter(TblSave.userId == userId)
-        if let profileId = profileId {
-            filter = table.filter(TblSave.profileId == profileId)
-        }
-        if gameHashIdList.count > 1 {
-            filter = table.filter(gameHashIdList.contains(TblSave.gameHashId))
-        } else if let first = gameHashIdList.first {
-            filter = table.filter(TblSave.gameHashId == first)
-        }
-        let asc = pageInfo.sortByAscending
-        let sorted = switch (pageInfo.sortBy) {
-            case .id:
-                filter.order(Connection.id.order(asc: asc))
-            case .createdAt:
-                filter.order(Connection.createdAt.order(asc: asc))
-            case .updatedAt:
-                filter.order(Connection.updatedAt.order(asc: asc))
-            case .date:
-                filter.order(TblSave.date.order(asc: asc))
-        }
-        let con = try Database.getConnection(existingCon)
-        let limited = sorted.limit(Int(pageInfo.perPage), offset: Int(pageInfo.perPage*pageInfo.page))
-        let rowIterator = try con.prepareRowIterator(limited)
-        
-        let list:[Save] = try rowIterator.map({ return try toItem($0) })
-        return list
-    }
-    
-    static func deleteAll(userId:UUID, profileId:UUID?, gameHashIdList:[UUID], existingCon:Connection? = nil) throws {
-        var filter = table.filter(TblSave.userId == userId)
-        if let profileId = profileId {
-            filter = table.filter(TblSave.profileId == profileId)
-        }
-        if gameHashIdList.count > 1 {
-            filter = table.filter(gameHashIdList.contains(TblSave.gameHashId))
-        } else if let first = gameHashIdList.first {
-            filter = table.filter(TblSave.gameHashId == first)
-        }
-        let con = try Database.getConnection(existingCon)
-        let query = filter.delete()
-        try con.run(query)
-    }
-    
-    static func fetchAllGameIds(userId:UUID, profileId:UUID?, existingCon:Connection? = nil) throws -> [UUID] {
-        var filter = table.filter(TblSave.userId == userId)
-        if let profileId = profileId {
-            filter = table.filter(TblSave.profileId == profileId)
-        }
-        let con = try Database.getConnection(existingCon)
-        let rowIterator = try con.prepareRowIterator(filter)
-        
-        let list:[UUID] = try rowIterator.compactMap({ return try $0.get(gameMetaId) })
-        return list
+
+    init(row: Row) {
+        id = row[Self.id]
+        gameHashId = row[Self.game_hash_id]
+        gameMetaId = row[Self.game_meta_id]
+        sequentialId = row[Self.sequential_id]
+        profileId = row[Self.profile_id]
+        userId = row[Self.user_id]
+        url = row[Self.url]
+        fileSize = row[Self.file_size]
+        sourceDevice = row[Self.source_device]
+        screenshot = row[Self.screenshot]
+        name = row[Self.name]
+        date = row[Self.date]
+        createdAt = row[Self.created_at]
+        updatedAt = row[Self.updated_at]
     }
 }
 
+typealias TblSave = Save
+
+extension Save {
+    static let gameHashId = game_hash_id
+    static let gameMetaId = game_meta_id
+    static let sequentialId = sequential_id
+    static let profileId = profile_id
+    static let userId = user_id
+    static let fileSize = file_size
+    static let sourceDevice = source_device
+    static let createdAt = created_at
+    static let updatedAt = updated_at
+
+    private static func baseRequest(userId: UUID, profileId: UUID?, gameHashId: UUID?) -> QueryInterfaceRequest<Save> {
+        var filter = all().filter(self.user_id == userId)
+        if let profileId {
+            filter = filter.filter(self.profile_id == profileId)
+        }
+        if let gameHashId {
+            filter = filter.filter(self.game_hash_id == gameHashId)
+        }
+        return filter
+    }
+
+    private static func baseRequest(userId: UUID, profileId: UUID?, gameHashIdList: [UUID]) -> QueryInterfaceRequest<Save> {
+        var filter = all().filter(self.user_id == userId)
+        if let profileId {
+            filter = filter.filter(self.profile_id == profileId)
+        }
+        if gameHashIdList.count > 1 {
+            filter = filter.filter(gameHashIdList.contains(self.game_hash_id))
+        } else if let first = gameHashIdList.first {
+            filter = filter.filter(self.game_hash_id == first)
+        }
+        return filter
+    }
+
+    private static func applySort(_ filter: QueryInterfaceRequest<Save>, pageInfo: PageInfo<SaveSortField>) -> QueryInterfaceRequest<Save> {
+        if pageInfo.sortByAscending {
+            return switch pageInfo.sortBy {
+            case .id:
+                filter.order(id.asc)
+            case .createdAt:
+                filter.order(created_at.asc)
+            case .updatedAt:
+                filter.order(updated_at.asc)
+            case .date:
+                filter.order(date.asc)
+            }
+        } else {
+            return switch pageInfo.sortBy {
+            case .id:
+                filter.order(id.desc)
+            case .createdAt:
+                filter.order(created_at.desc)
+            case .updatedAt:
+                filter.order(updated_at.desc)
+            case .date:
+                filter.order(date.desc)
+            }
+        }
+    }
+
+    static func fetchPaged(_ pageInfo: PageInfo<SaveSortField>, userId: UUID, profileId: UUID?, gameHashId: UUID?, existingCon: DatabasePool? = nil) throws -> [Save] {
+        let con = try Database.getConnection(existingCon)
+        let request = applySort(baseRequest(userId: userId, profileId: profileId, gameHashId: gameHashId), pageInfo: pageInfo)
+        return try con.unsafeReentrantWrite { db in
+            try request
+                .limit(Int(pageInfo.perPage), offset: Int(pageInfo.perPage * pageInfo.page))
+                .fetchAll(db)
+        }
+    }
+
+    static func fetchPaged(_ pageInfo: PageInfo<SaveSortField>, userId: UUID, profileId: UUID?, gameHashIdList: [UUID], existingCon: DatabasePool? = nil) throws -> [Save] {
+        let con = try Database.getConnection(existingCon)
+        let request = applySort(baseRequest(userId: userId, profileId: profileId, gameHashIdList: gameHashIdList), pageInfo: pageInfo)
+        return try con.unsafeReentrantWrite { db in
+            try request
+                .limit(Int(pageInfo.perPage), offset: Int(pageInfo.perPage * pageInfo.page))
+                .fetchAll(db)
+        }
+    }
+
+    static func deleteAll(userId: UUID, profileId: UUID?, gameHashIdList: [UUID], existingCon: DatabasePool? = nil) throws {
+        let con = try Database.getConnection(existingCon)
+        try con.unsafeReentrantWrite { db in
+            _ = try baseRequest(userId: userId, profileId: profileId, gameHashIdList: gameHashIdList).deleteAll(db)
+        }
+    }
+
+    static func fetchAllGameIds(userId: UUID, profileId: UUID?, existingCon: DatabasePool? = nil) throws -> [UUID] {
+        let con = try Database.getConnection(existingCon)
+        return try con.unsafeReentrantWrite { db in
+            try baseRequest(userId: userId, profileId: profileId, gameHashIdList: [])
+                .select(game_meta_id)
+                .fetchAll(db)
+                .compactMap { row in row[game_meta_id] as UUID? }
+        }
+    }
+}

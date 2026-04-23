@@ -7,7 +7,7 @@
 
 import Vapor
 import Argon2Swift
-import SQLite
+import GRDB
 
 struct ApiRegisterRequest: Content, IValidate {
     let username: String

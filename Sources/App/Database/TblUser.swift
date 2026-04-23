@@ -6,10 +6,10 @@
 //
 
 import Foundation
-import SQLite
+import GRDB
 import Vapor
 
-public struct AuthenticatedUser {
+final class AuthenticatedUser {
 
     public let id: UUID
     public let userId: UUID
@@ -27,9 +27,16 @@ extension AuthenticatedUser: SessionAuthenticatable {
     public var sessionID: UUID { id }
 }
 
-final class PublicUser: Content, IValidate {
+final class PublicUser: Codable, Content, IValidate {
+
+    var id: UUID
+    var username: String
+    var email: String?
+    var isAdmin: Bool
+    var createdAt: Date
+    var updatedAt: Date
     
-    init(id: UUID, username:String, email: String? = nil, isAdmin:Bool, createdAt: Date, updatedAt: Date) {
+    public init(id: UUID, username:String, email: String? = nil, isAdmin:Bool, createdAt: Date, updatedAt: Date) {
         self.id = id
         self.username = username
         self.email = email
@@ -37,13 +44,6 @@ final class PublicUser: Content, IValidate {
         self.createdAt = createdAt
         self.updatedAt = updatedAt
     }
-    
-    var id: UUID
-    var username: String
-    var email: String?
-    var isAdmin: Bool
-    var createdAt: Date
-    var updatedAt: Date
     
     func iterateErrors(_ index:inout Int) -> String? {
         switch index {
@@ -65,33 +65,17 @@ final class PublicUser: Content, IValidate {
     }
 }
 
-final class User: Content, SQLItem {
+final class User: Content, Codable, SQLItem {
+
+    var id: UUID
+    var username: String
+    var email: String?
+    var passwordHash: String?
+    var isAdmin: Bool
+    var createdAt: Date
+    var updatedAt: Date
     
-    static func getTable() -> SQLite.Table {
-        return TblUser.table
-    }
-    
-    static func upsertConflictColumn() -> SQLite.Expressible {
-        return TblUser.id
-    }
-    
-    static func toItem(_ row: SQLite.Row) throws -> User {
-        return try TblUser.toItem(row)
-    }
-    
-    static func toItemFull(_ con: SQLite.Connection, _ row: SQLite.Row) throws -> User {
-        return try TblUser.toItem(row)
-    }
-    
-    func toRow() -> [SQLite.Setter] {
-        TblUser.toRow(self)
-    }
-    
-    func toPublicUser() -> PublicUser {
-        return PublicUser(id: id, username: username, email: email, isAdmin: isAdmin, createdAt: createdAt, updatedAt: updatedAt)
-    }
-    
-    init(id: UUID, username:String, email: String? = nil, passwordHash: String? = nil, isAdmin:Bool, createdAt: Date, updatedAt: Date) {
+    public init(id: UUID, username:String, email: String? = nil, passwordHash: String? = nil, isAdmin:Bool, createdAt: Date, updatedAt: Date) {
         self.id = id
         self.username = username
         self.email = email
@@ -101,71 +85,63 @@ final class User: Content, SQLItem {
         self.updatedAt = updatedAt
     }
     
-    var id: UUID
-    var username: String
-    var email: String?
-    var passwordHash: String?
-    var isAdmin: Bool
-    var createdAt: Date
-    var updatedAt: Date
-}
+    enum CodingKeys: String, CodingKey {
+        case id
+        case username
+        case email
+        case passwordHash = "password_hash"
+        case isAdmin = "is_admin"
+        case createdAt = "created_at"
+        case updatedAt = "updated_at"
+    }
+    
+    func toPublicUser() -> PublicUser {
+        return PublicUser(id: id, username: username, email: email, isAdmin: isAdmin, createdAt: createdAt, updatedAt: updatedAt)
+    }
+    
+    //MARK: - DATABASE
+    static var databaseTableName: String { get {
+        return "user"
+    } }
+    
+    static let id               = Column(User.CodingKeys.id)
+    static let username         = Column(User.CodingKeys.username)
+    static let email            = Column(User.CodingKeys.email)
+    static let password_hash    = Column(User.CodingKeys.passwordHash)
+    static let is_admin         = Column(User.CodingKeys.isAdmin)
+    static let created_at       = Column(User.CodingKeys.createdAt)
+    static let updated_at       = Column(User.CodingKeys.updatedAt)
+    
+    static func createTable(db: GRDB.Database) throws {
+        if (try db.tableExists(databaseTableName)) {
+            return
+        }
+        
+        try db.create(table: databaseTableName) { t in
+            t.column(id,                .blob).primaryKey()
+            t.column(username,          .text).notNull()
+            t.column(email,             .text).notNull()
+            t.column(password_hash,     .text).notNull()
+            t.column(is_admin,          .boolean).notNull()
+            t.column(created_at,        .date).notNull()
+            t.column(updated_at,        .date).notNull()
+        }
+    }
 
-class TblUser {
-    nonisolated(unsafe) static let table = Table("user")
-    
-    nonisolated(unsafe) static let id = Connection.id
-    nonisolated(unsafe) static let username = Expression<String>("username")
-    nonisolated(unsafe) static let email = Expression<String?>("email")
-    nonisolated(unsafe) static let passwordHash = Expression<String?>("password_hash")
-    nonisolated(unsafe) static let isAdmin = Expression<Bool>("is_admin")
-    nonisolated(unsafe) static let createdAt = Expression<Date>("created_at")
-    nonisolated(unsafe) static let updatedAt = Connection.updatedAt
-    
-    static func createQuery() -> String {
-        return table.create(ifNotExists: true) { t in
-            t.column(id, primaryKey: true)
-            t.column(username)
-            t.column(email)
-            t.column(passwordHash)
-            t.column(isAdmin)
-            t.column(createdAt)
-            t.column(updatedAt)
-        }
+    convenience init(row: Row) {
+        self.init(
+            id: row[Self.id],
+            username: row[Self.username],
+            email: row[Self.email],
+            passwordHash: row[Self.password_hash],
+            isAdmin: row[Self.is_admin],
+            createdAt: row[Self.created_at],
+            updatedAt: row[Self.updated_at])
     }
-    
-    static func toItem(_ row:Row) throws -> User {
-        let result = User(
-            id: try row.get(id),
-            username: try row.get(username),
-            email: try row.get(email),
-            passwordHash: try row.get(passwordHash),
-            isAdmin: try row.get(isAdmin),
-            createdAt: try row.get(createdAt),
-            updatedAt: try row.get(updatedAt))
-        return result
-    }
-    
-    static func toRow(_ item:User) -> [SQLite.Setter] {
-        return [self.id <- item.id,
-                self.username <- item.username,
-                self.email <- item.email,
-                self.passwordHash <- item.passwordHash,
-                self.isAdmin <- item.isAdmin,
-                self.createdAt <- item.createdAt,
-                self.updatedAt <- item.updatedAt]
-    }
-    
-    static func first(_ con:Connection, email:String) throws -> User? {
-        return try con.first(User.self, predicate: self.email == email)
-    }
-    
-    static func first(_ con:Connection, emailOrUsername:String) throws -> User? {
-        let result = try con.first(User.self, predicate: self.email == email)
-        if (result == nil) {
-            return try con.first(User.self, predicate: self.username == emailOrUsername)
-        }
-        return result
+
+    static func first(_ con: DatabasePool, emailOrUsername: String) throws -> User? {
+        try con.first(User.self, predicate: username == emailOrUsername || email == emailOrUsername)
     }
 }
 
-
+typealias TblUser = User

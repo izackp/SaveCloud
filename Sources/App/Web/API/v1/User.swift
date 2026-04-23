@@ -6,7 +6,7 @@
 //
 
 import Vapor
-import SQLite
+import GRDB
 import Argon2Swift
 
 @Sendable func apiGETUser(req: Request) async throws -> PublicUser {

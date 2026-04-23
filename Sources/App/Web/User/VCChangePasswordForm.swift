@@ -7,7 +7,7 @@
 
 import Vapor
 import Argon2Swift
-import SQLite
+import GRDB
 import HRW
 
 struct ChangePasswordRequest: Content {
@@ -66,9 +66,8 @@ class VCChangePasswordForm : ChangePasswordForm {
     let salt = Salt.newSalt()
     let passwordHash = try Argon2Swift.hashPasswordString(password: contents.password, salt: salt).encodedString()
     
-    try connection.updateField(User.self, uuid: user.id, setter: TblUser.passwordHash <- passwordHash)
+    try connection.updateField(User.self, uuid: user.id, columnName: "password_hash", value: passwordHash)
     
     let response = try VCEditUserPage(user: user, userEditError: nil, passwordEditError: nil).rootNode
     return response.response()
 }
-

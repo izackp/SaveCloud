@@ -8,7 +8,7 @@
 import Vapor
 import Argon2Swift
 import SwiftJWT
-import SQLite
+import GRDB
 
 struct ApiLoginRequest: Content, IValidate {
     let username: String?
@@ -149,7 +149,7 @@ func generateJWT(userId: UUID, sessionId: UUID, refreshToken:UUID, admin: Bool) 
     let publicUser = user.toPublicUser()
     let newRefreshToken = UUID()
     let newToken = try generateJWT(userId: user.id, sessionId: sessionId, refreshToken: newRefreshToken, admin: user.isAdmin)
-    try connection.updateField(AuthSession.self, uuid: sessionId, setter: TBLSession.refreshToken <- newRefreshToken)
+    try connection.updateField(AuthSession.self, uuid: sessionId, columnName: "refresh_token", value: newRefreshToken)
     return LoginPair(token: newToken, user: publicUser)
 }
 

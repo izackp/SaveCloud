@@ -8,7 +8,7 @@
 import Foundation
 import Vapor
 import Argon2Swift
-import SQLite
+import GRDB
 import SwiftJWT
 
 struct JWTClaimAuthenticator: AsyncBearerAuthenticator {
@@ -91,7 +91,7 @@ func createSession(_ req: Request, _ userId:UUID, _ isAdmin:Bool, _ expiresIn:Ti
     return try createSession(req, userId, isAdmin, expiresIn, refreshToken, connection)
 }
 
-func createSession(_ req: Request, _ userId:UUID, _ isAdmin:Bool, _ expiresIn:TimeInterval = hours24, _ refreshToken:UUID?, _ connection:Connection) throws -> AuthSession {
+func createSession(_ req: Request, _ userId:UUID, _ isAdmin:Bool, _ expiresIn:TimeInterval = hours24, _ refreshToken:UUID?, _ connection:DatabasePool) throws -> AuthSession {
     //TODO: Build with SEC-CH-UA-PLATFORM etc
     let userAgent = req.headers.first(name: .userAgent)
     //TODO: Add ip address field

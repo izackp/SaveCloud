@@ -6,7 +6,7 @@
 //
 
 import Vapor
-import SQLite
+import GRDB
 import Argon2Swift
 
 @Sendable func apiGETUserProfiles(req: Request) async throws -> [UserProfile] {

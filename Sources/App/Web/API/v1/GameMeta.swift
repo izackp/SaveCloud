@@ -5,7 +5,7 @@
 //  Created by Isaac Paul on 7/10/24.
 //
 import Vapor
-import SQLite
+import GRDB
 
 /*
  
@@ -52,10 +52,10 @@ import SQLite
     //let connection = try Database.getConnection()
     if let userId = userId {
         let listUserGameIds = try TblSave.fetchAllGameIds(userId: userId, profileId: profileId)
-        let listSaves = try TBLGameMeta.fetchPaged(pageInfo, onlyBaseGames: onlyBaseGames, searchList: searches)
+        let listSaves = try GameMeta.fetchPaged(pageInfo, onlyBaseGames: onlyBaseGames, searchList: searches)
         return listSaves
     } else {
-        let listSaves = try TBLGameMeta.fetchPaged(pageInfo, onlyBaseGames: onlyBaseGames, searchList: searches)
+        let listSaves = try GameMeta.fetchPaged(pageInfo, onlyBaseGames: onlyBaseGames, searchList: searches)
         return listSaves
     }
 }
@@ -146,17 +146,17 @@ import SQLite
         let parentId = target.baseGameId
         if let parentId = parentId, replaceWithParent {
             try TBLGameHash.replaceGameMeta(connection, targetUUID: gameId, replaceWith: parentId)
-            try TBLGameMeta.replaceBaseGameId(connection, targetUUID: gameId, replaceWith: parentId)
+            try GameMeta.replaceBaseGameId(connection, targetUUID: gameId, replaceWith: parentId)
         } else if (allowRelBreak) {
             try TBLGameHash.replaceGameMeta(connection, targetUUID: gameId, replaceWith: nil)
-            try TBLGameMeta.replaceBaseGameId(connection, targetUUID: gameId, replaceWith: nil)
+            try GameMeta.replaceBaseGameId(connection, targetUUID: gameId, replaceWith: nil)
         } else {
             let hashCount = try connection.count(GameHash.self, predicate: TBLGameHash.gameMetaId == gameId)
             if (hashCount > 0) {
                 throw Abort(.forbidden, reason: "There are game hashes that depend on this game meta.")
             }
             
-            let metaCount = try connection.count(GameMeta.self, predicate: TBLGameMeta.baseGameId == gameId)
+            let metaCount = try connection.count(GameMeta.self, predicate: GameMeta.baseGameId == gameId)
             if (metaCount > 0) {
                 throw Abort(.forbidden, reason: "This game meta has other dependents as children.")
             }

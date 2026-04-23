@@ -1,4 +1,5 @@
 {
+  "originHash" : "88c0a6aa12f5d9924b6f3edbcba783a4d26900ce21a6c8f64d83e9278347ed12",
   "pins" : [
     {
       "identity" : "argon2swift",
@@ -64,6 +65,24 @@
       }
     },
     {
+      "identity" : "crlogging",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/izackp/CRLogging.git",
+      "state" : {
+        "branch" : "main",
+        "revision" : "149d22acbfcea125a7adb78f51aa11d08ce2583d"
+      }
+    },
+    {
+      "identity" : "grdb.swift",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/groue/GRDB.swift.git",
+      "state" : {
+        "branch" : "master",
+        "revision" : "18497b68fdbb3a09528d260a0a0e1e7e61c8c53d"
+      }
+    },
+    {
       "identity" : "kituracontracts",
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/Kitura/KituraContracts.git",
@@ -106,15 +125,6 @@
       "state" : {
         "revision" : "8c9a227476555c55837e569be71944e02a056b72",
         "version" : "4.9.1"
-      }
-    },
-    {
-      "identity" : "sqlite.swift",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/stephencelis/SQLite.swift.git",
-      "state" : {
-        "branch" : "master",
-        "revision" : "a95fc6df17d108bd99210db5e8a9bac90fe984b8"
       }
     },
     {
@@ -280,5 +290,5 @@
       }
     }
   ],
-  "version" : 2
+  "version" : 3
 }
