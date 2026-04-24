@@ -25,10 +25,11 @@ import GRDB
 import Vapor
 
 struct Save: Content, Codable, SQLItem, Identifiable, Sendable {
-    internal init(id: UUID, gameHashId: UUID, gameMetaId: UUID?, sequentialId: UUID, profileId: UUID, userId: UUID, url: String, fileSize: Int, sourceDevice: String? = nil, screenshot: Data? = nil, name: String? = nil, date: Date? = nil, createdAt: Date, updatedAt: Date) {
+    internal init(id: UUID, gameHashId: UUID, gameMetaId: UUID?, compatibilityId: UUID, sequentialId: UUID, profileId: UUID, userId: UUID, url: String, fileSize: Int, sourceDevice: String? = nil, screenshot: Data? = nil, name: String? = nil, contentHash: String? = nil, notes: String? = nil, date: Date? = nil, createdAt: Date, updatedAt: Date) {
         self.id = id
         self.gameHashId = gameHashId
         self.gameMetaId = gameMetaId
+        self.compatibilityId = compatibilityId
         self.sequentialId = sequentialId
         self.profileId = profileId
         self.userId = userId
@@ -37,6 +38,8 @@ struct Save: Content, Codable, SQLItem, Identifiable, Sendable {
         self.sourceDevice = sourceDevice
         self.screenshot = screenshot
         self.name = name
+        self.contentHash = contentHash
+        self.notes = notes
         self.date = date
         self.createdAt = createdAt
         self.updatedAt = updatedAt
@@ -45,6 +48,7 @@ struct Save: Content, Codable, SQLItem, Identifiable, Sendable {
     var id: UUID
     var gameHashId: UUID
     var gameMetaId: UUID?
+    var compatibilityId: UUID
     var sequentialId: UUID
     var profileId: UUID
     var userId: UUID
@@ -53,6 +57,8 @@ struct Save: Content, Codable, SQLItem, Identifiable, Sendable {
     var sourceDevice: String?
     var screenshot: Data?
     var name: String?
+    var contentHash: String?
+    var notes: String?
     var date: Date?
     var createdAt: Date
     var updatedAt: Date
@@ -61,6 +67,7 @@ struct Save: Content, Codable, SQLItem, Identifiable, Sendable {
         case id
         case gameHashId = "game_hash_id"
         case gameMetaId = "game_meta_id"
+        case compatibilityId = "compatibility_id"
         case sequentialId = "sequential_id"
         case profileId = "profile_id"
         case userId = "user_id"
@@ -69,6 +76,8 @@ struct Save: Content, Codable, SQLItem, Identifiable, Sendable {
         case sourceDevice = "source_device"
         case screenshot
         case name
+        case contentHash = "content_hash"
+        case notes
         case date
         case createdAt = "created_at"
         case updatedAt = "updated_at"
@@ -81,6 +90,7 @@ struct Save: Content, Codable, SQLItem, Identifiable, Sendable {
     static let id = Column(CodingKeys.id)
     static let game_hash_id = Column(CodingKeys.gameHashId)
     static let game_meta_id = Column(CodingKeys.gameMetaId)
+    static let compatibility_id = Column(CodingKeys.compatibilityId)
     static let sequential_id = Column(CodingKeys.sequentialId)
     static let profile_id = Column(CodingKeys.profileId)
     static let user_id = Column(CodingKeys.userId)
@@ -89,6 +99,8 @@ struct Save: Content, Codable, SQLItem, Identifiable, Sendable {
     static let source_device = Column(CodingKeys.sourceDevice)
     static let screenshot = Column(CodingKeys.screenshot)
     static let name = Column(CodingKeys.name)
+    static let content_hash = Column(CodingKeys.contentHash)
+    static let notes = Column(CodingKeys.notes)
     static let date = Column(CodingKeys.date)
     static let created_at = Column(CodingKeys.createdAt)
     static let updated_at = Column(CodingKeys.updatedAt)
@@ -102,6 +114,7 @@ struct Save: Content, Codable, SQLItem, Identifiable, Sendable {
             t.column(id, .blob).primaryKey()
             t.column(game_hash_id, .blob).notNull()
             t.column(game_meta_id, .blob)
+            t.column(compatibility_id, .blob).notNull()
             t.column(sequential_id, .blob).notNull()
             t.column(profile_id, .blob).notNull()
             t.column(user_id, .blob).notNull()
@@ -110,6 +123,8 @@ struct Save: Content, Codable, SQLItem, Identifiable, Sendable {
             t.column(source_device, .text)
             t.column(screenshot, .blob)
             t.column(name, .text)
+            t.column(content_hash, .text)
+            t.column(notes, .text)
             t.column(date, .date)
             t.column(created_at, .date).notNull()
             t.column(updated_at, .date).notNull()
@@ -121,11 +136,13 @@ struct Save: Content, Codable, SQLItem, Identifiable, Sendable {
 extension Save {
     static let gameHashId = game_hash_id
     static let gameMetaId = game_meta_id
+    static let compatibilityId = compatibility_id
     static let sequentialId = sequential_id
     static let profileId = profile_id
     static let userId = user_id
     static let fileSize = file_size
     static let sourceDevice = source_device
+    static let contentHash = content_hash
     static let createdAt = created_at
     static let updatedAt = updated_at
 

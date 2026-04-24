@@ -687,10 +687,16 @@ final class AppTests: XCTestCase {
 
     private func insertSave(userId: UUID, profileId: UUID, gameHashId: UUID, gameMetaId: UUID, name: String) throws -> Save {
         let now = Date()
+        let compatibilityId = UUID()
+        var compatibility = Compatibility(id: compatibilityId, updatedAt: now)
+        try DBShared.pool().write { db in
+            try compatibility.insert(db)
+        }
         var save = Save(
             id: UUID(),
             gameHashId: gameHashId,
             gameMetaId: gameMetaId,
+            compatibilityId: compatibilityId,
             sequentialId: UUID(),
             profileId: profileId,
             userId: userId,
@@ -698,6 +704,8 @@ final class AppTests: XCTestCase {
             fileSize: 1024,
             sourceDevice: "tests",
             name: name,
+            contentHash: "content-\(UUID().uuidString)",
+            notes: "test save",
             date: now,
             createdAt: now,
             updatedAt: now

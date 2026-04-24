@@ -69,6 +69,7 @@ class DBShared {
         try DBInfo.createTable(db: db)
         try User.createTable(db: db)
         try AuthSession.createTable(db: db)
+        try Compatibility.createTable(db: db)
         try GameMeta.createTable(db: db)
         try GameHash.createTable(db: db)
         try Save.createTable(db: db)
@@ -85,6 +86,9 @@ class DBShared {
         if try db.tableExists(AuthSession.databaseTableName) {
             try db.drop(table: AuthSession.databaseTableName)
         }
+        if try db.tableExists(Compatibility.databaseTableName) {
+            try db.drop(table: Compatibility.databaseTableName)
+        }
         if try db.tableExists(GameMeta.databaseTableName) {
             try db.drop(table: GameMeta.databaseTableName)
         }
@@ -96,6 +100,27 @@ class DBShared {
         }
         if try db.tableExists(UserProfile.databaseTableName) {
             try db.drop(table: UserProfile.databaseTableName)
+        }
+    }
+
+    static func reseedPreserving(currentUser: User, currentSession: AuthSession) throws {
+        let pool = pool()
+        try pool.write { db in
+            try dropAllTables(db)
+            try createAllTables(db)
+
+            var globalInfo = DBInfo(version: version)
+            try globalInfo.insert(db)
+
+            var preservedUser = currentUser
+            try preservedUser.insert(db)
+
+            var preservedSession = currentSession
+            preservedSession.user = preservedUser.id
+            preservedSession.isAdmin = preservedUser.isAdmin
+            try preservedSession.insert(db)
+
+            try FakeDataSeeder.seedGamesAndSaves(db)
         }
     }
     

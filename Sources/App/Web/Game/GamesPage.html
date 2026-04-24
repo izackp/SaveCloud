@@ -1,0 +1,49 @@
+<html>
+    <head>
+        <title>Games</title>
+        <link rel="stylesheet" href="/style.css" />
+    </head>
+    <body>
+        <div>
+            <div id='nav_bar'></div>
+            <div class='nav_body'>
+                <h1>Games</h1>
+                <p id="p_error" style="display:none"></p>
+                <table class="pure-table pure-table-horizontal">
+                    <thead>
+                        <tr>
+                            <th>
+                                ID
+                                <a id="sort_id_link">Sort</a>
+                            </th>
+                            <th>
+                                Name
+                                <a id="sort_name_link">Sort</a>
+                            </th>
+                            <th>Version</th>
+                            <th>Family ID</th>
+                            <th>Base Game ID</th>
+                            <th>Breaks Prev</th>
+                            <th>Breaks Base</th>
+                            <th>
+                                Created
+                                <a id="sort_created_at_link">Sort</a>
+                            </th>
+                            <th>
+                                Updated
+                                <a id="sort_updated_at_link">Sort</a>
+                            </th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="table"></tbody>
+                </table>
+                <div>
+                    <a id="prev_link" style="display:none">Previous</a>
+                    <span id="page_text"></span>
+                    <a id="next_link" style="display:none">Next</a>
+                </div>
+            </div>
+        </div>
+    </body>
+</html>

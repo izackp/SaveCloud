@@ -1,0 +1,41 @@
+<html>
+    <head>
+        <title>Delete Game</title>
+        <link rel="stylesheet" href="/style.css" />
+    </head>
+    <body>
+        <div>
+            <div id='nav_bar'></div>
+            <div class='nav_body'>
+                <h1>Delete Game</h1>
+                <p>Are you sure you want to delete this game?</p>
+                <ul>
+                    <li>ID: <span id="game_id"></span></li>
+                    <li>Name: <span id="name"></span></li>
+                    <li>Version: <span id="version"></span></li>
+                    <li>Base Game ID: <span id="base_game_id"></span></li>
+                </ul>
+                <form id="delete_form" action="/games" method="POST" enctype="application/x-www-form-urlencoded">
+                    <label for="replace_with_parent">
+                        <input
+                            type="checkbox"
+                            id="replace_with_parent"
+                            name="replace_with_parent">
+                        Replace dependents with parent
+                    </label>
+                    <label for="allow_break">
+                        <input
+                            type="checkbox"
+                            id="allow_break"
+                            name="allow_break">
+                        Allow dependents to lose their relation
+                    </label>
+                    <button type="submit">Delete Game</button>
+                </form>
+                <p>
+                    <a id="cancel_link" href="/games">Cancel</a>
+                </p>
+            </div>
+        </div>
+    </body>
+</html>

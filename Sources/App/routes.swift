@@ -55,6 +55,12 @@ func routes(_ app: Application) throws {
     app.get("register") { req async throws in
         try VCRegistrationForm().rootNode
     }
+    app.get("games", use: gamesPage(req:))
+    app.get("games", ":game_id", use: gameDetailPage(req:))
+    app.get("games", ":game_id", "edit", use: editGamePage(req:))
+    app.post("games", ":game_id", "edit", use: updateGame(req:))
+    app.get("games", ":game_id", "delete", use: deleteGamePage(req:))
+    app.post("games", ":game_id", "delete", use: deleteGame(req:))
 
     app.post("register", use: register(req:))
     app.post("api", "v1", "register", use: apiRegister(req:))
@@ -122,6 +128,7 @@ func routes(_ app: Application) throws {
 
     let userSessGroup = app.routes
     userSessGroup.post("login", use: login(req:))
+    userSessGroup.post("admin", "reseed", use: reseedDatabase(req:))
     userSessGroup.post("user", "edit", use: editUser(req:))
     userSessGroup.post("user", "change_password", use: changePassword(req:))
     userSessGroup.get("user", "edit_all", use: editAllUsers(req:))

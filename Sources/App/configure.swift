@@ -46,6 +46,7 @@ public func configure(_ app: Application) async throws {
     app.http.server.configuration.tlsConfiguration = tlsConfiguration
     */
     let _ = tryOrLog(SourceInfo(type:#file), {try DBShared.initDB(clearDB: false)})
+    let _ = tryOrLog(SourceInfo(type:#file), {try FakeDataSeeder.seedGamesAndSavesIfEmpty()})
     app.middleware.use(FileMiddleware(publicDirectory: app.directory.publicDirectory))
     app.middleware.use(app.sessions.middleware)
     // register routes

@@ -22,7 +22,7 @@ import GRDB
      "name": "The Battle for Wesnoth",
      "version": "1.18.0",
      "platform": "windows",
-     "family_id": "uuid",
+     "family_id": "uuid", //Links different versions of the game together
      "created_at": "..",
      "updated_at": "..",
      "patched_game_info": {

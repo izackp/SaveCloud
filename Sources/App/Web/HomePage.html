@@ -6,6 +6,17 @@
     <body>
         <div>
             <div id='nav_bar'></div>
+            <div class='nav_body'>
+                <h1>Save Cloud</h1>
+                <p id="p_message" style="display:none"></p>
+                <div id="admin_tools" style="display:none">
+                    <h2>Admin Tools</h2>
+                    <p>Clear the current database, keep your current user and session, and reseed sample data.</p>
+                    <form id="reseed_form" action="/admin/reseed" method="POST">
+                        <button type="submit">Reseed Database</button>
+                    </form>
+                </div>
+            </div>
         </div>
     </body>
 </html>
