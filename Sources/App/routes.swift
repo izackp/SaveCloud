@@ -126,6 +126,13 @@ func routes(_ app: Application) throws {
     userSessGroup.post("login", use: login(req:))
     userSessGroup.post("user", "edit", use: editUser(req:))
     userSessGroup.post("user", "change_password", use: changePassword(req:))
+    userSessGroup.get("user", "edit_all", use: editAllUsers(req:))
+    userSessGroup.get("user", "edit_all", "new", use: newManagedUserPage(req:))
+    userSessGroup.post("user", "edit_all", "new", use: createManagedUser(req:))
+    userSessGroup.get("user", "edit_all", ":managed_user_id", "edit", use: editManagedUserPage(req:))
+    userSessGroup.post("user", "edit_all", ":managed_user_id", "edit", use: updateManagedUser(req:))
+    userSessGroup.get("user", "edit_all", ":managed_user_id", "delete", use: deleteManagedUserPage(req:))
+    userSessGroup.post("user", "edit_all", ":managed_user_id", "delete", use: deleteManagedUser(req:))
     
     userSessGroup.get("user", "edit") { req async throws in
         let pool = DBShared.pool()

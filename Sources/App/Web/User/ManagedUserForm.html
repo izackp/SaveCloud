@@ -1,0 +1,64 @@
+<form action="/user/edit_all/new"
+      method="POST"
+      enctype="application/x-www-form-urlencoded">
+  <fieldset>
+    <h2 id="title">Manage User</h2>
+
+    <label for="username">
+      Username:
+      <input
+        type="text"
+        id="username"
+        name="username"
+        required
+        autofocus
+        autocomplete="off">
+    </label>
+
+    <label for="email">
+      Email:
+      <input
+        type="email"
+        id="email"
+        name="email"
+        required>
+    </label>
+
+    <label for="password">
+      Password:
+      <input
+        type="password"
+        id="password"
+        name="password"
+        class="password-input">
+    </label>
+
+    <label for="is_admin">
+      <input
+        type="checkbox"
+        id="is_admin"
+        name="is_admin">
+      Admin User
+    </label>
+
+    <label id="created_container" style="display:none">
+      Created At:
+      <br>
+      <span id="created_at"></span>
+    </label>
+
+    <label id="updated_container" style="display:none">
+      Updated At:
+      <br>
+      <span id="updated_at"></span>
+    </label>
+
+    <label id="error_container" style="display:none">
+      Error:
+      <br>
+      <span id="span_error"></span>
+    </label>
+
+    <button id="submit_button" type="submit">Save</button>
+  </fieldset>
+</form>
