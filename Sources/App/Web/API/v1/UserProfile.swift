@@ -15,13 +15,13 @@ import Argon2Swift
     }
     let userId:UUID = try req.expectValidUserId()
     
-    let connection = DBShared.pool()
-    guard let user = try await connection.read({ db in
+    let pool = DBShared.pool()
+    guard let user = try await pool.read({ db in
         try User.filter(id: userId).fetchOne(db)
     }) else {
         throw Abort(.notFound)
     }
-    let profileList = try await connection.read { db in
+    let profileList = try await pool.read { db in
         try UserProfile.filter(UserProfile.user_id == user.id).fetchAll(db)
     }
     return profileList
@@ -104,8 +104,8 @@ final class PostUserProfile: Content, IValidate {
     let id = contents.id ?? UUID()
     let date = Date()
     let userProfile = UserProfile(id: id, userId: userId, name: contents.name, createdAt: date, updatedAt: date)
-    let connection = DBShared.pool()
-    return try await connection.write { db in
+    let pool = DBShared.pool()
+    return try await pool.write { db in
         var profile = userProfile
         if userDefinedId {
             try profile.insert(db)
@@ -138,8 +138,8 @@ final class PostUserProfile: Content, IValidate {
         throw Abort(.badRequest)
     }
     
-    let connection = DBShared.pool()
-    guard var matchingUserProfile = try await connection.read({ db in
+    let pool = DBShared.pool()
+    guard var matchingUserProfile = try await pool.read({ db in
         try UserProfile.filter(id: profileId).fetchOne(db)
     }) else {
         throw Abort(.notFound, reason: "Profile with id not found: \(profileId)")
@@ -152,7 +152,7 @@ final class PostUserProfile: Content, IValidate {
     matchingUserProfile.updatedAt = Date()
     matchingUserProfile.name = contents.name
     let updatedProfile = matchingUserProfile
-    return try await connection.write { db in
+    return try await pool.write { db in
         let profile = updatedProfile
         try profile.update(db)
         return profile
@@ -173,8 +173,8 @@ final class PostUserProfile: Content, IValidate {
         profileId = contents.id
     }
     
-    let connection = DBShared.pool()
-    guard let matchingUserProfile = try await connection.read({ db in
+    let pool = DBShared.pool()
+    guard let matchingUserProfile = try await pool.read({ db in
         try UserProfile.filter(id: profileId).fetchOne(db)
     }) else {
         throw Abort(.notFound, reason: "Profile with id not found: \(profileId)")
@@ -184,7 +184,7 @@ final class PostUserProfile: Content, IValidate {
     if (!allowed) {
         throw Abort(.unauthorized, reason: "You don't have permission to edit this user.")
     }
-    try await connection.write { db in
+    try await pool.write { db in
         let firstSave = try Save.filter(Save.profileId == profileId).fetchOne(db)
         if (firstSave != nil) {
             throw Abort(.badRequest, reason: "Can not delete profile that contains save data.")

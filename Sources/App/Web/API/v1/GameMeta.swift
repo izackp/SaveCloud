@@ -49,7 +49,7 @@ import GRDB
     let searches = GameMetaSearchField.searchFieldsInRequest(req)
     let onlyBaseGames = req.parameters.get("base_games") == "1"
     
-    //let connection = DBShared.pool()
+    //let pool = DBShared.pool()
     if let userId = userId {
         let listUserGameIds = try Save.fetchAllGameIds(userId: userId, profileId: profileId)
         let listSaves = try GameMeta.fetchPaged(pageInfo, onlyBaseGames: onlyBaseGames, searchList: searches)
@@ -66,8 +66,8 @@ import GRDB
         throw Abort(.badRequest)
     }
     
-    let connection = DBShared.pool()
-    guard let result = try await connection.read({ db in
+    let pool = DBShared.pool()
+    guard let result = try await pool.read({ db in
         try GameMeta.filter(id: gameId).fetchOne(db)
     }) else {
         throw Abort(.notFound)
@@ -91,8 +91,8 @@ import GRDB
     try contents.checkValdiation()
     contents.id = gameId
     
-    let connection = DBShared.pool()
-    guard let existing = try await connection.read({ db in
+    let pool = DBShared.pool()
+    guard let existing = try await pool.read({ db in
         try GameMeta.filter(id: gameId).fetchOne(db)
     }) else {
         throw Abort(.notFound)
@@ -104,7 +104,7 @@ import GRDB
     newGameMeta.createdAt = existing.createdAt
     let updatedGameMeta = newGameMeta
     
-    return try await connection.write { db in
+    return try await pool.write { db in
         let gameMeta = updatedGameMeta
         try gameMeta.update(db)
         return gameMeta
@@ -124,8 +124,8 @@ import GRDB
     let date = Date()
     let newGameMeta = contents.toGameMeta(date)
     
-    let connection = DBShared.pool()
-    return try await connection.write { db in
+    let pool = DBShared.pool()
+    return try await pool.write { db in
         var gameMeta = newGameMeta
         try gameMeta.insert(db)//TODO: If UUID not provided by user, and the
         //UUID already exists then we should retry with a new UUID
@@ -148,8 +148,8 @@ import GRDB
     let replaceWithParent = req.parameters.get("replace_with_parent") == "1"
     let allowRelBreak = req.parameters.get("allow_break") == "1"
     
-    let connection = DBShared.pool()
-    try await connection.write { db in
+    let pool = DBShared.pool()
+    try await pool.write { db in
         guard let target = try GameMeta.filter(id: gameId).fetchOne(db) else {
             throw Abort(.notFound)
         }

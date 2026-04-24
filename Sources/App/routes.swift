@@ -25,8 +25,8 @@ func routes(_ app: Application) throws {
             return try VCHomePage(isAdmin: session.isAdmin).rootNode
         } else {
             do {
-                let connection = DBShared.pool()
-                let users = try await connection.read { db in
+                let pool = DBShared.pool()
+                let users = try await pool.read { db in
                     try User.fetchAll(db)
                 }
                 return try VCWelcomePage(users: users, error: nil).rootNode
@@ -43,8 +43,8 @@ func routes(_ app: Application) throws {
             return try HomePage(app, isAdmin: session.isAdmin).rootNode
         } else {
             do {
-                let connection = DBShared.pool()
-                let users = try connection.fetchAll(User.self)
+                let pool = DBShared.pool()
+                let users = try pool.fetchAll(User.self)
                 return try WelcomePage(app, users: users, error: nil).rootNode
             } catch {
                 return try WelcomePage(app, users: [], error: nil).rootNode

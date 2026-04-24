@@ -24,8 +24,8 @@ import Argon2Swift
         userId = claims.userId
     }
     
-    let connection = DBShared.pool()
-    guard let user = try await connection.read({ db in
+    let pool = DBShared.pool()
+    guard let user = try await pool.read({ db in
         try User.filter(id: userId).fetchOne(db)
     }) else {
         throw Abort(.notFound)
@@ -88,15 +88,15 @@ final class PutUser: Content, IValidate {
         throw Abort(.unauthorized, reason: "You don't have permission to edit this user.")
     }
     
-    let connection = DBShared.pool()
-    guard var matchingUser = try await connection.read({ db in
+    let pool = DBShared.pool()
+    guard var matchingUser = try await pool.read({ db in
         try User.filter(id: id).fetchOne(db)
     }) else {
         throw Abort(.notFound, reason: "User with id not found: \(id)")
     }
     var isDiff = false
     if let username = contents.username, (matchingUser.username != username) {
-        let uniqueUsername = try await connection.read { db in
+        let uniqueUsername = try await pool.read { db in
             try User
                 .filter(User.username == username && User.id != id)
                 .fetchCount(db) == 0
@@ -108,7 +108,7 @@ final class PutUser: Content, IValidate {
         isDiff = true
     }
     if let email = contents.email, (matchingUser.email != email) {
-        let uniqueEmail = try await connection.read { db in
+        let uniqueEmail = try await pool.read { db in
             try User
                 .filter(User.email == email && User.id != id)
                 .fetchCount(db) == 0
@@ -128,7 +128,7 @@ final class PutUser: Content, IValidate {
     }
     matchingUser.updatedAt = Date()
     let updatedUser = matchingUser
-    let savedUser = try await connection.write { db in
+    let savedUser = try await pool.write { db in
         let user = updatedUser
         try user.update(db)
         return user
@@ -175,8 +175,8 @@ final class PasswordCheck: Content, IValidate {
     let contents = try req.content.decode(PasswordCheck.self)
     try contents.checkValdiation()
     
-    let connection = DBShared.pool()
-    guard let matchingUser = try await connection.read({ db in
+    let pool = DBShared.pool()
+    guard let matchingUser = try await pool.read({ db in
         try User.filter(id: id).fetchOne(db)
     }) else {
         throw Abort(.notFound, reason: "User with id not found: \(id)")
@@ -187,7 +187,7 @@ final class PasswordCheck: Content, IValidate {
         throw Abort(.unauthorized, reason: "Incorrect password")
     }
     
-    try await connection.write { db in
+    try await pool.write { db in
         try AuthSession.filter(AuthSession.user == id).deleteAll(db)
         try User.filter(id: id).deleteAll(db)
         //TODO: Need to also delete saves, profiles, hashes

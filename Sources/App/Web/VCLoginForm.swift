@@ -39,8 +39,8 @@ struct LoginRequest: Content {
         return try VCWelcomePage(users: [], error: error).rootNode.response()
     }
     
-    let connection = DBShared.pool()
-    guard let user = try await User.first(connection, emailOrUsername: loginRequest.email_or_username) else {
+    let pool = DBShared.pool()
+    guard let user = try await User.first(pool, emailOrUsername: loginRequest.email_or_username) else {
         return try VCWelcomePage(users: [], error: "Username Or Email not found").rootNode.response()
     }
     
@@ -48,7 +48,7 @@ struct LoginRequest: Content {
     if (!verified) {
         return try VCWelcomePage(users: [], error: "Incorrect password").rootNode.response()
     }
-    let newSession = try await createSession(req, user.id, user.isAdmin, hours24, UUID.init(), connection)
+    let newSession = try await createSession(req, user.id, user.isAdmin, hours24, UUID.init(), pool)
     req.session.authenticate(newSession)
     //req.auth.login(user)
     

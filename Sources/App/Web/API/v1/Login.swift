@@ -73,8 +73,8 @@ struct JWTClaims: Claims, Authenticatable {
     let contents = try req.content.decode(ApiLoginRequest.self)
     try contents.checkValdiation()
     
-    let connection = DBShared.pool()
-    guard let user = try await User.first(connection, emailOrUsername: contents.emailOrUsername()) else {
+    let pool = DBShared.pool()
+    guard let user = try await User.first(pool, emailOrUsername: contents.emailOrUsername()) else {
         throw Abort(.notFound, reason: "Username Or Email not found")
     }
     
@@ -121,35 +121,35 @@ func generateJWT(userId: UUID, sessionId: UUID, refreshToken:UUID, admin: Bool) 
     let jwt = try JWT<JWTClaims>(jwtString: auth.token, verifier: jwtVerifier)
     let sessionId = jwt.claims.sessionId
     
-    let connection = DBShared.pool()
-    guard let session = try await connection.read({ db in
+    let pool = DBShared.pool()
+    guard let session = try await pool.read({ db in
         try AuthSession.filter(id: sessionId).fetchOne(db)
     }) else {
         throw Abort(.unauthorized)
     }
     if (session.refreshToken == nil) {
         //TODO: Log shananigans
-        _ = try await connection.write { db in
+        _ = try await pool.write { db in
             try AuthSession.filter(id: sessionId).deleteAll(db)
         }
         throw Abort(.unauthorized)
     }
     if (session.refreshToken != contents.refreshToken) {
         //TODO: Log shananigans
-        _ = try await connection.write { db in
+        _ = try await pool.write { db in
             try AuthSession.filter(id: sessionId).deleteAll(db)
         }
         throw Abort(.unauthorized)
     }
 
     if (session.isExpired()) {
-        _ = try await connection.write { db in
+        _ = try await pool.write { db in
             try AuthSession.filter(id: sessionId).deleteAll(db)
         }
         throw Abort(.unauthorized)
     }
 
-    guard let user = try await connection.read({ db in
+    guard let user = try await pool.read({ db in
         try User.filter(id: session.user).fetchOne(db)
     }) else {
         //TODO: Log
@@ -159,7 +159,7 @@ func generateJWT(userId: UUID, sessionId: UUID, refreshToken:UUID, admin: Bool) 
     let publicUser = user.toPublicUser()
     let newRefreshToken = UUID()
     let newToken = try generateJWT(userId: user.id, sessionId: sessionId, refreshToken: newRefreshToken, admin: user.isAdmin)
-    try await connection.write { db in
+    try await pool.write { db in
         _ = try AuthSession
             .filter(id: sessionId)
             .updateAll(
