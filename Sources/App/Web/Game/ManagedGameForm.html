@@ -1,101 +1,70 @@
 <form action="/games"
       method="POST"
-      enctype="application/x-www-form-urlencoded">
+      enctype="application/x-www-form-urlencoded"
+      class="pure-form pure-form-stacked">
   <fieldset>
-    <h2>Manage Game</h2>
+    <legend>Manage Game</legend>
 
     <label>
-      Game ID:
-      <span id="game_id"></span><br>
+      Game ID
+      <span id="game_id" style="display:block; color:#555;"></span>
     </label>
 
     <label for="name">
-      Name:
-      <input
-        type="text"
-        id="name"
-        name="name"
-        required
-        autofocus
-        autocomplete="off"><br>
+      Name
+      <input type="text" id="name" name="name" required autofocus autocomplete="off">
     </label>
 
     <label for="version">
-      Version:
-      <input
-        type="text"
-        id="version"
-        name="version"
-        autocomplete="off"><br>
+      Version
+      <input type="text" id="version" name="version" autocomplete="off">
     </label>
 
     <label for="family_id">
-      Family ID:
-      <input
-        type="text"
-        id="family_id"
-        name="family_id"
-        autocomplete="off"><br>
+      Family ID
+      <input type="text" id="family_id" name="family_id" autocomplete="off">
     </label>
 
     <label for="base_game_id">
-      Base Game ID:
-      <input
-        type="text"
-        id="base_game_id"
-        name="base_game_id"
-        autocomplete="off"><br>
+      Base Game ID
+      <input type="text" id="base_game_id" name="base_game_id" autocomplete="off">
     </label>
 
     <label for="hashed_file_name">
-      Hashed File Name:
-      <input
-        type="text"
-        id="hashed_file_name"
-        name="hashed_file_name"
-        autocomplete="off"><br>
+      Hashed File Name
+      <input type="text" id="hashed_file_name" name="hashed_file_name" autocomplete="off">
     </label>
 
     <label for="xxhash64">
-      xxHash64:
-      <input
-        type="text"
-        id="xxhash64"
-        name="xxhash64"
-        autocomplete="off"><br>
+      xxHash64
+      <input type="text" id="xxhash64" name="xxhash64" autocomplete="off">
     </label>
 
-    <label for="breaks_save_format_from_previous_version">
-      Breaks Save Format From Previous Version:
-      <input
-        type="checkbox"
-        id="breaks_save_format_from_previous_version"
-        name="breaks_save_format_from_previous_version"><br>
+    <label for="breaks_save_format_from_previous_version" class="pure-checkbox" style="margin-top:0.5rem;">
+      <input type="checkbox" id="breaks_save_format_from_previous_version" name="breaks_save_format_from_previous_version">
+      Breaks Save Format From Previous Version
     </label>
 
-    <label for="breaks_save_format_from_base_game">
-      Breaks Save Format From Base Game:
-      <input
-        type="checkbox"
-        id="breaks_save_format_from_base_game"
-        name="breaks_save_format_from_base_game"><br>
+    <label for="breaks_save_format_from_base_game" class="pure-checkbox">
+      <input type="checkbox" id="breaks_save_format_from_base_game" name="breaks_save_format_from_base_game">
+      Breaks Save Format From Base Game
     </label>
 
     <label>
-      Created At:
-      <span id="created_at"></span><br>
+      Created At
+      <span id="created_at" style="display:block; color:#555;"></span>
     </label>
 
     <label>
-      Updated At:
-      <span id="updated_at"></span><br>
+      Updated At
+      <span id="updated_at" style="display:block; color:#555;"></span>
     </label>
 
-    <label id="error_container" style="display:none">
-      Error:
-      <span id="span_error"></span><br>
+    <label id="error_container" style="display:none; color:#c00;">
+      Error
+      <span id="span_error" style="display:block;"></span>
     </label>
 
-    <button type="submit">Update Game</button>
+    <button type="submit" class="pure-button pure-button-primary" style="margin-top:0.75rem;">Update Game</button>
   </fieldset>
 </form>

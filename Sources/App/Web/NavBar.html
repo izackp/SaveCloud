@@ -1,33 +1,36 @@
-<nav id="sidebar">
-  <div class="nav_section user">
-    <span class="nav_item nav_text">User</span>
-    <a href="/user/edit" class="nav_item">
-      <span>Update</span>
-    </a>
-    <a href="/user/games" class="nav_item">
-      <span>Games</span>
-    </a>
-    <a href="/user/saves" class="nav_item">
-      <span>Saves</span>
-    </a>
-    <a href="/user/sessions" class="nav_item">
-      <span>Sessions</span>
-    </a>
-  </div>
+<nav class="pure-menu" style="height:100%; padding: 1rem 0;">
+  <span class="pure-menu-heading" style="color:#9ca3af; font-size:0.75rem; letter-spacing:.05em;">Save Cloud</span>
+  <ul class="pure-menu-list">
+    <li class="pure-menu-item pure-menu-heading" style="color:#6b7280; font-size:0.7rem;">User</li>
+    <li class="pure-menu-item">
+      <a href="/user/edit" class="pure-menu-link" style="color:#e5e7eb;">Profile</a>
+    </li>
+    <li class="pure-menu-item">
+      <a href="/user/games" class="pure-menu-link" style="color:#e5e7eb;">Games</a>
+    </li>
+    <li class="pure-menu-item">
+      <a href="/user/saves" class="pure-menu-link" style="color:#e5e7eb;">Saves</a>
+    </li>
+    <li class="pure-menu-item">
+      <a href="/user/sessions" class="pure-menu-link" style="color:#e5e7eb;">Sessions</a>
+    </li>
+  </ul>
 
-  <div id="nav_section_admin" class="nav_section admin" style="display:none">
-    <span class="nav_item nav_text">Admin</span>
-    <a href="/user/edit_all" class="nav_item">
-      <span>Users</span>
-    </a>
-    <a href="/sessions" class="nav_item">
-      <span>All Sessions</span>
-    </a>
-    <a href="/games" class="nav_item">
-      <span>Games</span>
-    </a>
-    <a href="/saves" class="nav_item">
-      <span>Saves</span>
-    </a>
+  <div id="nav_section_admin" style="display:none">
+    <ul class="pure-menu-list">
+      <li class="pure-menu-item pure-menu-heading" style="color:#6b7280; font-size:0.7rem;">Admin</li>
+      <li class="pure-menu-item">
+        <a href="/user/edit_all" class="pure-menu-link" style="color:#e5e7eb;">Users</a>
+      </li>
+      <li class="pure-menu-item">
+        <a href="/sessions" class="pure-menu-link" style="color:#e5e7eb;">All Sessions</a>
+      </li>
+      <li class="pure-menu-item">
+        <a href="/games" class="pure-menu-link" style="color:#e5e7eb;">Games</a>
+      </li>
+      <li class="pure-menu-item">
+        <a href="/saves" class="pure-menu-link" style="color:#e5e7eb;">Saves</a>
+      </li>
+    </ul>
   </div>
 </nav>

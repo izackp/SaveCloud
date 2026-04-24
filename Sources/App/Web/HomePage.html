@@ -1,21 +1,25 @@
 <html>
     <head>
         <title>Save Cloud - Home</title>
-        <link rel="stylesheet" href="/style.css" />
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/purecss@3.0.0/build/pure-min.css" integrity="sha384-X38yfunGUhNzHpBaEBsWLO+A0HDYOQi8ufWDkZ0k9e0eXz/tH3II7uKZ9msv++Ls" crossorigin="anonymous">
+        <style>
+            body { margin: 0; }
+            #nav_bar { width: 200px; position: fixed; left: 0; top: 0; bottom: 0; background: #1f2937; overflow-y: auto; }
+            .nav_body { margin-left: 200px; padding: 2rem; }
+        </style>
     </head>
     <body>
-        <div>
-            <div id='nav_bar'></div>
-            <div class='nav_body'>
-                <h1>Save Cloud</h1>
-                <p id="p_message" style="display:none"></p>
-                <div id="admin_tools" style="display:none">
-                    <h2>Admin Tools</h2>
-                    <p>Clear the current database, keep your current user and session, and reseed sample data.</p>
-                    <form id="reseed_form" action="/admin/reseed" method="POST">
-                        <button type="submit">Reseed Database</button>
-                    </form>
-                </div>
+        <div id='nav_bar'></div>
+        <div class='nav_body'>
+            <h1>Save Cloud</h1>
+            <p id="p_message" style="display:none"></p>
+            <div id="admin_tools" style="display:none">
+                <h2>Admin Tools</h2>
+                <p>Clear the current database, keep your current user and session, and reseed sample data.</p>
+                <form id="reseed_form" action="/admin/reseed" method="POST" class="pure-form">
+                    <button type="submit" class="pure-button" style="background:#c00; color:#fff;">Reseed Database</button>
+                </form>
             </div>
         </div>
     </body>

@@ -1,61 +1,45 @@
 <form action="/user/edit_all/new"
       method="POST"
-      enctype="application/x-www-form-urlencoded">
+      enctype="application/x-www-form-urlencoded"
+      class="pure-form pure-form-stacked">
   <fieldset>
-    <h2 id="title">Manage User</h2>
+    <legend><span id="title">Manage User</span></legend>
 
     <label for="username">
-      Username:
-      <input
-        type="text"
-        id="username"
-        name="username"
-        required
-        autofocus
-        autocomplete="off"><br>
+      Username
+      <input type="text" id="username" name="username" required autofocus autocomplete="off">
     </label>
 
     <label for="email">
-      Email:
-      <input
-        type="email"
-        id="email"
-        name="email"
-        required><br>
+      Email
+      <input type="email" id="email" name="email" required>
     </label>
 
     <label for="password">
-      Password:
-      <input
-        type="password"
-        id="password"
-        name="password"
-        class="password-input"><br>
+      Password
+      <input type="password" id="password" name="password" class="password-input">
     </label>
 
-    <label for="is_admin">
-      <input
-        type="checkbox"
-        id="is_admin"
-        name="is_admin">
+    <label for="is_admin" class="pure-checkbox" style="margin-top:0.5rem;">
+      <input type="checkbox" id="is_admin" name="is_admin">
       Admin User
     </label>
 
-    <label id="created_container" style="display:none">
-      Created At:
-      <span id="created_at"></span><br>
+    <label id="created_container" style="display:none;">
+      Created At
+      <span id="created_at" style="display:block; color:#555;"></span>
     </label>
 
-    <label id="updated_container" style="display:none">
-      Updated At:
-      <span id="updated_at"></span><br>
+    <label id="updated_container" style="display:none;">
+      Updated At
+      <span id="updated_at" style="display:block; color:#555;"></span>
     </label>
 
-    <label id="error_container" style="display:none">
-      Error:
-      <span id="span_error"></span><br>
+    <label id="error_container" style="display:none; color:#c00;">
+      Error
+      <span id="span_error" style="display:block;"></span>
     </label>
 
-    <button id="submit_button" type="submit">Save</button>
+    <button id="submit_button" type="submit" class="pure-button pure-button-primary" style="margin-top:0.75rem;">Save</button>
   </fieldset>
 </form>
