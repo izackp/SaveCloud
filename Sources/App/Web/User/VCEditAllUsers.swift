@@ -366,10 +366,29 @@ struct ManagedSessionRequest: Content {
     }
 }
 
+struct SessionPageContext {
+    let viewer: AuthSession
+    let targetUserId: UUID?
+    let basePath: String
+    let canEdit: Bool
+
+    func canDelete(_ session: AuthSession) -> Bool {
+        viewer.isAdmin || viewer.user == session.user
+    }
+
+    func isCurrent(_ session: AuthSession) -> Bool {
+        viewer.id == session.id
+    }
+}
+
 final class VCEditSessionsTableRow: EditSessionsTableRow {
-    init(session: AuthSession) throws {
+    init(session: AuthSession, context: SessionPageContext) throws {
         try super.init()
         session_id.addChild(HTMLText(content: session.id.uuidString))
+        if context.isCurrent(session) {
+            session_id.addChild(HTMLText(content: " (Current)"))
+            rootNode.globalAttributes[.style] = "background-color:#fff7d6;"
+        }
         user_id.addChild(HTMLText(content: session.user.uuidString))
         refresh_token.addChild(HTMLText(content: session.refreshToken?.uuidString ?? ""))
         device_name.addChild(HTMLText(content: session.deviceName ?? ""))
@@ -377,38 +396,46 @@ final class VCEditSessionsTableRow: EditSessionsTableRow {
         ip_address.addChild(HTMLText(content: session.ipAddress))
         is_admin.addChild(HTMLText(content: session.isAdmin ? "Yes" : "No"))
         expires_at.addChild(HTMLText(content: String(describing: session.expiresAt)))
-        edit_link.href = URL(string: "/sessions/\(session.id.uuidString)/edit")
-        delete_link.href = URL(string: "/sessions/\(session.id.uuidString)/delete")
+        if context.canEdit {
+            edit_link.href = URL(string: "\(context.basePath)/\(session.id.uuidString)/edit")
+        } else {
+            edit_link.globalAttributes[.style] = "display:none"
+        }
+        if context.canDelete(session) {
+            delete_link.href = URL(string: "\(context.basePath)/\(session.id.uuidString)/delete")
+        } else {
+            delete_link.globalAttributes[.style] = "display:none"
+        }
     }
 }
 
 final class VCEditSessionsPage: EditSessionsPage {
-    init(session: AuthSession, sessions: [AuthSession], pageInfo: ManagedUserPageInfo, hasNextPage: Bool, error: String?) throws {
+    init(context: SessionPageContext, sessions: [AuthSession], pageInfo: ManagedUserPageInfo, hasNextPage: Bool, error: String?) throws {
         try super.init()
-        nav_bar.addChild(try VCNavBar(isAdmin: session.isAdmin).rootNode)
+        nav_bar.addChild(try VCNavBar(isAdmin: context.viewer.isAdmin).rootNode)
         if let error {
             p_error.addChild(HTMLText(content: error))
             p_error.globalAttributes[.style] = ""
         }
         for item in sessions {
-            table.children.append(try VCEditSessionsTableRow(session: item).rootNode)
+            table.children.append(try VCEditSessionsTableRow(session: item, context: context).rootNode)
         }
         page_text.addChild(HTMLText(content: "Page \(pageInfo.page + 1)"))
         if pageInfo.page > 0 {
-            prev_link.href = URL(string: "/sessions?\(pageInfo.queryString(page: pageInfo.page - 1))")
+            prev_link.href = URL(string: "\(context.basePath)?\(pageInfo.queryString(page: pageInfo.page - 1))")
             prev_link.globalAttributes[.style] = ""
         }
         if hasNextPage {
-            next_link.href = URL(string: "/sessions?\(pageInfo.queryString(page: pageInfo.page + 1))")
+            next_link.href = URL(string: "\(context.basePath)?\(pageInfo.queryString(page: pageInfo.page + 1))")
             next_link.globalAttributes[.style] = ""
         }
     }
 }
 
 final class VCManagedSessionForm: ManagedSessionForm {
-    init(session: AuthSession, error: String?) throws {
+    init(session: AuthSession, basePath: String, error: String?) throws {
         try super.init()
-        rootNode.action = URL(string: "/sessions/\(session.id.uuidString)/edit")
+        rootNode.action = URL(string: "\(basePath)/\(session.id.uuidString)/edit")
         session_id.addChild(HTMLText(content: session.id.uuidString))
         user_id.value = session.user.uuidString
         refresh_token.value = session.refreshToken?.uuidString ?? ""
@@ -427,83 +454,131 @@ final class VCManagedSessionForm: ManagedSessionForm {
 }
 
 final class VCManagedSessionPage: ManagedSessionPage {
-    init(session: AuthSession, managedSession: AuthSession, error: String?) throws {
+    init(context: SessionPageContext, managedSession: AuthSession, error: String?) throws {
         try super.init()
-        nav_bar.addChild(try VCNavBar(isAdmin: session.isAdmin).rootNode)
-        form_container.addChild(try VCManagedSessionForm(session: managedSession, error: error).rootNode)
+        nav_bar.addChild(try VCNavBar(isAdmin: context.viewer.isAdmin).rootNode)
+        form_container.addChild(try VCManagedSessionForm(session: managedSession, basePath: context.basePath, error: error).rootNode)
     }
 }
 
 final class VCDeleteManagedSessionPage: DeleteManagedSessionPage {
-    init(session: AuthSession, managedSession: AuthSession) throws {
+    init(context: SessionPageContext, managedSession: AuthSession) throws {
         try super.init()
-        nav_bar.addChild(try VCNavBar(isAdmin: session.isAdmin).rootNode)
+        nav_bar.addChild(try VCNavBar(isAdmin: context.viewer.isAdmin).rootNode)
         session_id.addChild(HTMLText(content: managedSession.id.uuidString))
         user_id.addChild(HTMLText(content: managedSession.user.uuidString))
         device_name.addChild(HTMLText(content: managedSession.deviceName ?? ""))
         ip_address.addChild(HTMLText(content: managedSession.ipAddress))
         expires_at.addChild(HTMLText(content: String(describing: managedSession.expiresAt)))
-        delete_form.action = URL(string: "/sessions/\(managedSession.id.uuidString)/delete")
-        cancel_link.href = URL(string: "/sessions")
+        delete_form.action = URL(string: "\(context.basePath)/\(managedSession.id.uuidString)/delete")
+        cancel_link.href = URL(string: context.basePath)
     }
 }
 
-private func managedSessionFormError(_ session: AuthSession, managedSession: AuthSession, error: String) throws -> Response {
-    try VCManagedSessionPage(session: session, managedSession: managedSession, error: error).rootNode.response()
+private func managedSessionFormError(_ context: SessionPageContext, managedSession: AuthSession, error: String) throws -> Response {
+    try VCManagedSessionPage(context: context, managedSession: managedSession, error: error).rootNode.response()
 }
 
-private func fetchManagedSession(req: Request, pool: DatabasePool) async throws -> AuthSession? {
+private func unauthorizedResponse() throws -> Response {
+    try VCWelcomePage(users: [], error: "Unauthorized").rootNode.response()
+}
+
+private func sessionPageContext(for req: Request) async throws -> SessionPageContext? {
+    guard let viewer = try await req.fetchSession() else {
+        return nil
+    }
+
+    if req.url.path == "/sessions" || req.url.path.hasPrefix("/sessions/") {
+        guard viewer.isAdmin else {
+            return nil
+        }
+        return SessionPageContext(
+            viewer: viewer,
+            targetUserId: nil,
+            basePath: "/sessions",
+            canEdit: true
+        )
+    }
+
+    if let userId: UUID = req.parameters.get("user_id") {
+        guard viewer.isAdmin || viewer.user == userId else {
+            return nil
+        }
+        return SessionPageContext(
+            viewer: viewer,
+            targetUserId: userId,
+            basePath: "/users/\(userId.uuidString)/sessions",
+            canEdit: viewer.isAdmin
+        )
+    }
+
+    return SessionPageContext(
+        viewer: viewer,
+        targetUserId: viewer.user,
+        basePath: "/user/sessions",
+        canEdit: viewer.isAdmin
+    )
+}
+
+private func fetchManagedSession(req: Request, pool: DatabasePool, targetUserId: UUID?) async throws -> AuthSession? {
     guard let sessionId: UUID = req.parameters.get("managed_session_id") else {
         return nil
     }
     return try await pool.read { db in
-        try AuthSession.filter(id: sessionId).fetchOne(db)
+        var request = AuthSession.filter(id: sessionId)
+        if let targetUserId {
+            request = request.filter(AuthSession.user == targetUserId)
+        }
+        return try request.fetchOne(db)
     }
 }
 
 @Sendable func editAllSessions(req: Request) async throws -> Response {
-    guard let session = try await adminSession(for: req) else {
-        return try adminAccessDeniedResponse()
+    guard let context = try await sessionPageContext(for: req) else {
+        return try unauthorizedResponse()
     }
 
     let pageInfo = ManagedUserPageInfo(req: req)
     let pool = DBShared.pool()
     let sessions = try await pool.read { db in
-        try AuthSession
-            .order(AuthSession.created_at.desc)
+        var request = AuthSession.order(AuthSession.created_at.desc)
+        if let targetUserId = context.targetUserId {
+            request = request.filter(AuthSession.user == targetUserId)
+        }
+        return try request
             .limit(Int(pageInfo.perPage) + 1, offset: Int(pageInfo.page * pageInfo.perPage))
             .fetchAll(db)
     }
     let hasNextPage = sessions.count > Int(pageInfo.perPage)
     let pageSessions = Array(sessions.prefix(Int(pageInfo.perPage)))
-    return try VCEditSessionsPage(session: session, sessions: pageSessions, pageInfo: pageInfo, hasNextPage: hasNextPage, error: nil).rootNode.response()
+    return try VCEditSessionsPage(context: context, sessions: pageSessions, pageInfo: pageInfo, hasNextPage: hasNextPage, error: nil).rootNode.response()
 }
 
 @Sendable func editManagedSessionPage(req: Request) async throws -> Response {
-    guard let session = try await adminSession(for: req) else {
+    guard let context = try await sessionPageContext(for: req), context.canEdit else {
         return try adminAccessDeniedResponse()
     }
 
     let pool = DBShared.pool()
-    guard let managedSession = try await fetchManagedSession(req: req, pool: pool) else {
-        return try VCEditSessionsPage(session: session, sessions: [], pageInfo: ManagedUserPageInfo(req: req), hasNextPage: false, error: "Session not found.").rootNode.response()
+    guard let managedSession = try await fetchManagedSession(req: req, pool: pool, targetUserId: context.targetUserId) else {
+        return try VCEditSessionsPage(context: context, sessions: [], pageInfo: ManagedUserPageInfo(req: req), hasNextPage: false, error: "Session not found.").rootNode.response()
     }
-    return try VCManagedSessionPage(session: session, managedSession: managedSession, error: nil).rootNode.response()
+    return try VCManagedSessionPage(context: context, managedSession: managedSession, error: nil).rootNode.response()
 }
 
 @Sendable func updateManagedSession(req: Request) async throws -> Response {
-    guard let session = try await adminSession(for: req) else {
+    guard let context = try await sessionPageContext(for: req), context.canEdit else {
         return try adminAccessDeniedResponse()
     }
 
     let pool = DBShared.pool()
-    guard let managedSession = try await fetchManagedSession(req: req, pool: pool) else {
-        return try VCEditSessionsPage(session: session, sessions: [], pageInfo: ManagedUserPageInfo(req: req), hasNextPage: false, error: "Session not found.").rootNode.response()
+    guard let managedSession = try await fetchManagedSession(req: req, pool: pool, targetUserId: context.targetUserId) else {
+        return try VCEditSessionsPage(context: context, sessions: [], pageInfo: ManagedUserPageInfo(req: req), hasNextPage: false, error: "Session not found.").rootNode.response()
     }
 
     let contents = try req.content.decode(ManagedSessionRequest.self)
     if let error = contents.validate() {
-        return try managedSessionFormError(session, managedSession: managedSession, error: error)
+        return try managedSessionFormError(context, managedSession: managedSession, error: error)
     }
 
     let updatedSession = try await pool.write { db in
@@ -520,40 +595,46 @@ private func fetchManagedSession(req: Request, pool: DatabasePool) async throws 
         return updated
     }
 
-    return try VCManagedSessionPage(session: session, managedSession: updatedSession, error: nil).rootNode.response()
+    return try VCManagedSessionPage(context: context, managedSession: updatedSession, error: nil).rootNode.response()
 }
 
 @Sendable func deleteManagedSessionPage(req: Request) async throws -> Response {
-    guard let session = try await adminSession(for: req) else {
-        return try adminAccessDeniedResponse()
+    guard let context = try await sessionPageContext(for: req) else {
+        return try unauthorizedResponse()
     }
 
     let pool = DBShared.pool()
-    guard let managedSession = try await fetchManagedSession(req: req, pool: pool) else {
-        return try VCEditSessionsPage(session: session, sessions: [], pageInfo: ManagedUserPageInfo(req: req), hasNextPage: false, error: "Session not found.").rootNode.response()
+    guard let managedSession = try await fetchManagedSession(req: req, pool: pool, targetUserId: context.targetUserId) else {
+        return try VCEditSessionsPage(context: context, sessions: [], pageInfo: ManagedUserPageInfo(req: req), hasNextPage: false, error: "Session not found.").rootNode.response()
     }
-    return try VCDeleteManagedSessionPage(session: session, managedSession: managedSession).rootNode.response()
+    guard context.canDelete(managedSession) else {
+        return try unauthorizedResponse()
+    }
+    return try VCDeleteManagedSessionPage(context: context, managedSession: managedSession).rootNode.response()
 }
 
 @Sendable func deleteManagedSession(req: Request) async throws -> Response {
-    guard let session = try await adminSession(for: req) else {
-        return try adminAccessDeniedResponse()
+    guard let context = try await sessionPageContext(for: req) else {
+        return try unauthorizedResponse()
     }
 
     let pool = DBShared.pool()
-    guard let managedSession = try await fetchManagedSession(req: req, pool: pool) else {
-        return try VCEditSessionsPage(session: session, sessions: [], pageInfo: ManagedUserPageInfo(req: req), hasNextPage: false, error: "Session not found.").rootNode.response()
+    guard let managedSession = try await fetchManagedSession(req: req, pool: pool, targetUserId: context.targetUserId) else {
+        return try VCEditSessionsPage(context: context, sessions: [], pageInfo: ManagedUserPageInfo(req: req), hasNextPage: false, error: "Session not found.").rootNode.response()
+    }
+    guard context.canDelete(managedSession) else {
+        return try unauthorizedResponse()
     }
 
     _ = try await pool.write { db in
         try AuthSession.filter(id: managedSession.id).deleteAll(db)
     }
 
-    if session.id == managedSession.id {
+    if context.viewer.id == managedSession.id {
         let response = req.redirect(to: "/", redirectType: .normal)
         clearBrowserSessionCookie(on: response)
         return response
     }
 
-    return req.redirect(to: "/sessions", redirectType: .normal)
+    return req.redirect(to: context.basePath, redirectType: .normal)
 }
