@@ -61,6 +61,10 @@ func routes(_ app: Application) throws {
     app.post("games", ":game_id", "edit", use: updateGame(req:))
     app.get("games", ":game_id", "delete", use: deleteGamePage(req:))
     app.post("games", ":game_id", "delete", use: deleteGame(req:))
+    app.get("saves", use: savesPage(req:))
+    app.get("saves", ":save_id", use: saveDetailPage(req:))
+    app.get("saves", ":save_id", "delete", use: deleteSavePage(req:))
+    app.post("saves", ":save_id", "delete", use: deleteSave(req:))
 
     app.post("register", use: register(req:))
     app.post("api", "v1", "register", use: apiRegister(req:))

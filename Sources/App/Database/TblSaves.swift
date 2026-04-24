@@ -196,6 +196,20 @@ extension Save {
         }
     }
 
+    private static func baseRequest() -> QueryInterfaceRequest<Save> {
+        all()
+    }
+
+    static func fetchPaged(_ pageInfo: PageInfo<SaveSortField>, existingCon: DatabasePool? = nil) throws -> [Save] {
+        let pool = existingCon ?? DBShared.pool()
+        let request = applySort(baseRequest(), pageInfo: pageInfo)
+        return try pool.read { db in
+            try request
+                .limit(Int(pageInfo.perPage), offset: Int(pageInfo.perPage * pageInfo.page))
+                .fetchAll(db)
+        }
+    }
+
     static func fetchPaged(_ pageInfo: PageInfo<SaveSortField>, userId: UUID, profileId: UUID?, gameHashId: UUID?, existingCon: DatabasePool? = nil) throws -> [Save] {
         let pool = existingCon ?? DBShared.pool()
         let request = applySort(baseRequest(userId: userId, profileId: profileId, gameHashId: gameHashId), pageInfo: pageInfo)
