@@ -573,6 +573,7 @@ final class AppTests: XCTestCase {
         }
         XCTAssertEqual(remainingSaves, 0)
     }
+
     
     private func registerUser(username: String, email: String, password: String) async throws -> PublicUser {
         var user: PublicUser?
@@ -603,6 +604,7 @@ final class AppTests: XCTestCase {
         })
         return try XCTUnwrap(loginPair)
     }
+
     
     private func insertSession(userId: UUID, isAdmin: Bool, expiresAt: Date) throws -> AuthSession {
         let now = Date()

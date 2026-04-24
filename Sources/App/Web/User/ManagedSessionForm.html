@@ -1,0 +1,98 @@
+<form action="/sessions"
+      method="POST"
+      enctype="application/x-www-form-urlencoded">
+  <fieldset>
+    <h2>Edit Session</h2>
+
+    <label>
+      Session ID:
+      <br>
+      <span id="session_id"></span>
+    </label>
+
+    <label for="user_id">
+      User ID:
+      <input
+        type="text"
+        id="user_id"
+        name="user_id"
+        required
+        autocomplete="off">
+    </label>
+
+    <label for="refresh_token">
+      Refresh Token:
+      <input
+        type="text"
+        id="refresh_token"
+        name="refresh_token"
+        autocomplete="off">
+    </label>
+
+    <label for="device_name">
+      Device Name:
+      <input
+        type="text"
+        id="device_name"
+        name="device_name"
+        autocomplete="off">
+    </label>
+
+    <label for="location">
+      Location:
+      <input
+        type="text"
+        id="location"
+        name="location"
+        autocomplete="off">
+    </label>
+
+    <label for="ip_address">
+      IP Address:
+      <input
+        type="text"
+        id="ip_address"
+        name="ip_address"
+        required
+        autocomplete="off">
+    </label>
+
+    <label for="is_admin">
+      <input
+        type="checkbox"
+        id="is_admin"
+        name="is_admin">
+      Admin Session
+    </label>
+
+    <label for="expires_at">
+      Expires At:
+      <input
+        type="text"
+        id="expires_at"
+        name="expires_at"
+        required
+        autocomplete="off">
+    </label>
+
+    <label>
+      Created At:
+      <br>
+      <span id="created_at"></span>
+    </label>
+
+    <label>
+      Updated At:
+      <br>
+      <span id="updated_at"></span>
+    </label>
+
+    <label id="error_container" style="display:none">
+      Error:
+      <br>
+      <span id="span_error"></span>
+    </label>
+
+    <button type="submit">Update Session</button>
+  </fieldset>
+</form>

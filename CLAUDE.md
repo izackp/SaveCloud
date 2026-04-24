@@ -99,3 +99,10 @@ Contributors must sign commits with `git commit --signoff` to agree to the CLA i
 - **Push after every commit.** After every commit, push the branch to the remote immediately.
 - **Never modify branches that do not begin with `claude`.** If the current branch does not start with `claude`, stop and ask the user before making any changes.
 - **Commit footer format.** End every commit message with `Automated-By: <model name>` (no email address). Do not use `Co-Authored-By`.
+
+## Behavior Preservation Rules
+
+- Preserve existing user-visible behavior unless the user explicitly asked to change it.
+- Do not remove or rewrite useful comments without a concrete reason.
+- If a failing test is caused by environment, template lookup, or tooling behavior, do not hide it by changing app behavior.
+- When in doubt, ask before changing a route contract, response contract, or page flow.
