@@ -2,44 +2,37 @@
       method="POST"
       enctype="application/x-www-form-urlencoded"
       class="pure-form pure-form-stacked">
-  <fieldset>
-    <legend>Edit User</legend>
+    <fieldset>
+        <legend>Edit Profile</legend>
 
-    <label for="username">
-      Username
-      <input type="text" id="username" name="username" required autofocus autocomplete="off">
-    </label>
+        <label for="eu_username">Username</label>
+        <input type="text" id="eu_username" name="username" class="pure-input-1" required autofocus autocomplete="off">
 
-    <label for="email">
-      Email
-      <input type="email" id="email" name="email" required>
-    </label>
+        <label for="eu_email" style="margin-top:0.75rem;">Email</label>
+        <input type="email" id="eu_email" name="email" class="pure-input-1" required>
 
-    <label id="password_container" style="display:none">
-      Password Hash
-      <span id="password_hash" style="display:block; font-family:monospace; font-size:0.85rem; color:#555;"></span>
-    </label>
+        <label id="password_container" style="display:none; margin-top:0.75rem;">
+            Password Hash
+            <code id="password_hash" style="display:block; font-size:0.8rem; word-break:break-all; color:#555; margin-top:0.25rem;"></code>
+        </label>
 
-    <label>
-      Created At
-      <span id="created_at" style="display:block; color:#555;"></span>
-    </label>
+        <label style="margin-top:0.75rem;">
+            Created At
+            <span id="created_at" style="display:block; color:#6b7280; font-weight:400;"></span>
+        </label>
 
-    <label>
-      Updated At
-      <span id="updated_at" style="display:block; color:#555;"></span>
-    </label>
+        <label style="margin-top:0.5rem;">
+            Updated At
+            <span id="updated_at" style="display:block; color:#6b7280; font-weight:400;"></span>
+        </label>
 
-    <label for="password">
-      Password required to update
-      <input type="password" id="password" name="password" class="password-input">
-    </label>
+        <label for="eu_password" style="margin-top:0.75rem;">Current password required to save</label>
+        <input type="password" id="eu_password" name="password" class="pure-input-1 password-input">
 
-    <label id="error_container" style="display:none; color:#c00;">
-      Error
-      <span id="span_error" style="display:block;"></span>
-    </label>
+        <label id="error_container" class="error-msg" style="display:none; margin-top:0.5rem;">
+            <span id="span_error"></span>
+        </label>
 
-    <button type="submit" class="pure-button pure-button-primary" style="margin-top:0.75rem;">Update</button>
-  </fieldset>
+        <button type="submit" class="pure-button pure-button-primary" style="margin-top:1rem;">Update</button>
+    </fieldset>
 </form>

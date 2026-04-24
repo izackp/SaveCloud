@@ -1,65 +1,60 @@
-<html>
-    <head>
-        <title>Registration</title>
-        <meta name="viewport" content="width=device-width, initial-scale=1">
-        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/purecss@3.0.0/build/pure-min.css" integrity="sha384-X38yfunGUhNzHpBaEBsWLO+A0HDYOQi8ufWDkZ0k9e0eXz/tH3II7uKZ9msv++Ls" crossorigin="anonymous">
-        <style>
-            body { padding: 2rem; background: #f4f5f7; }
-            .form-container { max-width: 480px; margin: 2rem auto; background: #fff; padding: 2rem; border-radius: 4px; box-shadow: 0 1px 3px rgba(0,0,0,.12); }
-            h1 { margin: 0 0 1.5rem; font-size: 1.6rem; color: #333; }
-            .error-msg { color: #c00; margin-top: 0.5rem; }
-        </style>
-    </head>
-    <body>
-        <div class="form-container">
-            <h1>Create Account</h1>
-            <form action="/register"
-                method="POST"
-                enctype="application/x-www-form-urlencoded"
-                class="pure-form pure-form-stacked">
-                <fieldset>
-                    <label>
-                        Username
-                        <input type="text"
-                            name="username"
-                            required
-                            autofocus
-                            autocomplete="off">
-                    </label>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Create Account — Save Cloud</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/purecss@3.0.0/build/pure-min.css" integrity="sha384-X38yfunGUhNzHpBaEBsWLO+A0HDYOQi8ufWDkZ0k9e0eXz/tH3II7uKZ9msv++Ls" crossorigin="anonymous">
+    <link rel="stylesheet" href="/app.css">
+</head>
+<body class="auth-page">
+    <div class="auth-card">
+        <h1>Create Account</h1>
+        <form action="/register"
+            method="POST"
+            enctype="application/x-www-form-urlencoded"
+            class="pure-form pure-form-stacked">
+            <fieldset>
+                <label for="reg_username">Username</label>
+                <input type="text"
+                    id="reg_username"
+                    name="username"
+                    class="pure-input-1"
+                    required
+                    autofocus
+                    autocomplete="off">
 
-                    <label>
-                        Email
-                        <input type="email"
-                            name="email"
-                            required>
-                    </label>
+                <label for="reg_email" style="margin-top:0.75rem;">Email</label>
+                <input type="email"
+                    id="reg_email"
+                    name="email"
+                    class="pure-input-1"
+                    required>
 
-                    <label>
-                        Password
-                        <input type="password"
-                            name="password"
-                            class="password-input"
-                            required
-                            minlength="8"
-                            pattern="(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{8,}"
-                            title="Must contain at least one number and one uppercase and lowercase letter, and at least 8 or more characters">
-                    </label>
+                <label for="reg_password" style="margin-top:0.75rem;">Password</label>
+                <input type="password"
+                    id="reg_password"
+                    name="password"
+                    class="pure-input-1 password-input"
+                    required
+                    minlength="8"
+                    pattern="(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{8,}"
+                    title="Must contain at least one number and one uppercase and lowercase letter, and at least 8 or more characters">
 
-                    <label>
-                        Re-enter Password
-                        <input type="password"
-                            name="password_confirmation"
-                            class="password-input"
-                            required
-                            minlength="8"
-                            pattern="(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{8,}"
-                            title="Must contain at least one number and one uppercase and lowercase letter, and at least 8 or more characters">
-                    </label>
+                <label for="reg_password_confirm" style="margin-top:0.75rem;">Re-enter Password</label>
+                <input type="password"
+                    id="reg_password_confirm"
+                    name="password_confirmation"
+                    class="pure-input-1 password-input"
+                    required
+                    minlength="8"
+                    pattern="(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{8,}"
+                    title="Must contain at least one number and one uppercase and lowercase letter, and at least 8 or more characters">
 
-                    <button type="submit" class="pure-button pure-button-primary" style="margin-top:0.75rem; width:100%;">Register</button>
-                </fieldset>
-            </form>
-            <p id="error_text" class="error-msg"></p>
-        </div>
-    </body>
+                <button type="submit" class="pure-button pure-button-primary pure-input-1" style="margin-top:1rem;">Register</button>
+            </fieldset>
+        </form>
+        <p id="error_text" class="error-msg"></p>
+    </div>
+</body>
 </html>

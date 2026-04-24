@@ -1,32 +1,33 @@
-<html>
-    <head>
-        <title>Game Detail</title>
-        <meta name="viewport" content="width=device-width, initial-scale=1">
-        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/purecss@3.0.0/build/pure-min.css" integrity="sha384-X38yfunGUhNzHpBaEBsWLO+A0HDYOQi8ufWDkZ0k9e0eXz/tH3II7uKZ9msv++Ls" crossorigin="anonymous">
-        <style>
-            body { margin: 0; }
-            #nav_bar { width: 200px; position: fixed; left: 0; top: 0; bottom: 0; background: #1f2937; overflow-y: auto; }
-            .nav_body { margin-left: 200px; padding: 2rem; max-width: 760px; }
-            .error-msg { color: #c00; }
-        </style>
-    </head>
-    <body>
-        <div id='nav_bar'></div>
-        <div class='nav_body'>
-            <h1>Game Detail</h1>
-            <p id="p_error" class="error-msg" style="display:none"></p>
-            <p><strong>ID:</strong> <span id="game_id"></span></p>
-            <p><strong>Name:</strong> <span id="name"></span></p>
-            <p><strong>Version:</strong> <span id="version"></span></p>
-            <p><strong>Family ID:</strong> <a id="family_id_link"><span id="family_id"></span></a></p>
-            <p><strong>Base Game ID:</strong> <span id="base_game_id"></span></p>
-            <p><strong>Hashed File:</strong> <span id="hashed_file_name"></span></p>
-            <p><strong>xxHash64:</strong> <span id="xxhash64"></span></p>
-            <p><strong>Breaks Previous:</strong> <span id="breaks_prev"></span></p>
-            <p><strong>Breaks Base:</strong> <span id="breaks_base"></span></p>
-            <p><strong>Created:</strong> <span id="created_at"></span></p>
-            <p><strong>Updated:</strong> <span id="updated_at"></span></p>
-            <p><a id="back_link">Back to Games</a></p>
-        </div>
-    </body>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Game Detail — Save Cloud</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/purecss@3.0.0/build/pure-min.css" integrity="sha384-X38yfunGUhNzHpBaEBsWLO+A0HDYOQi8ufWDkZ0k9e0eXz/tH3II7uKZ9msv++Ls" crossorigin="anonymous">
+    <link rel="stylesheet" href="/app.css">
+</head>
+<body>
+    <div id="nav_bar"></div>
+    <div class="nav_body">
+        <h1 style="margin-bottom:1.5rem;">Game Detail</h1>
+        <p id="p_error" class="error-msg" style="display:none"></p>
+        <table class="pure-table pure-table-bordered" style="max-width:600px;">
+            <tbody>
+                <tr><th>ID</th><td><span id="game_id"></span></td></tr>
+                <tr><th>Name</th><td><span id="name"></span></td></tr>
+                <tr><th>Version</th><td><span id="version"></span></td></tr>
+                <tr><th>Family ID</th><td><a id="family_id_link"><span id="family_id"></span></a></td></tr>
+                <tr><th>Base Game ID</th><td><span id="base_game_id"></span></td></tr>
+                <tr><th>Hashed File</th><td><span id="hashed_file_name"></span></td></tr>
+                <tr><th>xxHash64</th><td><code id="xxhash64"></code></td></tr>
+                <tr><th>Breaks Previous</th><td><span id="breaks_prev"></span></td></tr>
+                <tr><th>Breaks Base</th><td><span id="breaks_base"></span></td></tr>
+                <tr><th>Created</th><td><span id="created_at"></span></td></tr>
+                <tr><th>Updated</th><td><span id="updated_at"></span></td></tr>
+            </tbody>
+        </table>
+        <p style="margin-top:1.5rem;"><a id="back_link">&#8592; Back to Games</a></p>
+    </div>
+</body>
 </html>

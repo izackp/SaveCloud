@@ -1,26 +1,21 @@
-<html>
-    <head>
-        <title>Save Cloud - Welcome</title>
-        <meta name="viewport" content="width=device-width, initial-scale=1">
-        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/purecss@3.0.0/build/pure-min.css" integrity="sha384-X38yfunGUhNzHpBaEBsWLO+A0HDYOQi8ufWDkZ0k9e0eXz/tH3II7uKZ9msv++Ls" crossorigin="anonymous">
-        <style>
-            body { padding: 2rem; background: #f4f5f7; }
-            .login-container { max-width: 420px; margin: 3rem auto; background: #fff; padding: 2rem; border-radius: 4px; box-shadow: 0 1px 3px rgba(0,0,0,.12); }
-            h1 { text-align: center; margin: 0 0 1.5rem; font-size: 1.8rem; color: #333; }
-            .error-msg { color: #c00; margin: 0.5rem 0; }
-            .register-link { display: block; margin-top: 1rem; text-align: center; }
-            .users-table { margin-top: 2rem; width: 100%; }
-        </style>
-    </head>
-    <body>
-        <div class="login-container">
-            <h1>Save Cloud</h1>
-            <div id="login_form"></div>
-            <p id="p_error" class="error-msg" style="display:none"></p>
-            <a href="/register" class="register-link">Register</a>
-            <table class="pure-table pure-table-bordered users-table">
-                <tbody id="table"></tbody>
-            </table>
-        </div>
-    </body>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Save Cloud - Welcome</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/purecss@3.0.0/build/pure-min.css" integrity="sha384-X38yfunGUhNzHpBaEBsWLO+A0HDYOQi8ufWDkZ0k9e0eXz/tH3II7uKZ9msv++Ls" crossorigin="anonymous">
+    <link rel="stylesheet" href="/app.css">
+</head>
+<body class="auth-page">
+    <div class="auth-card">
+        <h1>Save Cloud</h1>
+        <div id="login_form"></div>
+        <p id="p_error" class="error-msg" style="display:none"></p>
+        <a href="/register" class="register-link">Don't have an account? Register</a>
+        <table class="pure-table pure-table-bordered" style="margin-top:2rem; width:100%;">
+            <tbody id="table"></tbody>
+        </table>
+    </div>
+</body>
 </html>

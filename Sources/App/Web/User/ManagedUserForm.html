@@ -2,44 +2,37 @@
       method="POST"
       enctype="application/x-www-form-urlencoded"
       class="pure-form pure-form-stacked">
-  <fieldset>
-    <legend><span id="title">Manage User</span></legend>
+    <fieldset>
+        <legend><span id="title">Manage User</span></legend>
 
-    <label for="username">
-      Username
-      <input type="text" id="username" name="username" required autofocus autocomplete="off">
-    </label>
+        <label for="mu_username">Username</label>
+        <input type="text" id="mu_username" name="username" class="pure-input-1" required autofocus autocomplete="off">
 
-    <label for="email">
-      Email
-      <input type="email" id="email" name="email" required>
-    </label>
+        <label for="mu_email" style="margin-top:0.75rem;">Email</label>
+        <input type="email" id="mu_email" name="email" class="pure-input-1" required>
 
-    <label for="password">
-      Password
-      <input type="password" id="password" name="password" class="password-input">
-    </label>
+        <label for="mu_password" style="margin-top:0.75rem;">Password</label>
+        <input type="password" id="mu_password" name="password" class="pure-input-1 password-input">
 
-    <label for="is_admin" class="pure-checkbox" style="margin-top:0.5rem;">
-      <input type="checkbox" id="is_admin" name="is_admin">
-      Admin User
-    </label>
+        <label for="is_admin" class="pure-checkbox" style="margin-top:0.75rem; font-weight:400;">
+            <input type="checkbox" id="is_admin" name="is_admin">
+            Admin User
+        </label>
 
-    <label id="created_container" style="display:none;">
-      Created At
-      <span id="created_at" style="display:block; color:#555;"></span>
-    </label>
+        <label id="created_container" style="display:none; margin-top:0.75rem;">
+            Created At
+            <span id="created_at" style="display:block; color:#6b7280; font-weight:400;"></span>
+        </label>
 
-    <label id="updated_container" style="display:none;">
-      Updated At
-      <span id="updated_at" style="display:block; color:#555;"></span>
-    </label>
+        <label id="updated_container" style="display:none; margin-top:0.5rem;">
+            Updated At
+            <span id="updated_at" style="display:block; color:#6b7280; font-weight:400;"></span>
+        </label>
 
-    <label id="error_container" style="display:none; color:#c00;">
-      Error
-      <span id="span_error" style="display:block;"></span>
-    </label>
+        <label id="error_container" class="error-msg" style="display:none; margin-top:0.5rem;">
+            <span id="span_error"></span>
+        </label>
 
-    <button id="submit_button" type="submit" class="pure-button pure-button-primary" style="margin-top:0.75rem;">Save</button>
-  </fieldset>
+        <button id="submit_button" type="submit" class="pure-button pure-button-primary" style="margin-top:1rem;">Save</button>
+    </fieldset>
 </form>
