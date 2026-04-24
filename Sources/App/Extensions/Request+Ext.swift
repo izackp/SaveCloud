@@ -8,47 +8,48 @@
 import Vapor
 
 extension Request {
-    func expectValidAuth() throws -> (UUID, Bool) {
-        guard let claims:JWTClaims = self.auth.get() else {
-            throw Abort(.internalServerError)
+    func authSession() throws -> AuthSession {
+        guard let session: AuthSession = self.auth.get() else {
+            throw Abort(.unauthorized)
         }
+        return session
+    }
+    
+    func expectValidAuth() throws -> (UUID, Bool) {
+        let session = try authSession()
         
         let pathId:UUID? = self.parameters.get("user_id")
         if let pathId = pathId {
-            if (pathId != claims.userId && !claims.admin) {
+            if (pathId != session.user && !session.isAdmin) {
                 throw Abort(.unauthorized)
             }
-            return (pathId, claims.admin)
+            return (pathId, session.isAdmin)
         }
         
-        return (claims.userId, claims.admin)
+        return (session.user, session.isAdmin)
     }
     
     func expectValidUserId() throws -> UUID {
-        guard let claims:JWTClaims = self.auth.get() else {
-            throw Abort(.internalServerError)
-        }
+        let session = try authSession()
         
         let pathId:UUID? = self.parameters.get("user_id")
         if let pathId = pathId {
-            if (pathId != claims.userId && !claims.admin) {
+            if (pathId != session.user && !session.isAdmin) {
                 throw Abort(.unauthorized)
             }
             return pathId
         }
         
-        return claims.userId
+        return session.user
     }
     
     func validUserIdIfExists() throws -> UUID? {
         let pathId:UUID? = self.parameters.get("user_id")
         guard let pathId = pathId else { return nil }
         
-        guard let claims:JWTClaims = self.auth.get() else {
-            throw Abort(.internalServerError)
-        }
+        let session = try authSession()
         
-        if (pathId != claims.userId && !claims.admin) {
+        if (pathId != session.user && !session.isAdmin) {
             throw Abort(.unauthorized)
         }
         return pathId

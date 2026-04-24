@@ -58,18 +58,17 @@ func routes(_ app: Application) throws {
 
     app.post("register", use: register(req:))
     app.post("api", "v1", "register", use: apiRegister(req:))
-    app.post("api", "v1", "login", use: apiLoginJWT(req:))
-    app.post("api", "v1", "refresh", use: apiRefreshJWT(req:))
+    app.post("api", "v1", "login", use: apiLoginSession(req:))
     
-    let jwtAuth = app.routes.grouped([
-        JWTClaimAuthenticator(), JWTClaims.guardMiddleware()
+    let apiAuth = app.routes.grouped([
+        APISessionAuthenticator(), AuthSession.guardMiddleware()
     ])
-    jwtAuth.get("api", "v1", "user", use: apiGETUser(req:))
-    jwtAuth.get("api", "v1", "user", ":id", use: apiGETUser(req:))
-    jwtAuth.put("api", "v1", "user", use: apiPUTUser(req:))
-    jwtAuth.put("api", "v1", "user", ":id", use: apiPUTUser(req:))
-    jwtAuth.delete("api", "v1", "user", use: apiDELETEUser(req:))
-    jwtAuth.delete("api", "v1", "user", ":id", use: apiDELETEUser(req:))
+    apiAuth.get("api", "v1", "user", use: apiGETUser(req:))
+    apiAuth.get("api", "v1", "user", ":id", use: apiGETUser(req:))
+    apiAuth.put("api", "v1", "user", use: apiPUTUser(req:))
+    apiAuth.put("api", "v1", "user", ":id", use: apiPUTUser(req:))
+    apiAuth.delete("api", "v1", "user", use: apiDELETEUser(req:))
+    apiAuth.delete("api", "v1", "user", ":id", use: apiDELETEUser(req:))
 
     let userSessGroup = app.routes.grouped([
         UserSessionAuthenticator(),

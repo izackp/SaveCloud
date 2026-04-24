@@ -9,22 +9,47 @@ import Foundation
 import Vapor
 import Argon2Swift
 import GRDB
-import SwiftJWT
 
-struct JWTClaimAuthenticator: AsyncBearerAuthenticator {
+public let hours24:TimeInterval = 24 * 60 * 60
+public let apiSessionDuration: TimeInterval = 365 * hours24
+public let apiSessionRenewWindow: TimeInterval = apiSessionDuration - hours24
+
+struct APISessionAuthenticator: AsyncBearerAuthenticator {
 
     func authenticate(
         bearer: BearerAuthorization,
         for request: Request
     ) async throws {
-        
-        let jwtVerifier = JWTVerifier.rs256(publicKey: jwtPublicKey)
-        let jwt = try JWT<JWTClaims>(jwtString: bearer.token, verifier: jwtVerifier)
-        if (jwt.validateClaims(leeway: 60) == .success) {
-            request.auth.login(jwt.claims)
+        guard let sessionId = UUID(uuidString: bearer.token) else {
             return
         }
-        //throw Abort(.unauthorized)
+        
+        let pool = DBShared.pool()
+        guard let session = try await pool.read({ db in
+            try AuthSession.filter(id: sessionId).fetchOne(db)
+        }) else {
+            return
+        }
+        if session.isExpired() {
+            _ = try await pool.write { db in
+                try AuthSession.filter(id: sessionId).deleteAll(db)
+            }
+            throw Abort(.unauthorized, reason: "Session expired")
+        }
+        if session.expiresAt < Date().advanced(by: apiSessionRenewWindow) {
+            let newExpirationDate = Date().advanced(by: apiSessionDuration)
+            try await pool.write { db in
+                _ = try AuthSession
+                    .filter(id: sessionId)
+                    .updateAll(
+                        db,
+                        AuthSession.expires_at.set(to: newExpirationDate),
+                        AuthSession.updated_at.set(to: Date())
+                    )
+            }
+        }
+        
+        request.auth.login(session)
     }
 }
 
@@ -85,8 +110,6 @@ struct UserCredentialsAuthenticator: AsyncCredentialsAuthenticator {
         req.session.authenticate(newSession)
     }
 }
-
-public let hours24:TimeInterval = 24 * 60 * 60
 
 func createSession(_ req: Request, _ userId:UUID, _ isAdmin:Bool, _ expiresIn:TimeInterval = hours24, _ refreshToken:UUID?) async throws -> AuthSession {
     let pool = DBShared.pool()

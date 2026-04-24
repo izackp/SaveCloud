@@ -10,9 +10,6 @@ import GRDB
 import Argon2Swift
 
 @Sendable func apiGETUserProfiles(req: Request) async throws -> [UserProfile] {
-    guard let claims:JWTClaims = req.auth.get() else {
-        throw Abort(.internalServerError)
-    }
     let userId:UUID = try req.expectValidUserId()
     
     let pool = DBShared.pool()
@@ -128,9 +125,7 @@ final class PostUserProfile: Content, IValidate {
 
 //PUT /user/:user_id/profile/:profile_id
 @Sendable func apiPUTUserProfile(req: Request) async throws -> UserProfile {
-    guard let claims:JWTClaims = req.auth.get() else {
-        throw Abort(.internalServerError)
-    }
+    let session = try req.authSession()
     let contents = try req.content.decode(PutUserProfile.self)
     try contents.checkValdiation()
     let pathId:UUID? = req.parameters.get("profile_id")
@@ -145,7 +140,7 @@ final class PostUserProfile: Content, IValidate {
         throw Abort(.notFound, reason: "Profile with id not found: \(profileId)")
     }
     
-    let allowed = (claims.admin || matchingUserProfile.userId == claims.userId)
+    let allowed = (session.isAdmin || matchingUserProfile.userId == session.user)
     if (!allowed) {
         throw Abort(.unauthorized, reason: "You don't have permission to edit this user.")
     }
@@ -160,9 +155,7 @@ final class PostUserProfile: Content, IValidate {
 }
 
 @Sendable func apiDELETEUserProfile(req: Request) async throws {
-    guard let claims:JWTClaims = req.auth.get() else {
-        throw Abort(.internalServerError)
-    }
+    let session = try req.authSession()
     
     let pathId:UUID? = req.parameters.get("profile_id")
     let profileId:UUID
@@ -180,7 +173,7 @@ final class PostUserProfile: Content, IValidate {
         throw Abort(.notFound, reason: "Profile with id not found: \(profileId)")
     }
     
-    let allowed = (claims.admin || claims.userId == matchingUserProfile.userId)
+    let allowed = (session.isAdmin || session.user == matchingUserProfile.userId)
     if (!allowed) {
         throw Abort(.unauthorized, reason: "You don't have permission to edit this user.")
     }

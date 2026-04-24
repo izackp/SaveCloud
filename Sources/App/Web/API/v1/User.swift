@@ -10,18 +10,16 @@ import GRDB
 import Argon2Swift
 
 @Sendable func apiGETUser(req: Request) async throws -> PublicUser {
-    guard let claims:JWTClaims = req.auth.get() else {
-        throw Abort(.internalServerError)
-    }
     let pathId:UUID? = req.parameters.get("id")
     let userId:UUID
+    let session = try req.authSession()
     if let pathId = pathId {
-        if (pathId != claims.userId && !claims.admin) {
+        if (pathId != session.user && !session.isAdmin) {
             throw Abort(.unauthorized)
         }
         userId = pathId
     } else {
-        userId = claims.userId
+        userId = session.user
     }
     
     let pool = DBShared.pool()
@@ -69,9 +67,7 @@ final class PutUser: Content, IValidate {
 }
 
 @Sendable func apiPUTUser(req: Request) async throws -> PublicUser {
-    guard let claims:JWTClaims = req.auth.get() else {
-        throw Abort(.internalServerError)
-    }
+    let session = try req.authSession()
     let contents = try req.content.decode(PutUser.self)
     try contents.checkValdiation()
     let pathId:UUID? = req.parameters.get("id")
@@ -83,7 +79,7 @@ final class PutUser: Content, IValidate {
             throw Abort(.badRequest, reason: "Specified two different users.")
         }
     }
-    let allowed = (claims.admin || id == claims.userId)
+    let allowed = (session.isAdmin || id == session.user)
     if (!allowed) {
         throw Abort(.unauthorized, reason: "You don't have permission to edit this user.")
     }
@@ -160,14 +156,12 @@ final class PasswordCheck: Content, IValidate {
 }
 
 @Sendable func apiDELETEUser(req: Request) async throws -> PublicUser {
-    guard let claims:JWTClaims = req.auth.get() else {
-        throw Abort(.internalServerError)
-    }
+    let session = try req.authSession()
     
     let pathId:UUID? = req.parameters.get("id")
-    let id = pathId ?? claims.userId
+    let id = pathId ?? session.user
     
-    let allowed = (claims.admin || claims.userId == id)
+    let allowed = (session.isAdmin || session.user == id)
     if (!allowed) {
         throw Abort(.unauthorized, reason: "You don't have permission to edit this user.")
     }

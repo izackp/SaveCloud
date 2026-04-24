@@ -7,7 +7,6 @@
 
 import Vapor
 import Argon2Swift
-import SwiftJWT
 import GRDB
 
 struct ApiLoginRequest: Content, IValidate {
@@ -45,9 +44,7 @@ struct ApiLoginRequest: Content, IValidate {
 }
 
 struct AuthToken: Content {
-    let jwt: String
-    let refreshId: String
-    let expiresAt: Date
+    let sessionId: String
 }
 
 struct LoginPair: Content {
@@ -59,14 +56,6 @@ struct LoginPair: Content {
     
     let token: AuthToken
     let user: PublicUser
-}
-
-struct JWTClaims: Claims, Authenticatable {
-    //let issurer: String //issurer
-    let userId: UUID //subject
-    let sessionId: UUID //subject
-    let expiresAt: Date
-    let admin: Bool
 }
 
 @Sendable func apiLogin(req: Request) async throws -> PublicUser {
@@ -89,91 +78,11 @@ struct JWTClaims: Claims, Authenticatable {
     return user.toPublicUser()
 }
 
-@Sendable func apiLoginJWT(req: Request) async throws -> LoginPair {
+@Sendable func apiLoginSession(req: Request) async throws -> LoginPair {
     let user = try await apiLogin(req: req)
-    let refreshToken = UUID()
-    let newSession = try await createSession(req, user.id, user.isAdmin, 365 * 24 * 60 * 60, refreshToken)
+    let newSession = try await createSession(req, user.id, user.isAdmin, apiSessionDuration, nil)
     
-    let authToken = try generateJWT(userId: user.id, sessionId: newSession.id, refreshToken: refreshToken, admin: user.isAdmin)
+    let authToken = AuthToken(sessionId: newSession.id.uuidString)
     let result = LoginPair(token: authToken, user: user)
     return result
-}
-
-func generateJWT(userId: UUID, sessionId: UUID, refreshToken:UUID, admin: Bool) throws -> AuthToken {
-    let jwtExpiration = Date().advanced(by: 90 * 60)
-    let claims = JWTClaims(userId: userId, sessionId: sessionId, expiresAt: jwtExpiration, admin: admin)
-    var myJWT = JWT(header: Header(kid: "SaveCloud1"), claims: claims)
-    let jwtSigner = JWTSigner.rs256(privateKey: jwtPrivateKey)
-    let signedJWT = try myJWT.sign(using: jwtSigner)
-    let authToken = AuthToken(jwt: signedJWT, refreshId: refreshToken.uuidString, expiresAt: jwtExpiration)
-    return authToken
-}
-
-@Sendable func apiRefreshJWT(req: Request) async throws -> LoginPair {
-    guard let auth = req.headers.bearerAuthorization else {
-        throw Abort(.unauthorized)
-    }
-    let contents = try req.content.decode(ApiRefreshRequest.self)
-    try contents.checkValdiation()
-    
-    let jwtVerifier = JWTVerifier.rs256(publicKey: jwtPublicKey)
-    let jwt = try JWT<JWTClaims>(jwtString: auth.token, verifier: jwtVerifier)
-    let sessionId = jwt.claims.sessionId
-    
-    let pool = DBShared.pool()
-    guard let session = try await pool.read({ db in
-        try AuthSession.filter(id: sessionId).fetchOne(db)
-    }) else {
-        throw Abort(.unauthorized)
-    }
-    if (session.refreshToken == nil) {
-        //TODO: Log shananigans
-        _ = try await pool.write { db in
-            try AuthSession.filter(id: sessionId).deleteAll(db)
-        }
-        throw Abort(.unauthorized)
-    }
-    if (session.refreshToken != contents.refreshToken) {
-        //TODO: Log shananigans
-        _ = try await pool.write { db in
-            try AuthSession.filter(id: sessionId).deleteAll(db)
-        }
-        throw Abort(.unauthorized)
-    }
-
-    if (session.isExpired()) {
-        _ = try await pool.write { db in
-            try AuthSession.filter(id: sessionId).deleteAll(db)
-        }
-        throw Abort(.unauthorized)
-    }
-
-    guard let user = try await pool.read({ db in
-        try User.filter(id: session.user).fetchOne(db)
-    }) else {
-        //TODO: Log
-        throw Abort(.notFound, reason: "User doesnt exist")
-    }
-
-    let publicUser = user.toPublicUser()
-    let newRefreshToken = UUID()
-    let newToken = try generateJWT(userId: user.id, sessionId: sessionId, refreshToken: newRefreshToken, admin: user.isAdmin)
-    try await pool.write { db in
-        _ = try AuthSession
-            .filter(id: sessionId)
-            .updateAll(
-                db,
-                AuthSession.refresh_token.set(to: newRefreshToken),
-                AuthSession.updated_at.set(to: Date())
-            )
-    }
-    return LoginPair(token: newToken, user: publicUser)
-}
-
-struct ApiRefreshRequest: Content, IValidate {
-    let refreshToken: UUID
-    
-    func iterateErrors(_ index:inout Int) -> String? {
-        return nil
-    }
 }
