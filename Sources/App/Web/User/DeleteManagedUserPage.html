@@ -1,32 +1,27 @@
-<html>
-    <head>
-        <title>Delete User</title>
-        <meta name="viewport" content="width=device-width, initial-scale=1">
-        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/purecss@3.0.0/build/pure-min.css" integrity="sha384-X38yfunGUhNzHpBaEBsWLO+A0HDYOQi8ufWDkZ0k9e0eXz/tH3II7uKZ9msv++Ls" crossorigin="anonymous">
-        <style>
-            body { margin: 0; }
-            #nav_bar { width: 200px; position: fixed; left: 0; top: 0; bottom: 0; background: #1f2937; overflow-y: auto; }
-            .nav_body { margin-left: 200px; padding: 2rem; max-width: 760px; }
-            .danger-button { background: #c00; color: #fff; }
-        </style>
-    </head>
-    <body>
-        <div id='nav_bar'></div>
-        <div class='nav_body'>
-            <h1>Delete User</h1>
-            <p>Are you sure you want to delete this user?</p>
-            <ul>
-                <li>ID: <span id="user_id"></span></li>
-                <li>Username: <span id="username"></span></li>
-                <li>Email: <span id="email"></span></li>
-                <li>Admin: <span id="is_admin"></span></li>
-            </ul>
-            <form id="delete_form" action="/user/edit_all" method="POST" enctype="application/x-www-form-urlencoded" class="pure-form">
-                <button type="submit" class="pure-button danger-button">Delete User</button>
-            </form>
-            <p style="margin-top:1rem;">
-                <a id="cancel_link" href="/user/edit_all">Cancel</a>
-            </p>
-        </div>
-    </body>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Delete User — Save Cloud</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/purecss@3.0.0/build/pure-min.css" integrity="sha384-X38yfunGUhNzHpBaEBsWLO+A0HDYOQi8ufWDkZ0k9e0eXz/tH3II7uKZ9msv++Ls" crossorigin="anonymous">
+    <link rel="stylesheet" href="/app.css">
+</head>
+<body>
+    <div id="nav_bar"></div>
+    <div class="nav_body">
+        <h1>Delete User</h1>
+        <p>Are you sure you want to delete this user?</p>
+        <ul>
+            <li>ID: <span id="user_id"></span></li>
+            <li>Username: <span id="username"></span></li>
+            <li>Email: <span id="email"></span></li>
+            <li>Admin: <span id="is_admin"></span></li>
+        </ul>
+        <form id="delete_form" action="/user/edit_all" method="POST" enctype="application/x-www-form-urlencoded" class="pure-form">
+            <button type="submit" class="pure-button btn-danger">Delete User</button>
+            <a id="cancel_link" href="/user/edit_all" class="pure-button" style="margin-left:0.5rem;">Cancel</a>
+        </form>
+    </div>
+</body>
 </html>

@@ -1,37 +1,38 @@
-<html>
-    <head>
-        <title>Save Detail</title>
-        <meta name="viewport" content="width=device-width, initial-scale=1">
-        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/purecss@3.0.0/build/pure-min.css" integrity="sha384-X38yfunGUhNzHpBaEBsWLO+A0HDYOQi8ufWDkZ0k9e0eXz/tH3II7uKZ9msv++Ls" crossorigin="anonymous">
-        <style>
-            body { margin: 0; }
-            #nav_bar { width: 200px; position: fixed; left: 0; top: 0; bottom: 0; background: #1f2937; overflow-y: auto; }
-            .nav_body { margin-left: 200px; padding: 2rem; max-width: 760px; }
-            .error-msg { color: #c00; }
-        </style>
-    </head>
-    <body>
-        <div id='nav_bar'></div>
-        <div class='nav_body'>
-            <h1>Save Detail</h1>
-            <p id="p_error" class="error-msg" style="display:none"></p>
-            <p><strong>ID:</strong> <span id="save_id"></span></p>
-            <p><strong>User ID:</strong> <span id="user_id"></span></p>
-            <p><strong>Profile ID:</strong> <span id="profile_id"></span></p>
-            <p><strong>Game Meta ID:</strong> <a id="game_meta_id_link"><span id="game_meta_id"></span></a></p>
-            <p><strong>Game Hash ID:</strong> <span id="game_hash_id"></span></p>
-            <p><strong>Compatibility ID:</strong> <span id="compatibility_id"></span></p>
-            <p><strong>Sequential ID:</strong> <span id="sequential_id"></span></p>
-            <p><strong>Name:</strong> <span id="name"></span></p>
-            <p><strong>URL:</strong> <span id="url"></span></p>
-            <p><strong>File Size:</strong> <span id="file_size"></span></p>
-            <p><strong>Source Device:</strong> <span id="source_device"></span></p>
-            <p><strong>Content Hash:</strong> <span id="content_hash"></span></p>
-            <p><strong>Notes:</strong> <span id="notes"></span></p>
-            <p><strong>Date:</strong> <span id="date"></span></p>
-            <p><strong>Created:</strong> <span id="created_at"></span></p>
-            <p><strong>Updated:</strong> <span id="updated_at"></span></p>
-            <p><a id="back_link">Back to Saves</a></p>
-        </div>
-    </body>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Save Detail — Save Cloud</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/purecss@3.0.0/build/pure-min.css" integrity="sha384-X38yfunGUhNzHpBaEBsWLO+A0HDYOQi8ufWDkZ0k9e0eXz/tH3II7uKZ9msv++Ls" crossorigin="anonymous">
+    <link rel="stylesheet" href="/app.css">
+</head>
+<body>
+    <div id="nav_bar"></div>
+    <div class="nav_body">
+        <h1 style="margin-bottom:1.5rem;">Save Detail</h1>
+        <p id="p_error" class="error-msg" style="display:none"></p>
+        <table class="pure-table pure-table-bordered" style="max-width:600px;">
+            <tbody>
+                <tr><th>ID</th><td><span id="save_id"></span></td></tr>
+                <tr><th>User ID</th><td><span id="user_id"></span></td></tr>
+                <tr><th>Profile ID</th><td><span id="profile_id"></span></td></tr>
+                <tr><th>Game Meta ID</th><td><a id="game_meta_id_link"><span id="game_meta_id"></span></a></td></tr>
+                <tr><th>Game Hash ID</th><td><span id="game_hash_id"></span></td></tr>
+                <tr><th>Compatibility ID</th><td><span id="compatibility_id"></span></td></tr>
+                <tr><th>Sequential ID</th><td><span id="sequential_id"></span></td></tr>
+                <tr><th>Name</th><td><span id="name"></span></td></tr>
+                <tr><th>URL</th><td><span id="url"></span></td></tr>
+                <tr><th>File Size</th><td><span id="file_size"></span></td></tr>
+                <tr><th>Source Device</th><td><span id="source_device"></span></td></tr>
+                <tr><th>Content Hash</th><td><code id="content_hash"></code></td></tr>
+                <tr><th>Notes</th><td><span id="notes"></span></td></tr>
+                <tr><th>Date</th><td><span id="date"></span></td></tr>
+                <tr><th>Created</th><td><span id="created_at"></span></td></tr>
+                <tr><th>Updated</th><td><span id="updated_at"></span></td></tr>
+            </tbody>
+        </table>
+        <p style="margin-top:1.5rem;"><a id="back_link">&#8592; Back to Saves</a></p>
+    </div>
+</body>
 </html>

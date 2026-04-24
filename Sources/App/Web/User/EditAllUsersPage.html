@@ -1,43 +1,39 @@
-<html>
-    <head>
-        <title>Manage Users</title>
-        <meta name="viewport" content="width=device-width, initial-scale=1">
-        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/purecss@3.0.0/build/pure-min.css" integrity="sha384-X38yfunGUhNzHpBaEBsWLO+A0HDYOQi8ufWDkZ0k9e0eXz/tH3II7uKZ9msv++Ls" crossorigin="anonymous">
-        <style>
-            body { margin: 0; }
-            #nav_bar { width: 200px; position: fixed; left: 0; top: 0; bottom: 0; background: #1f2937; overflow-y: auto; }
-            .nav_body { margin-left: 200px; padding: 2rem; }
-            .error-msg { color: #c00; }
-            .pagination { margin-top: 1rem; }
-        </style>
-    </head>
-    <body>
-        <div id='nav_bar'></div>
-        <div class='nav_body'>
-            <h1>Manage Users</h1>
-            <p>
-                <a href="/user/edit_all/new" class="pure-button pure-button-primary">Add User</a>
-            </p>
-            <p id="p_error" class="error-msg" style="display:none"></p>
-            <table class="pure-table pure-table-horizontal" style="width:100%;">
-                <thead>
-                    <tr>
-                        <th>ID</th>
-                        <th>Username</th>
-                        <th>Email</th>
-                        <th>Admin</th>
-                        <th>Created</th>
-                        <th>Updated</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody id="table"></tbody>
-            </table>
-            <div class="pagination">
-                <a id="prev_link" style="display:none">Previous</a>
-                <span id="page_text"></span>
-                <a id="next_link" style="display:none">Next</a>
-            </div>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Manage Users — Save Cloud</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/purecss@3.0.0/build/pure-min.css" integrity="sha384-X38yfunGUhNzHpBaEBsWLO+A0HDYOQi8ufWDkZ0k9e0eXz/tH3II7uKZ9msv++Ls" crossorigin="anonymous">
+    <link rel="stylesheet" href="/app.css">
+</head>
+<body>
+    <div id="nav_bar"></div>
+    <div class="nav_body">
+        <div style="display:flex; align-items:baseline; justify-content:space-between; margin-bottom:1.5rem;">
+            <h1 style="margin:0;">Users</h1>
+            <a href="/user/edit_all/new" class="pure-button pure-button-primary">+ Add User</a>
         </div>
-    </body>
+        <p id="p_error" class="error-msg" style="display:none"></p>
+        <table class="pure-table pure-table-horizontal">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Username</th>
+                    <th>Email</th>
+                    <th>Admin</th>
+                    <th>Created</th>
+                    <th>Updated</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody id="table"></tbody>
+        </table>
+        <div class="pagination">
+            <a id="prev_link" style="display:none">&#8592; Previous</a>
+            <span id="page_text"></span>
+            <a id="next_link" style="display:none">Next &#8594;</a>
+        </div>
+    </div>
+</body>
 </html>

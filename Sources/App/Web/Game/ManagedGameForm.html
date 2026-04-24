@@ -2,69 +2,56 @@
       method="POST"
       enctype="application/x-www-form-urlencoded"
       class="pure-form pure-form-stacked">
-  <fieldset>
-    <legend>Manage Game</legend>
+    <fieldset>
+        <legend>Manage Game</legend>
 
-    <label>
-      Game ID
-      <span id="game_id" style="display:block; color:#555;"></span>
-    </label>
+        <label>
+            Game ID
+            <span id="game_id" style="display:block; color:#6b7280; font-weight:400; font-family:monospace; font-size:0.85rem;"></span>
+        </label>
 
-    <label for="name">
-      Name
-      <input type="text" id="name" name="name" required autofocus autocomplete="off">
-    </label>
+        <label for="mg_name" style="margin-top:0.75rem;">Name</label>
+        <input type="text" id="mg_name" name="name" class="pure-input-1" required autofocus autocomplete="off">
 
-    <label for="version">
-      Version
-      <input type="text" id="version" name="version" autocomplete="off">
-    </label>
+        <label for="mg_version" style="margin-top:0.75rem;">Version</label>
+        <input type="text" id="mg_version" name="version" class="pure-input-1" autocomplete="off">
 
-    <label for="family_id">
-      Family ID
-      <input type="text" id="family_id" name="family_id" autocomplete="off">
-    </label>
+        <label for="mg_family_id" style="margin-top:0.75rem;">Family ID</label>
+        <input type="text" id="mg_family_id" name="family_id" class="pure-input-1" autocomplete="off">
 
-    <label for="base_game_id">
-      Base Game ID
-      <input type="text" id="base_game_id" name="base_game_id" autocomplete="off">
-    </label>
+        <label for="mg_base_game_id" style="margin-top:0.75rem;">Base Game ID</label>
+        <input type="text" id="mg_base_game_id" name="base_game_id" class="pure-input-1" autocomplete="off">
 
-    <label for="hashed_file_name">
-      Hashed File Name
-      <input type="text" id="hashed_file_name" name="hashed_file_name" autocomplete="off">
-    </label>
+        <label for="mg_hashed_file_name" style="margin-top:0.75rem;">Hashed File Name</label>
+        <input type="text" id="mg_hashed_file_name" name="hashed_file_name" class="pure-input-1" autocomplete="off">
 
-    <label for="xxhash64">
-      xxHash64
-      <input type="text" id="xxhash64" name="xxhash64" autocomplete="off">
-    </label>
+        <label for="mg_xxhash64" style="margin-top:0.75rem;">xxHash64</label>
+        <input type="text" id="mg_xxhash64" name="xxhash64" class="pure-input-1" autocomplete="off">
 
-    <label for="breaks_save_format_from_previous_version" class="pure-checkbox" style="margin-top:0.5rem;">
-      <input type="checkbox" id="breaks_save_format_from_previous_version" name="breaks_save_format_from_previous_version">
-      Breaks Save Format From Previous Version
-    </label>
+        <label for="breaks_save_format_from_previous_version" class="pure-checkbox" style="margin-top:0.75rem; font-weight:400;">
+            <input type="checkbox" id="breaks_save_format_from_previous_version" name="breaks_save_format_from_previous_version">
+            Breaks Save Format From Previous Version
+        </label>
 
-    <label for="breaks_save_format_from_base_game" class="pure-checkbox">
-      <input type="checkbox" id="breaks_save_format_from_base_game" name="breaks_save_format_from_base_game">
-      Breaks Save Format From Base Game
-    </label>
+        <label for="breaks_save_format_from_base_game" class="pure-checkbox" style="font-weight:400;">
+            <input type="checkbox" id="breaks_save_format_from_base_game" name="breaks_save_format_from_base_game">
+            Breaks Save Format From Base Game
+        </label>
 
-    <label>
-      Created At
-      <span id="created_at" style="display:block; color:#555;"></span>
-    </label>
+        <label style="margin-top:0.75rem;">
+            Created At
+            <span id="created_at" style="display:block; color:#6b7280; font-weight:400;"></span>
+        </label>
 
-    <label>
-      Updated At
-      <span id="updated_at" style="display:block; color:#555;"></span>
-    </label>
+        <label style="margin-top:0.5rem;">
+            Updated At
+            <span id="updated_at" style="display:block; color:#6b7280; font-weight:400;"></span>
+        </label>
 
-    <label id="error_container" style="display:none; color:#c00;">
-      Error
-      <span id="span_error" style="display:block;"></span>
-    </label>
+        <label id="error_container" class="error-msg" style="display:none; margin-top:0.5rem;">
+            <span id="span_error"></span>
+        </label>
 
-    <button type="submit" class="pure-button pure-button-primary" style="margin-top:0.75rem;">Update Game</button>
-  </fieldset>
+        <button type="submit" class="pure-button pure-button-primary" style="margin-top:1rem;">Update Game</button>
+    </fieldset>
 </form>

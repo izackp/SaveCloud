@@ -1,0 +1,207 @@
+/* ==========================================================================
+   Base
+   ========================================================================== */
+
+body {
+    font-size: 16px;
+    line-height: 1.5;
+    color: #333;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, sans-serif;
+    margin: 0;
+}
+
+/* ==========================================================================
+   Sidebar layout
+   ========================================================================== */
+
+#nav_bar {
+    width: 220px;
+    position: fixed;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    background: #1a2332;
+    overflow-y: auto;
+}
+
+.nav_body {
+    margin-left: 220px;
+    padding: 2rem 2.5rem;
+}
+
+/* ==========================================================================
+   Sidebar menu
+   ========================================================================== */
+
+#nav_bar .pure-menu {
+    padding: 1rem 0;
+}
+
+#nav_bar .pure-menu-heading {
+    color: #9ca3af;
+    font-size: 0.7rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    padding: 1.25rem 1rem 0.4rem;
+}
+
+#nav_bar .pure-menu-item {
+    border-left: 3px solid transparent;
+}
+
+#nav_bar .pure-menu-link {
+    color: #cbd5e1;
+    padding: 0.45rem 1rem;
+    font-size: 0.9rem;
+}
+
+#nav_bar .pure-menu-link:hover,
+#nav_bar .pure-menu-link:focus {
+    background: rgba(255, 255, 255, 0.07);
+    color: #fff;
+}
+
+#nav_bar .pure-menu-item.pure-menu-selected {
+    border-left-color: #0078e7;
+}
+
+#nav_bar .pure-menu-item.pure-menu-selected .pure-menu-link {
+    color: #fff;
+    background: rgba(0, 120, 231, 0.15);
+}
+
+/* ==========================================================================
+   Forms
+   ========================================================================== */
+
+.pure-form fieldset {
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    padding: 1.5rem;
+    max-width: 520px;
+}
+
+.pure-form legend {
+    font-weight: 600;
+    font-size: 1rem;
+    color: #111;
+    padding: 0 0.4rem;
+}
+
+/* Full-width inputs */
+.pure-form input[type="text"],
+.pure-form input[type="email"],
+.pure-form input[type="password"],
+.pure-form input[type="number"],
+.pure-form select,
+.pure-form textarea {
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.pure-form label {
+    font-weight: 500;
+    color: #374151;
+}
+
+/* ==========================================================================
+   Buttons
+   ========================================================================== */
+
+.pure-button-primary {
+    background: #0078e7;
+}
+
+.pure-button-primary:hover,
+.pure-button-primary:focus {
+    background: #0063c4;
+}
+
+.btn-danger {
+    background: #dc2626;
+    color: #fff;
+}
+
+.btn-danger:hover,
+.btn-danger:focus {
+    background: #b91c1c;
+    color: #fff;
+    background-image: none;
+}
+
+/* ==========================================================================
+   Tables
+   ========================================================================== */
+
+.pure-table {
+    width: 100%;
+}
+
+.pure-table th,
+.pure-table td {
+    font-size: 0.875rem;
+    vertical-align: middle;
+}
+
+/* ==========================================================================
+   Shared utilities
+   ========================================================================== */
+
+.error-msg {
+    color: #dc2626;
+    font-size: 0.9rem;
+    margin: 0.5rem 0;
+}
+
+.pagination {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+    margin-top: 1rem;
+    color: #555;
+    font-size: 0.9rem;
+}
+
+/* ==========================================================================
+   Auth pages (login / register)
+   ========================================================================== */
+
+.auth-page {
+    min-height: 100vh;
+    background: #f1f5f9;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+}
+
+.auth-card {
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.10);
+    padding: 2.5rem;
+    width: 100%;
+    max-width: 420px;
+}
+
+.auth-card h1 {
+    text-align: center;
+    margin: 0 0 1.75rem;
+    font-size: 1.6rem;
+    font-weight: 700;
+    color: #111;
+    letter-spacing: -0.02em;
+}
+
+.auth-card .pure-form fieldset {
+    border: none;
+    padding: 0;
+    max-width: none;
+}
+
+.register-link {
+    display: block;
+    text-align: center;
+    margin-top: 1rem;
+    font-size: 0.9rem;
+}

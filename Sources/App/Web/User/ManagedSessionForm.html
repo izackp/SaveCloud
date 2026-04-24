@@ -2,64 +2,51 @@
       method="POST"
       enctype="application/x-www-form-urlencoded"
       class="pure-form pure-form-stacked">
-  <fieldset>
-    <legend>Edit Session</legend>
+    <fieldset>
+        <legend>Edit Session</legend>
 
-    <label>
-      Session ID
-      <span id="session_id" style="display:block; color:#555;"></span>
-    </label>
+        <label>
+            Session ID
+            <span id="session_id" style="display:block; color:#6b7280; font-weight:400; font-family:monospace; font-size:0.85rem;"></span>
+        </label>
 
-    <label for="user_id">
-      User ID
-      <input type="text" id="user_id" name="user_id" required autocomplete="off">
-    </label>
+        <label for="ms_user_id" style="margin-top:0.75rem;">User ID</label>
+        <input type="text" id="ms_user_id" name="user_id" class="pure-input-1" required autocomplete="off">
 
-    <label for="refresh_token">
-      Refresh Token
-      <input type="text" id="refresh_token" name="refresh_token" autocomplete="off">
-    </label>
+        <label for="ms_refresh_token" style="margin-top:0.75rem;">Refresh Token</label>
+        <input type="text" id="ms_refresh_token" name="refresh_token" class="pure-input-1" autocomplete="off">
 
-    <label for="device_name">
-      Device Name
-      <input type="text" id="device_name" name="device_name" autocomplete="off">
-    </label>
+        <label for="ms_device_name" style="margin-top:0.75rem;">Device Name</label>
+        <input type="text" id="ms_device_name" name="device_name" class="pure-input-1" autocomplete="off">
 
-    <label for="location">
-      Location
-      <input type="text" id="location" name="location" autocomplete="off">
-    </label>
+        <label for="ms_location" style="margin-top:0.75rem;">Location</label>
+        <input type="text" id="ms_location" name="location" class="pure-input-1" autocomplete="off">
 
-    <label for="ip_address">
-      IP Address
-      <input type="text" id="ip_address" name="ip_address" required autocomplete="off">
-    </label>
+        <label for="ms_ip_address" style="margin-top:0.75rem;">IP Address</label>
+        <input type="text" id="ms_ip_address" name="ip_address" class="pure-input-1" required autocomplete="off">
 
-    <label for="is_admin" class="pure-checkbox" style="margin-top:0.5rem;">
-      <input type="checkbox" id="is_admin" name="is_admin">
-      Admin Session
-    </label>
+        <label for="is_admin" class="pure-checkbox" style="margin-top:0.75rem; font-weight:400;">
+            <input type="checkbox" id="is_admin" name="is_admin">
+            Admin Session
+        </label>
 
-    <label for="expires_at">
-      Expires At
-      <input type="text" id="expires_at" name="expires_at" required autocomplete="off">
-    </label>
+        <label for="ms_expires_at" style="margin-top:0.75rem;">Expires At</label>
+        <input type="text" id="ms_expires_at" name="expires_at" class="pure-input-1" required autocomplete="off">
 
-    <label>
-      Created At
-      <span id="created_at" style="display:block; color:#555;"></span>
-    </label>
+        <label style="margin-top:0.75rem;">
+            Created At
+            <span id="created_at" style="display:block; color:#6b7280; font-weight:400;"></span>
+        </label>
 
-    <label>
-      Updated At
-      <span id="updated_at" style="display:block; color:#555;"></span>
-    </label>
+        <label style="margin-top:0.5rem;">
+            Updated At
+            <span id="updated_at" style="display:block; color:#6b7280; font-weight:400;"></span>
+        </label>
 
-    <label id="error_container" style="display:none; color:#c00;">
-      Error
-      <span id="span_error" style="display:block;"></span>
-    </label>
+        <label id="error_container" class="error-msg" style="display:none; margin-top:0.5rem;">
+            <span id="span_error"></span>
+        </label>
 
-    <button type="submit" class="pure-button pure-button-primary" style="margin-top:0.75rem;">Update Session</button>
-  </fieldset>
+        <button type="submit" class="pure-button pure-button-primary" style="margin-top:1rem;">Update Session</button>
+    </fieldset>
 </form>
