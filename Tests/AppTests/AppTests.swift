@@ -339,6 +339,115 @@ final class AppTests: XCTestCase {
         })
     }
 
+    func testAPIGameRoutesSupportHashFamilyAndProfileQueries() async throws {
+        _ = try await registerUser(
+            username: "games-query-admin",
+            email: "games-query-admin@example.com",
+            password: "password123"
+        )
+        let adminLogin = try await loginUser(
+            username: "games-query-admin",
+            password: "password123"
+        )
+        let adminSession = try await currentSession(for: adminLogin.token.sessionId)
+        let familyId = UUID()
+        let includedGame = try insertGameMeta(name: "Alpha Game", familyId: familyId)
+        let excludedGame = try insertGameMeta(name: "Zulu Game", familyId: UUID())
+        let hash = try insertGameHash(gameMetaId: includedGame.id, hash: "family-hash")
+        let profile = try insertProfile(userId: adminSession.user, name: "Family Profile")
+        _ = try insertSave(
+            userId: adminSession.user,
+            profileId: profile.id,
+            gameHashId: hash.id,
+            gameMetaId: includedGame.id,
+            name: "Included Save"
+        )
+
+        try await app.test(.GET, "api/v1/games?hash=family-hash", beforeRequest: { req in
+            req.headers.bearerAuthorization = BearerAuthorization(token: adminLogin.token.sessionId)
+        }, afterResponse: { res async throws in
+            XCTAssertEqual(res.status, .ok)
+            let games = try res.content.decode([GameMeta].self)
+            XCTAssertEqual(games.map(\.id), [includedGame.id])
+        })
+
+        try await app.test(.GET, "api/v1/games/\(includedGame.id.uuidString)", beforeRequest: { req in
+            req.headers.bearerAuthorization = BearerAuthorization(token: adminLogin.token.sessionId)
+        }, afterResponse: { res async throws in
+            XCTAssertEqual(res.status, .ok)
+            let game = try res.content.decode(GameMeta.self)
+            XCTAssertEqual(game.id, includedGame.id)
+        })
+
+        try await app.test(.GET, "api/v1/games/by_family/\(familyId.uuidString)", beforeRequest: { req in
+            req.headers.bearerAuthorization = BearerAuthorization(token: adminLogin.token.sessionId)
+        }, afterResponse: { res async throws in
+            XCTAssertEqual(res.status, .ok)
+            let games = try res.content.decode([GameMeta].self)
+            XCTAssertEqual(games.map(\.id), [includedGame.id])
+        })
+
+        try await app.test(.GET, "api/v1/games?family_id_search=\(familyId.uuidString)&page=0&per_page=10&sort_by=name&asc=1", beforeRequest: { req in
+            req.headers.bearerAuthorization = BearerAuthorization(token: adminLogin.token.sessionId)
+        }, afterResponse: { res async throws in
+            XCTAssertEqual(res.status, .ok)
+            let games = try res.content.decode([GameMeta].self)
+            XCTAssertEqual(games.map(\.id), [includedGame.id])
+            XCTAssertFalse(games.contains(where: { $0.id == excludedGame.id }))
+        })
+
+        try await app.test(.GET, "api/v1/user/\(adminSession.user.uuidString)/profile/\(profile.id.uuidString)/games?family_id_search=\(familyId.uuidString)&page=0&per_page=10&sort_by=name&asc=1", beforeRequest: { req in
+            req.headers.bearerAuthorization = BearerAuthorization(token: adminLogin.token.sessionId)
+        }, afterResponse: { res async throws in
+            XCTAssertEqual(res.status, .ok)
+            let games = try res.content.decode([GameMeta].self)
+            XCTAssertEqual(games.map(\.id), [includedGame.id])
+            XCTAssertFalse(games.contains(where: { $0.id == excludedGame.id }))
+        })
+    }
+
+    func testAPIDeleteGameReplaceWithParentAndAllowBreak() async throws {
+        _ = try await registerUser(
+            username: "games-delete-admin",
+            email: "games-delete-admin@example.com",
+            password: "password123"
+        )
+        let adminLogin = try await loginUser(
+            username: "games-delete-admin",
+            password: "password123"
+        )
+        let familyId = UUID()
+        let parentGame = try insertGameMeta(name: "Parent Game", familyId: familyId)
+        let childGame = try insertGameMeta(name: "Child Game", familyId: familyId, baseGameId: parentGame.id)
+        let dependentHash = try insertGameHash(gameMetaId: childGame.id, hash: "replace-child-hash")
+        let adminSession = try await currentSession(for: adminLogin.token.sessionId)
+        let profile = try insertProfile(userId: adminSession.user, name: "Delete Profile")
+        let save = try insertSave(
+            userId: adminSession.user,
+            profileId: profile.id,
+            gameHashId: dependentHash.id,
+            gameMetaId: childGame.id,
+            name: "Child Save"
+        )
+
+        try await app.test(.DELETE, "api/v1/games/\(childGame.id.uuidString)?replace_with_parent=1&allow_break=1", beforeRequest: { req in
+            req.headers.bearerAuthorization = BearerAuthorization(token: adminLogin.token.sessionId)
+        }, afterResponse: { res async throws in
+            XCTAssertEqual(res.status, .ok)
+        })
+
+        let savedState = try await DBShared.pool().read { db in
+            let deletedChild = try GameMeta.filter(id: childGame.id).fetchOne(db)
+            let updatedHash = try GameHash.filter(id: dependentHash.id).fetchOne(db)
+            let updatedSave = try Save.filter(id: save.id).fetchOne(db)
+            return (deletedChild, updatedHash, updatedSave)
+        }
+        XCTAssertNil(savedState.0)
+        XCTAssertEqual(savedState.1?.gameMetaId, parentGame.id)
+        XCTAssertEqual(savedState.2?.gameMetaId, parentGame.id)
+    }
+
+
     func testAPIUserProfileRoutesWorkThroughPathVariants() async throws {
         _ = try await registerUser(
             username: "profiles-admin",
@@ -539,10 +648,12 @@ final class AppTests: XCTestCase {
         return profile
     }
 
-    private func insertGameMeta(name: String) throws -> GameMeta {
+    private func insertGameMeta(name: String, familyId: UUID? = nil, baseGameId: UUID? = nil) throws -> GameMeta {
         let now = Date()
         var game = GameMeta(
             id: UUID(),
+            familyId: familyId,
+            baseGameId: baseGameId,
             name: name,
             version: "1.0",
             breaksSaveFormatFromPreviousVersion: false,

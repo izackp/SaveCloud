@@ -193,8 +193,18 @@ extension GameMeta {
         try GameMeta.filter(id: uuid).fetchOne(db)
     }
 
-    static func fetchPaged(_ pageInfo: PageInfo<GameMetaSortField>, onlyBaseGames: Bool, searchList: [SearchQuery<GameMetaSearchField>], existingCon: DatabasePool? = nil) throws -> [GameMeta] {
+    static func fetchPaged(_ pageInfo: PageInfo<GameMetaSortField>, onlyBaseGames: Bool, searchList: [SearchQuery<GameMetaSearchField>], allowedIds: [UUID]? = nil, existingCon: DatabasePool? = nil) throws -> [GameMeta] {
         var filter: QueryInterfaceRequest<GameMeta> = all()
+        if let allowedIds {
+            if allowedIds.isEmpty {
+                return []
+            }
+            if allowedIds.count == 1, let firstId = allowedIds.first {
+                filter = filter.filter(id == firstId)
+            } else {
+                filter = filter.filter(allowedIds.contains(id))
+            }
+        }
         for eachSearch in searchList {
             switch eachSearch.searchBy {
             case .id:

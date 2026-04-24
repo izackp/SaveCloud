@@ -20,7 +20,7 @@ import GRDB
     let pageInfo:PageInfo<SaveSortField> = try req.getPageInfo()
     let profileId:UUID? = req.parameters.get("profile_id")
     let gameMetaId:UUID? = req.parameters.get("game_meta_id")
-    let gameHash:String? = req.parameters.get("game_hash")
+    let gameHash = try? req.query.get(String.self, at: "game_hash")
     
     let pool = DBShared.pool()
     let (resultHashMap, resultMatchingHashes):(GameHash?, [GameHash]) = try await pool.read { (db:Database) in
@@ -75,7 +75,7 @@ import GRDB
     let userId = try req.expectValidUserId()
     let profileId:UUID? = req.parameters.get("profile_id")
     let gameMetaId:UUID? = req.parameters.get("game_meta_id")
-    let gameHash:String? = req.parameters.get("game_hash")
+    let gameHash = try? req.query.get(String.self, at: "game_hash")
     
     let pool = DBShared.pool()
     let (resultHashMap, resultMatchingHashes):(GameHash?, [GameHash]) = try await pool.read { (db:Database) in

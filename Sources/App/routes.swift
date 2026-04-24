@@ -70,6 +70,7 @@ func routes(_ app: Application) throws {
     apiAuth.delete("api", "v1", "user", use: apiDELETEUser(req:))
     apiAuth.delete("api", "v1", "user", ":user_id", use: apiDELETEUser(req:))
     apiAuth.get("api", "v1", "games", use: apiGETGameList(req:))
+    apiAuth.get("api", "v1", "games", "by_family", ":family_id", use: apiGETGameList(req:))
     apiAuth.get("api", "v1", "games", ":game_id", use: apiGETGame(req:))
     apiAuth.post("api", "v1", "games", use: apiPOSTGame(req:))
     apiAuth.put("api", "v1", "games", ":game_id", use: apiPUTGame(req:))

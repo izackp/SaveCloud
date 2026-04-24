@@ -13,6 +13,9 @@ import GRDB
  GET /games?hash=xyz
  GET /games/:id
  GET /games/by_family/:id
+ GET /games?family_id_search=abc&page=0&per_page=10&sort_by=name&asc=1
+ GET /user/:user_id/profile/:profile_id/games?family_id_search=abc&page=0&per_page=10&sort_by=name&asc=1
+ DELETE /games/:game_id?replace_with_parent=1&allow_break=1
  {
      "id": "uuid",
      "hash": "asdadsasd",
@@ -44,20 +47,33 @@ import GRDB
 @Sendable func apiGETGameList(req: Request) async throws -> [GameMeta] {
     let userId = try req.validUserIdIfExists()
     let profileId:UUID? = req.parameters.get("profile_id")
-    //
     let pageInfo:PageInfo<GameMetaSortField> = try req.getPageInfo()
-    let searches = GameMetaSearchField.searchFieldsInRequest(req)
-    let onlyBaseGames = req.parameters.get("base_games") == "1"
-    
-    //let pool = DBShared.pool()
-    if let userId = userId {
-        let listUserGameIds = try Save.fetchAllGameIds(userId: userId, profileId: profileId)
-        let listSaves = try GameMeta.fetchPaged(pageInfo, onlyBaseGames: onlyBaseGames, searchList: searches)
-        return listSaves
-    } else {
-        let listSaves = try GameMeta.fetchPaged(pageInfo, onlyBaseGames: onlyBaseGames, searchList: searches)
-        return listSaves
+    var searches = GameMetaSearchField.searchFieldsInRequest(req)
+    let onlyBaseGames = (try? req.query.get(String.self, at: "base_games")) == "1"
+
+    if let familyId: UUID = req.parameters.get("family_id") {
+        searches.append(SearchQuery(searchBy: .familyId, value: familyId.uuidString))
     }
+
+    let pool = DBShared.pool()
+    if let hash = try? req.query.get(String.self, at: "hash") {
+        return try await pool.read { db in
+            guard let gameHash = try GameHash.first(db, hash: hash), let gameMetaId = gameHash.gameMetaId else {
+                return []
+            }
+            guard let gameMeta = try GameMeta.filter(id: gameMetaId).fetchOne(db) else {
+                return []
+            }
+            return [gameMeta]
+        }
+    }
+
+    let allowedIds: [UUID]? = if let userId {
+        try Save.fetchAllGameIds(userId: userId, profileId: profileId)
+    } else {
+        nil
+    }
+    return try GameMeta.fetchPaged(pageInfo, onlyBaseGames: onlyBaseGames, searchList: searches, allowedIds: allowedIds)
 }
 
 //GET /games/:game_id
@@ -78,7 +94,7 @@ import GRDB
 //We really should allow updating fields that are sent instead of the entire obj
 //PUT /games/:game_id
 @Sendable func apiPUTGame(req: Request) async throws -> GameMeta {
-    let (userId, isAdmin) = try req.expectValidAuth()
+    let (_, isAdmin) = try req.expectValidAuth()
     if (isAdmin == false) {
         throw Abort(.unauthorized)
     }
@@ -113,7 +129,7 @@ import GRDB
 
 //POST /games
 @Sendable func apiPOSTGame(req: Request) async throws -> GameMeta {
-    let (userId, isAdmin) = try req.expectValidAuth()
+    let (_, isAdmin) = try req.expectValidAuth()
     if (isAdmin == false) {
         throw Abort(.unauthorized)
     }
@@ -136,17 +152,16 @@ import GRDB
 
 //DELETE /games/:game_id?replace_with_parent=1&allow_break=1
 @Sendable func apiDELETEGame(req: Request) async throws {
-    let (userId, isAdmin) = try req.expectValidAuth()
+    let (_, isAdmin) = try req.expectValidAuth()
     if (isAdmin == false) {
         throw Abort(.unauthorized)
     }
-    
-    let pageInfo:PageInfo<GameMetaSortField> = try req.getPageInfo()
+
     guard let gameId:UUID = req.parameters.get("game_id") else {
         throw Abort(.badRequest)
     }
-    let replaceWithParent = req.parameters.get("replace_with_parent") == "1"
-    let allowRelBreak = req.parameters.get("allow_break") == "1"
+    let replaceWithParent = (try? req.query.get(String.self, at: "replace_with_parent")) == "1"
+    let allowRelBreak = (try? req.query.get(String.self, at: "allow_break")) == "1"
     
     let pool = DBShared.pool()
     try await pool.write { db in
@@ -157,9 +172,11 @@ import GRDB
         if let parentId = parentId, replaceWithParent {
             try GameHash.replaceGameMeta(db, targetUUID: gameId, replaceWith: parentId)
             try GameMeta.replaceBaseGameId(db, targetUUID: gameId, replaceWith: parentId)
+            try GameMeta.filter(id: gameId).deleteAll(db)
         } else if (allowRelBreak) {
             try GameHash.replaceGameMeta(db, targetUUID: gameId, replaceWith: nil)
             try GameMeta.replaceBaseGameId(db, targetUUID: gameId, replaceWith: nil)
+            try GameMeta.filter(id: gameId).deleteAll(db)
         } else {
             let hashCount = try GameHash.filter(GameHash.gameMetaId == gameId).fetchCount(db)
             if (hashCount > 0) {

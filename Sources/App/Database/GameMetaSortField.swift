@@ -130,13 +130,8 @@ public enum GameMetaSearchField : UInt16, Sendable, LosslessStringConvertible, D
     static let allFields:[GameMetaSearchField] = [.name, .familyId, .hashedFileName, .xxhash64, .version, .id]
     
     public static func searchFieldsInRequest(_ req:Request) -> [SearchQuery<GameMetaSearchField>] {
-        var result = allFields.compactMap({
-            if let search:String = req.parameters.get("\($0.urlKey)_search") {
-                return SearchQuery(searchBy: $0, value: search)
-            }
-            return nil
-        })
-        return result
+        allFields.compactMap {
+            try? req.getSearchField(field: $0, name: $0.urlKey)
+        }
     }
 }
-
