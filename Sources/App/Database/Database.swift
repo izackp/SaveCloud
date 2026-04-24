@@ -11,10 +11,16 @@ class DBShared {
     nonisolated(unsafe) static var path:String = ""
     static let version = 1
     
-    static func initDB(clearDB:Bool = false) throws -> DBInfo  {
-        guard let path_ = NSSearchPathForDirectoriesInDomains(
-            .documentDirectory, .userDomainMask, true
-        ).first else { throw AppError("Document directory not found.")}
+    static func initDB(clearDB:Bool = false, path overridePath: String? = nil) throws -> DBInfo  {
+        let path_: String
+        if let overridePath {
+            path_ = overridePath
+        } else {
+            guard let documentsPath = NSSearchPathForDirectoriesInDomains(
+                .documentDirectory, .userDomainMask, true
+            ).first else { throw AppError("Document directory not found.")}
+            path_ = documentsPath
+        }
         path = path_
         
         let pool:DatabasePool
