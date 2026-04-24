@@ -24,7 +24,7 @@ import Argon2Swift
         userId = claims.userId
     }
     
-    let connection = try Database.getConnection()
+    let connection = DBShared.pool()
     guard let user = try await connection.read({ db in
         try User.filter(id: userId).fetchOne(db)
     }) else {
@@ -88,7 +88,7 @@ final class PutUser: Content, IValidate {
         throw Abort(.unauthorized, reason: "You don't have permission to edit this user.")
     }
     
-    let connection = try Database.getConnection()
+    let connection = DBShared.pool()
     guard var matchingUser = try await connection.read({ db in
         try User.filter(id: id).fetchOne(db)
     }) else {
@@ -175,7 +175,7 @@ final class PasswordCheck: Content, IValidate {
     let contents = try req.content.decode(PasswordCheck.self)
     try contents.checkValdiation()
     
-    let connection = try Database.getConnection()
+    let connection = DBShared.pool()
     guard let matchingUser = try await connection.read({ db in
         try User.filter(id: id).fetchOne(db)
     }) else {

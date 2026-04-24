@@ -73,7 +73,7 @@ struct JWTClaims: Claims, Authenticatable {
     let contents = try req.content.decode(ApiLoginRequest.self)
     try contents.checkValdiation()
     
-    let connection = try Database.getConnection()
+    let connection = DBShared.pool()
     guard let user = try await User.first(connection, emailOrUsername: contents.emailOrUsername()) else {
         throw Abort(.notFound, reason: "Username Or Email not found")
     }
@@ -121,7 +121,7 @@ func generateJWT(userId: UUID, sessionId: UUID, refreshToken:UUID, admin: Bool) 
     let jwt = try JWT<JWTClaims>(jwtString: auth.token, verifier: jwtVerifier)
     let sessionId = jwt.claims.sessionId
     
-    let connection = try Database.getConnection()
+    let connection = DBShared.pool()
     guard let session = try await connection.read({ db in
         try AuthSession.filter(id: sessionId).fetchOne(db)
     }) else {

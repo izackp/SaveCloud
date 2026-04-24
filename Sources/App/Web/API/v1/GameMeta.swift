@@ -49,7 +49,7 @@ import GRDB
     let searches = GameMetaSearchField.searchFieldsInRequest(req)
     let onlyBaseGames = req.parameters.get("base_games") == "1"
     
-    //let connection = try Database.getConnection()
+    //let connection = DBShared.pool()
     if let userId = userId {
         let listUserGameIds = try Save.fetchAllGameIds(userId: userId, profileId: profileId)
         let listSaves = try GameMeta.fetchPaged(pageInfo, onlyBaseGames: onlyBaseGames, searchList: searches)
@@ -66,7 +66,7 @@ import GRDB
         throw Abort(.badRequest)
     }
     
-    let connection = try Database.getConnection()
+    let connection = DBShared.pool()
     guard let result = try await connection.read({ db in
         try GameMeta.filter(id: gameId).fetchOne(db)
     }) else {
@@ -91,7 +91,7 @@ import GRDB
     try contents.checkValdiation()
     contents.id = gameId
     
-    let connection = try Database.getConnection()
+    let connection = DBShared.pool()
     guard let existing = try await connection.read({ db in
         try GameMeta.filter(id: gameId).fetchOne(db)
     }) else {
@@ -124,7 +124,7 @@ import GRDB
     let date = Date()
     let newGameMeta = contents.toGameMeta(date)
     
-    let connection = try Database.getConnection()
+    let connection = DBShared.pool()
     return try await connection.write { db in
         var gameMeta = newGameMeta
         try gameMeta.insert(db)//TODO: If UUID not provided by user, and the
@@ -148,7 +148,7 @@ import GRDB
     let replaceWithParent = req.parameters.get("replace_with_parent") == "1"
     let allowRelBreak = req.parameters.get("allow_break") == "1"
     
-    let connection = try Database.getConnection()
+    let connection = DBShared.pool()
     try await connection.write { db in
         guard let target = try GameMeta.filter(id: gameId).fetchOne(db) else {
             throw Abort(.notFound)

@@ -36,8 +36,10 @@ struct UserSessionAuthenticator: AsyncSessionAuthenticator {
         for req: Request
     ) async throws {
         
-        let connection = try Database.getConnection()
-        guard let session = try await AuthSession.first(connection, uuid: sessionID) else {
+        let connection = DBShared.pool()
+        guard let session = try await connection.read({ db in
+            try AuthSession.filter(id: sessionID).fetchOne(db)
+        }) else {
             return
         }
         //req.auth.login(session)
@@ -68,7 +70,7 @@ struct UserCredentialsAuthenticator: AsyncCredentialsAuthenticator {
     ) async throws {
         try credentials.validate()
         
-        let connection = try Database.getConnection()
+        let connection = DBShared.pool()
         guard let user = try await User.first(connection, emailOrUsername: credentials.email_or_username) else {
             throw Abort(.notFound)
         }
@@ -87,7 +89,7 @@ struct UserCredentialsAuthenticator: AsyncCredentialsAuthenticator {
 public let hours24:TimeInterval = 24 * 60 * 60
 
 func createSession(_ req: Request, _ userId:UUID, _ isAdmin:Bool, _ expiresIn:TimeInterval = hours24, _ refreshToken:UUID?) async throws -> AuthSession {
-    let connection = try Database.getConnection()
+    let connection = DBShared.pool()
     return try await createSession(req, userId, isAdmin, expiresIn, refreshToken, connection)
 }
 

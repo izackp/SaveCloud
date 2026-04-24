@@ -22,7 +22,7 @@ import GRDB
     let gameMetaId:UUID? = req.parameters.get("game_meta_id")
     let gameHash:String? = req.parameters.get("game_hash")
     
-    let connection = try Database.getConnection()
+    let connection = DBShared.pool()
     let gameHashId:UUID?
     if let gameHash = gameHash {
         let hashMap = try GameHash.first(connection, hash: gameHash)
@@ -63,7 +63,7 @@ import GRDB
     let gameMetaId:UUID? = req.parameters.get("game_meta_id")
     let gameHash:String? = req.parameters.get("game_hash")
     
-    let connection = try Database.getConnection()
+    let connection = DBShared.pool()
     let gameHashId:UUID?
     if let gameHash = gameHash {
         let hashMap = try GameHash.first(connection, hash: gameHash)
@@ -101,7 +101,7 @@ import GRDB
         throw Abort(.badRequest)
     }
     
-    let connection = try Database.getConnection()
+    let connection = DBShared.pool()
     guard let result = try await connection.read({ db in
         try Save.filter(id: saveId).fetchOne(db)
     }) else {
@@ -115,7 +115,7 @@ import GRDB
 
 @Sendable func apiDELETESave(req: Request) async throws {
     let save = try await apiGETSave(req: req)
-    let connection = try Database.getConnection()
+    let connection = DBShared.pool()
     _ = try await connection.write { db in
         try Save.filter(id: save.id).deleteAll(db)
     }

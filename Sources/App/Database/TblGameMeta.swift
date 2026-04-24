@@ -246,7 +246,7 @@ extension GameMeta {
             }
         }
 
-        let con = try Database.getConnection(existingCon)
+        let con = existingCon ?? DBShared.pool()
         return try con.read { db in
             try sorted
                 .limit(Int(pageInfo.perPage), offset: Int(pageInfo.perPage * pageInfo.page))

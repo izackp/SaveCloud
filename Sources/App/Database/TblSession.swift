@@ -57,9 +57,6 @@ struct AuthSession: Content, Codable, SessionAuthenticatable, SQLItem, Identifia
         }
         return true
     }
-}
- 
-extension AuthSession {
     
     //MARK: - DATABASE
     static var databaseTableName: String { get {
@@ -85,8 +82,8 @@ extension AuthSession {
         
         try db.create(table: databaseTableName) { t in
             t.column(id,                .blob).primaryKey()
-            t.column(refresh_token,     .text)
-            t.column(user,              .text).notNull()
+            t.column(refresh_token,     .blob)
+            t.column(user,              .blob).notNull()
             t.column(device_name,       .text)
             t.column(location,          .text)
             t.column(ip_address,        .text).notNull()
@@ -94,12 +91,6 @@ extension AuthSession {
             t.column(created_at,        .date).notNull()
             t.column(updated_at,        .date).notNull()
             t.column(expires_at,        .date).notNull()
-        }
-    }
-
-    static func first(_ con: DatabasePool, uuid: UUID) async throws -> AuthSession? {
-        try await con.read { db in
-            try AuthSession.filter(id: uuid).fetchOne(db)
         }
     }
 }

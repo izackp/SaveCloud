@@ -25,7 +25,7 @@ func routes(_ app: Application) throws {
             return try VCHomePage(isAdmin: session.isAdmin).rootNode
         } else {
             do {
-                let connection = try Database.getConnection()
+                let connection = DBShared.pool()
                 let users = try await connection.read { db in
                     try User.fetchAll(db)
                 }
@@ -43,7 +43,7 @@ func routes(_ app: Application) throws {
             return try HomePage(app, isAdmin: session.isAdmin).rootNode
         } else {
             do {
-                let connection = try Database.getConnection()
+                let connection = DBShared.pool()
                 let users = try connection.fetchAll(User.self)
                 return try WelcomePage(app, users: users, error: nil).rootNode
             } catch {
@@ -79,13 +79,23 @@ func routes(_ app: Application) throws {
     userSessGroup.post("user", "change_password", use: changePassword(req:))
     
     userSessGroup.get("user", "edit") { req async throws in
-        let connection = try Database.getConnection()
-        guard
-            let session = try await req.fetchSession(),
-            let user = try await connection.read({ db in
-                try User.filter(id: session.user).fetchOne(db)
-            }) else {//TODO: Log error
-            return try VCWelcomePage(users: [], error:"Session doesn't exist").rootNode.response()
+        let pool = DBShared.pool()
+        let result: (AuthSession?, User?) = try await pool.read { db in
+            guard let session = try req.fetchSession(db) else {
+                return (nil, nil)
+            }
+            if let user = try User.filter(id: session.user).fetchOne(db) {
+                return (session, user)
+            } else {
+                return (session, nil)
+            }
+        }
+        let (session, user) = result
+        guard session != nil else {
+            return try VCWelcomePage(users:[], error:"Session doesn't exist").rootNode.response()
+        }
+        guard let user = user else {
+            return try VCWelcomePage(users:[], error:"User not found").rootNode.response()
         }
         return try VCEditUserPage(user: user, userEditError: nil, passwordEditError: nil).rootNode.response()
     }

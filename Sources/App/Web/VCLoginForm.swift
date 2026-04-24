@@ -28,6 +28,7 @@ struct LoginRequest: Content {
 
 @Sendable func login(req: Request) async throws -> Response {
     //let app = req.application
+    //TODO: The user might login with different credentials. We shouldn't redirect
     let session = req.session.authenticated(AuthSession.self)
     if (session != nil) {
         return req.redirect(to: "/", redirectType: .normal)
@@ -38,7 +39,7 @@ struct LoginRequest: Content {
         return try VCWelcomePage(users: [], error: error).rootNode.response()
     }
     
-    let connection = try Database.getConnection()
+    let connection = DBShared.pool()
     guard let user = try await User.first(connection, emailOrUsername: loginRequest.email_or_username) else {
         return try VCWelcomePage(users: [], error: "Username Or Email not found").rootNode.response()
     }

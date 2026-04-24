@@ -15,7 +15,7 @@ import Argon2Swift
     }
     let userId:UUID = try req.expectValidUserId()
     
-    let connection = try Database.getConnection()
+    let connection = DBShared.pool()
     guard let user = try await connection.read({ db in
         try User.filter(id: userId).fetchOne(db)
     }) else {
@@ -104,7 +104,7 @@ final class PostUserProfile: Content, IValidate {
     let id = contents.id ?? UUID()
     let date = Date()
     let userProfile = UserProfile(id: id, userId: userId, name: contents.name, createdAt: date, updatedAt: date)
-    let connection = try Database.getConnection()
+    let connection = DBShared.pool()
     return try await connection.write { db in
         var profile = userProfile
         if userDefinedId {
@@ -138,7 +138,7 @@ final class PostUserProfile: Content, IValidate {
         throw Abort(.badRequest)
     }
     
-    let connection = try Database.getConnection()
+    let connection = DBShared.pool()
     guard var matchingUserProfile = try await connection.read({ db in
         try UserProfile.filter(id: profileId).fetchOne(db)
     }) else {
@@ -173,7 +173,7 @@ final class PostUserProfile: Content, IValidate {
         profileId = contents.id
     }
     
-    let connection = try Database.getConnection()
+    let connection = DBShared.pool()
     guard let matchingUserProfile = try await connection.read({ db in
         try UserProfile.filter(id: profileId).fetchOne(db)
     }) else {

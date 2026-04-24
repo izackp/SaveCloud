@@ -53,7 +53,7 @@ struct ApiRegisterRequest: Content, IValidate {
         throw Abort(.badRequest, reason: "Unable to save password.")
     }
     
-    let connection = try Database.getConnection()
+    let connection = DBShared.pool()
     let uniqueUsername = try await connection.read { db in
         try User.filter(User.username == contents.username).fetchCount(db) == 0
     }

@@ -59,7 +59,7 @@ class VCRegistrationForm : RegistrationForm {
     let passwordHash = try Argon2Swift.hashPasswordString(password: contents.password, salt: salt)
     let encodedPassword = passwordHash.encodedString()
     
-    let connection = try Database.getConnection()
+    let connection = DBShared.pool()
     let numUsers = try await connection.read { db in
         try User.fetchCount(db)
     }

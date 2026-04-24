@@ -8,6 +8,7 @@
 import Vapor
 import Argon2Swift
 import HRW
+import GRDB
 
 struct EditUserRequest: Content {
     let username: String
@@ -46,22 +47,37 @@ class VCEditUserForm : EditUserForm {
 
 extension Request {
     func fetchSession() async throws -> AuthSession? {
+        let pool = DBShared.pool()
+        return try await pool.read { db in
+            try fetchSession(db)
+        }
+    }
+    
+    func fetchSession(_ db: GRDB.Database) throws -> AuthSession? {
         guard let sessionId = session.authenticated(AuthSession.self) else { return nil }
-        let connection = try Database.getConnection()
-        let session = try await AuthSession.first(connection, uuid:sessionId)
-        return session
+        return try AuthSession.filter(id: sessionId).fetchOne(db)
     }
 }
 
 @Sendable func editUser(req: Request) async throws -> Response {
-    let connection = try Database.getConnection()
+    let pool = DBShared.pool()
     //let app = req.application
-    guard
-        let session = try await req.fetchSession(),
-        let user = try await connection.read({ db in
-            try User.filter(id: session.user).fetchOne(db)
-        }) else {
+    let result: (AuthSession?, User?) = try await pool.read { db in
+        guard let session = try req.fetchSession(db) else {
+            return (nil, nil)
+        }
+        if let user = try User.filter(id: session.user).fetchOne(db) {
+            return (session, user)
+        } else {
+            return (session, nil)
+        }
+    }
+    let (session, user) = result
+    guard session != nil else {
         return try VCWelcomePage(users:[], error:"Session doesn't exist").rootNode.response()
+    }
+    guard let user = user else {
+        return try VCWelcomePage(users:[], error:"User not found").rootNode.response()
     }
     
     let contents = try req.content.decode(EditUserRequest.self)
@@ -83,8 +99,8 @@ extension Request {
         user.updatedAt = Date()
         return user
     }()
-    let savedUser = try await connection.write { db in
-        var user = updatedUser
+    let savedUser = try await pool.write { db in
+        let user = updatedUser
         try user.update(db)
         return user
     }

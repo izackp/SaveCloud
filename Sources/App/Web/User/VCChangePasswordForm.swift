@@ -39,14 +39,13 @@ class VCChangePasswordForm : ChangePasswordForm {
 }
 
 @Sendable func changePassword(req: Request) async throws -> Response {
-    let connection = try Database.getConnection()
+    let connection = DBShared.pool()
     //let app = req.application
-    guard
-        let session = try await req.fetchSession(),
+    guard let session = try await req.fetchSession(),
         let user = try await connection.read({ db in
             try User.filter(id: session.user).fetchOne(db)
         }) else {
-        return try VCWelcomePage(users: [], error:"Session doesn't exist").rootNode.response()
+            return try VCWelcomePage(users: [], error:"Session doesn't exist").rootNode.response()
     }
     
     let contents = try req.content.decode(ChangePasswordRequest.self)

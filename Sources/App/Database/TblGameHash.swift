@@ -97,7 +97,7 @@ extension GameHash {
     }
 
     static func fetchList(gameMetaId: UUID, existingCon: DatabasePool? = nil) throws -> [GameHash] {
-        let con = try Database.getConnection(existingCon)
+        let con = existingCon ?? DBShared.pool()
         return try con.read { db in
             try GameHash.filter(game_meta_id == gameMetaId).fetchAll(db)
         }
