@@ -1,6 +1,7 @@
 <form action="/login"
       method="POST"
-      enctype="application/x-www-form-urlencoded">
+      enctype="application/x-www-form-urlencoded"
+      class="pure-form pure-form-stacked">
   <fieldset>
     <label>
       Username or Email
@@ -11,7 +12,7 @@
              autocomplete="off">
     </label>
 
-    <label class="password-label">
+    <label>
       Password
       <input type="password"
              name="password"
@@ -22,6 +23,6 @@
              title="Must contain at least one number and one uppercase and lowercase letter, and at least 8 or more characters">
     </label>
 
-    <button type="submit">Login</button>
+    <button type="submit" class="pure-button pure-button-primary" style="margin-top:0.75rem; width:100%;">Login</button>
   </fieldset>
 </form>

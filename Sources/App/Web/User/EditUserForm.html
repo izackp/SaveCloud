@@ -1,58 +1,45 @@
 <form action="/user/edit"
       method="POST"
-      enctype="application/x-www-form-urlencoded">
+      enctype="application/x-www-form-urlencoded"
+      class="pure-form pure-form-stacked">
   <fieldset>
-    <h2>Edit User:</h2>
+    <legend>Edit User</legend>
 
     <label for="username">
-      Username:
-      <input
-        type="text"
-        id="username"
-        name="username"
-        required
-        autofocus
-        autocomplete="off"><br>
+      Username
+      <input type="text" id="username" name="username" required autofocus autocomplete="off">
     </label>
 
     <label for="email">
-      Email:
-      <input
-        type="email"
-        id="email"
-        name="email"
-        required><br>
+      Email
+      <input type="email" id="email" name="email" required>
     </label>
 
     <label id="password_container" style="display:none">
-      Password:
-      <span id="password_hash"></span><br>
+      Password Hash
+      <span id="password_hash" style="display:block; font-family:monospace; font-size:0.85rem; color:#555;"></span>
     </label>
 
     <label>
-      Created At:
-      <span id="created_at"></span><br>
+      Created At
+      <span id="created_at" style="display:block; color:#555;"></span>
     </label>
 
     <label>
-      Updated At:
-      <span id="updated_at"></span><br>
+      Updated At
+      <span id="updated_at" style="display:block; color:#555;"></span>
     </label>
 
     <label for="password">
-      Password required to update:
-      <input
-        type="password"
-        id="password"
-        name="password"
-        class="password-input"><br>
+      Password required to update
+      <input type="password" id="password" name="password" class="password-input">
     </label>
 
-    <label id="error_container" style="display:none">
-      Error:
-      <span id="span_error"></span><br>
+    <label id="error_container" style="display:none; color:#c00;">
+      Error
+      <span id="span_error" style="display:block;"></span>
     </label>
 
-    <button type="submit">Update</button>
+    <button type="submit" class="pure-button pure-button-primary" style="margin-top:0.75rem;">Update</button>
   </fieldset>
 </form>

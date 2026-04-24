@@ -1,35 +1,41 @@
 <html>
     <head>
         <title>Manage Sessions</title>
-        <link rel="stylesheet" href="/style.css" />
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/purecss@3.0.0/build/pure-min.css" integrity="sha384-X38yfunGUhNzHpBaEBsWLO+A0HDYOQi8ufWDkZ0k9e0eXz/tH3II7uKZ9msv++Ls" crossorigin="anonymous">
+        <style>
+            body { margin: 0; }
+            #nav_bar { width: 200px; position: fixed; left: 0; top: 0; bottom: 0; background: #1f2937; overflow-y: auto; }
+            .nav_body { margin-left: 200px; padding: 2rem; }
+            .error-msg { color: #c00; }
+            .pagination { margin-top: 1rem; }
+        </style>
     </head>
     <body>
-        <div>
-            <div id='nav_bar'></div>
-            <div class='nav_body'>
-                <h1>Manage Sessions</h1>
-                <p id="p_error" style="display:none"></p>
-                <table class="pure-table pure-table-horizontal">
-                    <thead>
-                        <tr>
-                            <th>ID</th>
-                            <th>User</th>
-                            <th>Refresh Token</th>
-                            <th>Device</th>
-                            <th>Location</th>
-                            <th>IP Address</th>
-                            <th>Admin</th>
-                            <th>Expires</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody id="table"></tbody>
-                </table>
-                <div>
-                    <a id="prev_link" style="display:none">Previous</a>
-                    <span id="page_text"></span>
-                    <a id="next_link" style="display:none">Next</a>
-                </div>
+        <div id='nav_bar'></div>
+        <div class='nav_body'>
+            <h1>Manage Sessions</h1>
+            <p id="p_error" class="error-msg" style="display:none"></p>
+            <table class="pure-table pure-table-horizontal" style="width:100%;">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>User</th>
+                        <th>Refresh Token</th>
+                        <th>Device</th>
+                        <th>Location</th>
+                        <th>IP Address</th>
+                        <th>Admin</th>
+                        <th>Expires</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="table"></tbody>
+            </table>
+            <div class="pagination">
+                <a id="prev_link" style="display:none">Previous</a>
+                <span id="page_text"></span>
+                <a id="next_link" style="display:none">Next</a>
             </div>
         </div>
     </body>

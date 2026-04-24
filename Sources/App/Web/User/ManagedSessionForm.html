@@ -1,94 +1,65 @@
 <form action="/sessions"
       method="POST"
-      enctype="application/x-www-form-urlencoded">
+      enctype="application/x-www-form-urlencoded"
+      class="pure-form pure-form-stacked">
   <fieldset>
-    <h2>Edit Session</h2>
+    <legend>Edit Session</legend>
 
     <label>
-      Session ID:
-      <span id="session_id"></span><br>
+      Session ID
+      <span id="session_id" style="display:block; color:#555;"></span>
     </label>
 
     <label for="user_id">
-      User ID:
-      <input
-        type="text"
-        id="user_id"
-        name="user_id"
-        required
-        autocomplete="off"><br>
+      User ID
+      <input type="text" id="user_id" name="user_id" required autocomplete="off">
     </label>
 
     <label for="refresh_token">
-      Refresh Token:
-      <input
-        type="text"
-        id="refresh_token"
-        name="refresh_token"
-        autocomplete="off"><br>
+      Refresh Token
+      <input type="text" id="refresh_token" name="refresh_token" autocomplete="off">
     </label>
 
     <label for="device_name">
-      Device Name:
-      <input
-        type="text"
-        id="device_name"
-        name="device_name"
-        autocomplete="off"><br>
+      Device Name
+      <input type="text" id="device_name" name="device_name" autocomplete="off">
     </label>
 
     <label for="location">
-      Location:
-      <input
-        type="text"
-        id="location"
-        name="location"
-        autocomplete="off"><br>
+      Location
+      <input type="text" id="location" name="location" autocomplete="off">
     </label>
 
     <label for="ip_address">
-      IP Address:
-      <input
-        type="text"
-        id="ip_address"
-        name="ip_address"
-        required
-        autocomplete="off"><br>
+      IP Address
+      <input type="text" id="ip_address" name="ip_address" required autocomplete="off">
     </label>
 
-    <label for="is_admin">
-      <input
-        type="checkbox"
-        id="is_admin"
-        name="is_admin">
+    <label for="is_admin" class="pure-checkbox" style="margin-top:0.5rem;">
+      <input type="checkbox" id="is_admin" name="is_admin">
       Admin Session
     </label>
 
     <label for="expires_at">
-      Expires At:
-      <input
-        type="text"
-        id="expires_at"
-        name="expires_at"
-        required
-        autocomplete="off"><br>
+      Expires At
+      <input type="text" id="expires_at" name="expires_at" required autocomplete="off">
     </label>
 
     <label>
-      Created At:
-      <span id="created_at"></span><br>
+      Created At
+      <span id="created_at" style="display:block; color:#555;"></span>
     </label>
 
     <label>
-      Updated At:
-      <span id="updated_at"></span><br>
+      Updated At
+      <span id="updated_at" style="display:block; color:#555;"></span>
     </label>
 
-    <label id="error_container" style="display:none">
-      Error:
-      <span id="span_error"></span><br>
+    <label id="error_container" style="display:none; color:#c00;">
+      Error
+      <span id="span_error" style="display:block;"></span>
     </label>
 
-    <button type="submit">Update Session</button>
+    <button type="submit" class="pure-button pure-button-primary" style="margin-top:0.75rem;">Update Session</button>
   </fieldset>
 </form>
