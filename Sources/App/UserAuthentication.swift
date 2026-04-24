@@ -71,7 +71,7 @@ struct UserCredentialsAuthenticator: AsyncCredentialsAuthenticator {
         try credentials.validate()
         
         let pool = DBShared.pool()
-        guard let user = try await User.first(pool, emailOrUsername: credentials.email_or_username) else {
+        guard let user = try await User.first(emailOrUsername: credentials.email_or_username, pool) else {
             throw Abort(.notFound)
         }
         

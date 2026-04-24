@@ -73,8 +73,7 @@ struct JWTClaims: Claims, Authenticatable {
     let contents = try req.content.decode(ApiLoginRequest.self)
     try contents.checkValdiation()
     
-    let pool = DBShared.pool()
-    guard let user = try await User.first(pool, emailOrUsername: contents.emailOrUsername()) else {
+    guard let user = try await User.first(emailOrUsername: contents.emailOrUsername()) else {
         throw Abort(.notFound, reason: "Username Or Email not found")
     }
     

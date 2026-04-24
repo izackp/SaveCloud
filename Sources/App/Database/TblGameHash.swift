@@ -8,7 +8,7 @@
 import Vapor
 import GRDB
 
-final class GameHash: Content, Codable, SQLItem, Identifiable {
+final class GameHash: Content, Codable, SQLItem, Identifiable, Sendable {
     internal init(id: UUID, gameMetaId: UUID? = nil, hashedFileName: String, xxhash64: String, createdAt: Date, updatedAt: Date) {
         self.id = id
         self.gameMetaId = gameMetaId
@@ -18,12 +18,12 @@ final class GameHash: Content, Codable, SQLItem, Identifiable {
         self.updatedAt = updatedAt
     }
 
-    var id: UUID
-    var gameMetaId: UUID?
-    var hashedFileName: String
-    var xxhash64: String
-    var createdAt: Date
-    var updatedAt: Date
+    let id: UUID
+    let gameMetaId: UUID?
+    let hashedFileName: String
+    let xxhash64: String
+    let createdAt: Date
+    let updatedAt: Date
 
     enum CodingKeys: String, CodingKey {
         case id
@@ -78,28 +78,15 @@ extension GameHash {
             .updateAll(db, Save.gameMetaId.set(to: replaceWith))
     }
 
-    static func first(_ con: DatabasePool, uuid: UUID) throws -> GameHash? {
-        try con.read { db in
-            try GameHash.filter(id: uuid).fetchOne(db)
-        }
+    static func first(_ db: Database, uuid: UUID) throws -> GameHash? {
+        try GameHash.filter(id: uuid).fetchOne(db)
     }
 
-    static func first(_ con: DatabasePool, hash: String) throws -> GameHash? {
-        try con.read { db in
-            try GameHash.filter(xxhash64 == hash).fetchOne(db)
-        }
+    static func first(_ db: Database, hash: String) throws -> GameHash? {
+        try GameHash.filter(xxhash64 == hash).fetchOne(db)
     }
 
-    static func replaceGameMeta(_ con: DatabasePool, targetUUID: UUID, replaceWith: UUID?) throws {
-        try con.write { db in
-            try replaceGameMeta(db, targetUUID: targetUUID, replaceWith: replaceWith)
-        }
-    }
-
-    static func fetchList(gameMetaId: UUID, existingCon: DatabasePool? = nil) throws -> [GameHash] {
-        let con = existingCon ?? DBShared.pool()
-        return try con.read { db in
-            try GameHash.filter(game_meta_id == gameMetaId).fetchAll(db)
-        }
+    static func fetchList(_ db: Database, gameMetaId: UUID) throws -> [GameHash] {
+        try GameHash.filter(game_meta_id == gameMetaId).fetchAll(db)
     }
 }

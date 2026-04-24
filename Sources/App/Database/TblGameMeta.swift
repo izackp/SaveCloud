@@ -189,10 +189,8 @@ extension GameMeta {
     static let createdAt = created_at
     static let updatedAt = updated_at
 
-    static func first(_ con: DatabasePool, uuid: UUID) throws -> GameMeta? {
-        try con.read { db in
-            try GameMeta.filter(id: uuid).fetchOne(db)
-        }
+    static func first(_ db: Database, uuid: UUID) throws -> GameMeta? {
+        try GameMeta.filter(id: uuid).fetchOne(db)
     }
 
     static func fetchPaged(_ pageInfo: PageInfo<GameMetaSortField>, onlyBaseGames: Bool, searchList: [SearchQuery<GameMetaSearchField>], existingCon: DatabasePool? = nil) throws -> [GameMeta] {
@@ -251,12 +249,6 @@ extension GameMeta {
             try sorted
                 .limit(Int(pageInfo.perPage), offset: Int(pageInfo.perPage * pageInfo.page))
                 .fetchAll(db)
-        }
-    }
-
-    static func replaceBaseGameId(_ con: DatabasePool, targetUUID: UUID, replaceWith: UUID?) throws {
-        try con.write { db in
-            try replaceBaseGameId(db, targetUUID: targetUUID, replaceWith: replaceWith)
         }
     }
 }

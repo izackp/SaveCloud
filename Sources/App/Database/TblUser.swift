@@ -128,8 +128,9 @@ struct User: Content, Codable, SQLItem, Identifiable, Sendable {
         }
     }
 
-    static func first(_ con: DatabasePool, emailOrUsername: String) async throws -> User? {
-        try await con.read { db in
+    static func first(emailOrUsername: String, _ existingPool: DatabasePool? = nil) async throws -> User? {
+        let pool = existingPool ?? DBShared.pool()
+        return try await pool.read { db in
             try User
                 .filter(username == emailOrUsername || email == emailOrUsername)
                 .fetchOne(db)

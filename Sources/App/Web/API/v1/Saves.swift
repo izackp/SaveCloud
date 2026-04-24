@@ -23,10 +23,25 @@ import GRDB
     let gameHash:String? = req.parameters.get("game_hash")
     
     let pool = DBShared.pool()
+    let (resultHashMap, resultMatchingHashes):(GameHash?, [GameHash]) = try await pool.read { (db:Database) in
+        let hashMap:GameHash?
+        let matchingHashes:[GameHash]
+        if let gameHash = gameHash {
+            hashMap = try GameHash.first(db, hash: gameHash)
+        } else {
+            hashMap = nil
+        }
+        if let gameMetaId = gameMetaId {
+            matchingHashes = try GameHash.fetchList(db, gameMetaId: gameMetaId)
+        } else {
+            matchingHashes = []
+        }
+        return (hashMap, matchingHashes)
+    }
+    
     let gameHashId:UUID?
     if let gameHash = gameHash {
-        let hashMap = try GameHash.first(pool, hash: gameHash)
-        guard let hashMap = hashMap else {
+        guard let hashMap = resultHashMap else {
             throw Abort(.notFound, reason: "Can not find a game id that matches hash: \(gameHash)")
         }
         gameHashId = hashMap.id
@@ -37,13 +52,12 @@ import GRDB
     let hashIdListFromGameMeta:[UUID]
     if let gameMetaId = gameMetaId {
         //if (gameHash != nil) { throw Abort(.badRequest, reason: "Cant look up saves by both game hash and game id.") }
-        let matchingHashes = try GameHash.fetchList(gameMetaId: gameMetaId, existingCon: pool)
         if let gameHash = gameHash {
-            if (!matchingHashes.contains(where: { $0.xxhash64 == gameHash})) {
+            if (!resultMatchingHashes.contains(where: { $0.xxhash64 == gameHash})) {
                 throw Abort(.notFound, reason: "Hash \(gameHash). Not found in game id: \(gameMetaId)")
             }
         }
-        hashIdListFromGameMeta = matchingHashes.map({ $0.id })
+        hashIdListFromGameMeta = resultMatchingHashes.map({ $0.id })
     } else if let gameHashId = gameHashId {
         hashIdListFromGameMeta = [gameHashId]
     } else {
@@ -64,10 +78,25 @@ import GRDB
     let gameHash:String? = req.parameters.get("game_hash")
     
     let pool = DBShared.pool()
+    let (resultHashMap, resultMatchingHashes):(GameHash?, [GameHash]) = try await pool.read { (db:Database) in
+        let hashMap:GameHash?
+        let matchingHashes:[GameHash]
+        if let gameHash = gameHash {
+            hashMap = try GameHash.first(db, hash: gameHash)
+        } else {
+            hashMap = nil
+        }
+        if let gameMetaId = gameMetaId {
+            matchingHashes = try GameHash.fetchList(db, gameMetaId: gameMetaId)
+        } else {
+            matchingHashes = []
+        }
+        return (hashMap, matchingHashes)
+    }
+    
     let gameHashId:UUID?
     if let gameHash = gameHash {
-        let hashMap = try GameHash.first(pool, hash: gameHash)
-        guard let hashMap = hashMap else {
+        guard let hashMap = resultHashMap else {
             throw Abort(.notFound, reason: "Can not find a game id that matches hash: \(gameHash)")
         }
         gameHashId = hashMap.id
@@ -78,13 +107,12 @@ import GRDB
     let hashIdListFromGameMeta:[UUID]
     if let gameMetaId = gameMetaId {
         //if (gameHash != nil) { throw Abort(.badRequest, reason: "Cant look up saves by both game hash and game id.") }
-        let matchingHashes = try GameHash.fetchList(gameMetaId: gameMetaId, existingCon: pool)
         if let gameHash = gameHash {
-            if (!matchingHashes.contains(where: { $0.xxhash64 == gameHash})) {
+            if (!resultMatchingHashes.contains(where: { $0.xxhash64 == gameHash})) {
                 throw Abort(.notFound, reason: "Hash \(gameHash). Not found in game id: \(gameMetaId)")
             }
         }
-        hashIdListFromGameMeta = matchingHashes.map({ $0.id })
+        hashIdListFromGameMeta = resultMatchingHashes.map({ $0.id })
     } else if let gameHashId = gameHashId {
         hashIdListFromGameMeta = [gameHashId]
     } else {

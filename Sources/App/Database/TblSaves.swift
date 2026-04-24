@@ -180,9 +180,9 @@ extension Save {
     }
 
     static func fetchPaged(_ pageInfo: PageInfo<SaveSortField>, userId: UUID, profileId: UUID?, gameHashId: UUID?, existingCon: DatabasePool? = nil) throws -> [Save] {
-        let con = existingCon ?? DBShared.pool()
+        let pool = existingCon ?? DBShared.pool()
         let request = applySort(baseRequest(userId: userId, profileId: profileId, gameHashId: gameHashId), pageInfo: pageInfo)
-        return try con.read { db in
+        return try pool.read { db in
             try request
                 .limit(Int(pageInfo.perPage), offset: Int(pageInfo.perPage * pageInfo.page))
                 .fetchAll(db)
@@ -190,9 +190,9 @@ extension Save {
     }
 
     static func fetchPaged(_ pageInfo: PageInfo<SaveSortField>, userId: UUID, profileId: UUID?, gameHashIdList: [UUID], existingCon: DatabasePool? = nil) throws -> [Save] {
-        let con = existingCon ?? DBShared.pool()
+        let pool = existingCon ?? DBShared.pool()
         let request = applySort(baseRequest(userId: userId, profileId: profileId, gameHashIdList: gameHashIdList), pageInfo: pageInfo)
-        return try con.read { db in
+        return try pool.read { db in
             try request
                 .limit(Int(pageInfo.perPage), offset: Int(pageInfo.perPage * pageInfo.page))
                 .fetchAll(db)
@@ -200,15 +200,15 @@ extension Save {
     }
 
     static func deleteAll(userId: UUID, profileId: UUID?, gameHashIdList: [UUID], existingCon: DatabasePool? = nil) throws {
-        let con = existingCon ?? DBShared.pool()
-        try con.write { db in
+        let pool = existingCon ?? DBShared.pool()
+        try pool.write { db in
             _ = try baseRequest(userId: userId, profileId: profileId, gameHashIdList: gameHashIdList).deleteAll(db)
         }
     }
 
     static func fetchAllGameIds(userId: UUID, profileId: UUID?, existingCon: DatabasePool? = nil) throws -> [UUID] {
-        let con = existingCon ?? DBShared.pool()
-        return try con.read { db in
+        let pool = existingCon ?? DBShared.pool()
+        return try pool.read { db in
             try baseRequest(userId: userId, profileId: profileId, gameHashIdList: [])
                 .select(game_meta_id)
                 .fetchAll(db)
