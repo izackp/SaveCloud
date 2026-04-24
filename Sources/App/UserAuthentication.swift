@@ -13,6 +13,7 @@ import GRDB
 public let hours24:TimeInterval = 24 * 60 * 60
 public let apiSessionDuration: TimeInterval = 365 * hours24
 public let apiSessionRenewWindow: TimeInterval = apiSessionDuration - hours24
+public let browserSessionCookieName = "savecloud_session"
 
 struct APISessionAuthenticator: AsyncBearerAuthenticator {
 
@@ -53,26 +54,6 @@ struct APISessionAuthenticator: AsyncBearerAuthenticator {
     }
 }
 
-struct UserSessionAuthenticator: AsyncSessionAuthenticator {
-    typealias User = AuthenticatedUser
-
-    func authenticate(
-        sessionID: AuthenticatedUser.SessionID,
-        for req: Request
-    ) async throws {
-        
-        let pool = DBShared.pool()
-        guard let session = try await pool.read({ db in
-            try AuthSession.filter(id: sessionID).fetchOne(db)
-        }) else {
-            return
-        }
-        //req.auth.login(session)
-        req.session.authenticate(session)
-    }
-}
-
-
 struct UserCredentialsAuthenticator: AsyncCredentialsAuthenticator {
     
     struct Credentials: Content {
@@ -104,10 +85,7 @@ struct UserCredentialsAuthenticator: AsyncCredentialsAuthenticator {
         if (!verified) {
             throw Abort(.unauthorized) //AppError("Wrong Password") {"reason":"App.AppError","error":true}
         }
-        let hours24:TimeInterval = 24 * 60 * 60
         let newSession = try await createSession(req, user.id, user.isAdmin, hours24, nil, pool)
-        
-        req.session.authenticate(newSession)
     }
 }
 
@@ -130,4 +108,27 @@ func createSession(_ req: Request, _ userId:UUID, _ isAdmin:Bool, _ expiresIn:Ti
         try session.insert(db)
         return session
     }
+}
+
+func setBrowserSessionCookie(on response: Response, session: AuthSession) {
+    response.cookies[browserSessionCookieName] = HTTPCookies.Value(
+        string: session.id.uuidString,
+        expires: session.expiresAt,
+        path: "/",
+        isSecure: false,
+        isHTTPOnly: true,
+        sameSite: .lax
+    )
+}
+
+func clearBrowserSessionCookie(on response: Response) {
+    response.cookies[browserSessionCookieName] = HTTPCookies.Value(
+        string: "",
+        expires: Date(timeIntervalSince1970: 0),
+        maxAge: 0,
+        path: "/",
+        isSecure: false,
+        isHTTPOnly: true,
+        sameSite: .lax
+    )
 }

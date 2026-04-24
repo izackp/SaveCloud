@@ -328,8 +328,9 @@ private func ensureUniqueManagedUserFields(pool: DatabasePool, username: String,
     }
 
     if session.user == user.id {
-        req.session.unauthenticate(AuthSession.self)
-        return req.redirect(to: "/", redirectType: .normal)
+        let response = req.redirect(to: "/", redirectType: .normal)
+        clearBrowserSessionCookie(on: response)
+        return response
     }
 
     return req.redirect(to: "/user/edit_all", redirectType: .normal)
@@ -549,8 +550,9 @@ private func fetchManagedSession(req: Request, pool: DatabasePool) async throws 
     }
 
     if session.id == managedSession.id {
-        req.session.unauthenticate(AuthSession.self)
-        return req.redirect(to: "/", redirectType: .normal)
+        let response = req.redirect(to: "/", redirectType: .normal)
+        clearBrowserSessionCookie(on: response)
+        return response
     }
 
     return req.redirect(to: "/sessions", redirectType: .normal)

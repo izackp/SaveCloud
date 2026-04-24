@@ -120,9 +120,7 @@ func routes(_ app: Application) throws {
         return .ok
     }
 
-    let userSessGroup = app.routes.grouped([
-        UserSessionAuthenticator(),
-    ])
+    let userSessGroup = app.routes
     userSessGroup.post("login", use: login(req:))
     userSessGroup.post("user", "edit", use: editUser(req:))
     userSessGroup.post("user", "change_password", use: changePassword(req:))
@@ -167,6 +165,7 @@ func routes(_ app: Application) throws {
 func signOut(
     _ req: Request
 ) throws -> Response {
-    req.session.unauthenticate(AuthenticatedUser.self)
-    return req.redirect(to: "/")
+    let response = req.redirect(to: "/")
+    clearBrowserSessionCookie(on: response)
+    return response
 }

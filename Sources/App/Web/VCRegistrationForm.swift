@@ -84,7 +84,7 @@ class VCRegistrationForm : RegistrationForm {
         return session
     }
     
-    req.session.authenticate(newSession)
-    
-    return req.redirect(to: "/", redirectType: .normal)
+    let response = req.redirect(to: "/", redirectType: .normal)
+    setBrowserSessionCookie(on: response, session: newSession)
+    return response
 }

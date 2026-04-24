@@ -29,7 +29,7 @@ struct LoginRequest: Content {
 @Sendable func login(req: Request) async throws -> Response {
     //let app = req.application
     //TODO: The user might login with different credentials. We shouldn't redirect
-    let session = req.session.authenticated(AuthSession.self)
+    let session = try await req.fetchSession()
     if (session != nil) {
         return req.redirect(to: "/", redirectType: .normal)
     }
@@ -49,8 +49,7 @@ struct LoginRequest: Content {
         return try VCWelcomePage(users: [], error: "Incorrect password").rootNode.response()
     }
     let newSession = try await createSession(req, user.id, user.isAdmin, hours24, UUID.init(), pool)
-    req.session.authenticate(newSession)
-    //req.auth.login(user)
-    
-    return req.redirect(to: "/", redirectType: .normal)
+    let response = req.redirect(to: "/", redirectType: .normal)
+    setBrowserSessionCookie(on: response, session: newSession)
+    return response
 }

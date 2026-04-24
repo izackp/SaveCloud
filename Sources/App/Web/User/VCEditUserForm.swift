@@ -54,7 +54,10 @@ extension Request {
     }
     
     func fetchSession(_ db: GRDB.Database) throws -> AuthSession? {
-        guard let sessionId = session.authenticated(AuthSession.self) else { return nil }
+        guard let sessionCookie = cookies[browserSessionCookieName]?.string,
+              let sessionId = UUID(uuidString: sessionCookie) else {
+            return nil
+        }
         return try AuthSession.filter(id: sessionId).fetchOne(db)
     }
 }
