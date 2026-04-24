@@ -10,7 +10,7 @@ import GRDB
 import Argon2Swift
 
 @Sendable func apiGETUser(req: Request) async throws -> PublicUser {
-    let pathId:UUID? = req.parameters.get("id")
+    let pathId:UUID? = req.parameters.get("user_id")
     let userId:UUID
     let session = try req.authSession()
     if let pathId = pathId {
@@ -70,7 +70,7 @@ final class PutUser: Content, IValidate {
     let session = try req.authSession()
     let contents = try req.content.decode(PutUser.self)
     try contents.checkValdiation()
-    let pathId:UUID? = req.parameters.get("id")
+    let pathId:UUID? = req.parameters.get("user_id")
     guard let id = pathId ?? contents.id else {
         throw Abort(.badRequest, reason: "No user specified.")
     }
@@ -158,7 +158,7 @@ final class PasswordCheck: Content, IValidate {
 @Sendable func apiDELETEUser(req: Request) async throws -> PublicUser {
     let session = try req.authSession()
     
-    let pathId:UUID? = req.parameters.get("id")
+    let pathId:UUID? = req.parameters.get("user_id")
     let id = pathId ?? session.user
     
     let allowed = (session.isAdmin || session.user == id)

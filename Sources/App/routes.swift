@@ -64,11 +64,60 @@ func routes(_ app: Application) throws {
         APISessionAuthenticator(), AuthSession.guardMiddleware()
     ])
     apiAuth.get("api", "v1", "user", use: apiGETUser(req:))
-    apiAuth.get("api", "v1", "user", ":id", use: apiGETUser(req:))
+    apiAuth.get("api", "v1", "user", ":user_id", use: apiGETUser(req:))
     apiAuth.put("api", "v1", "user", use: apiPUTUser(req:))
-    apiAuth.put("api", "v1", "user", ":id", use: apiPUTUser(req:))
+    apiAuth.put("api", "v1", "user", ":user_id", use: apiPUTUser(req:))
     apiAuth.delete("api", "v1", "user", use: apiDELETEUser(req:))
-    apiAuth.delete("api", "v1", "user", ":id", use: apiDELETEUser(req:))
+    apiAuth.delete("api", "v1", "user", ":user_id", use: apiDELETEUser(req:))
+    apiAuth.get("api", "v1", "games", use: apiGETGameList(req:))
+    apiAuth.get("api", "v1", "games", ":game_id", use: apiGETGame(req:))
+    apiAuth.post("api", "v1", "games", use: apiPOSTGame(req:))
+    apiAuth.put("api", "v1", "games", ":game_id", use: apiPUTGame(req:))
+    apiAuth.delete("api", "v1", "games", ":game_id") { req async throws -> HTTPStatus in
+        try await apiDELETEGame(req: req)
+        return .ok
+    }
+    apiAuth.get("api", "v1", "user", "profile", use: apiGETUserProfiles(req:))
+    apiAuth.get("api", "v1", "user", ":user_id", "profile", use: apiGETUserProfiles(req:))
+    apiAuth.post("api", "v1", "user", "profile", use: apiPOSTUserProfile(req:))
+    apiAuth.post("api", "v1", "user", ":user_id", "profile", use: apiPOSTUserProfile(req:))
+    apiAuth.put("api", "v1", "user", "profile", ":profile_id", use: apiPUTUserProfile(req:))
+    apiAuth.put("api", "v1", "user", ":user_id", "profile", ":profile_id", use: apiPUTUserProfile(req:))
+    apiAuth.delete("api", "v1", "user", "profile", ":profile_id") { req async throws -> HTTPStatus in
+        try await apiDELETEUserProfile(req: req)
+        return .ok
+    }
+    apiAuth.delete("api", "v1", "user", ":user_id", "profile", ":profile_id") { req async throws -> HTTPStatus in
+        try await apiDELETEUserProfile(req: req)
+        return .ok
+    }
+    apiAuth.get("api", "v1", "user", "profile", ":profile_id", "games", use: apiGETGameList(req:))
+    apiAuth.get("api", "v1", "user", ":user_id", "profile", ":profile_id", "games", use: apiGETGameList(req:))
+    apiAuth.get("api", "v1", "user", "profile", ":profile_id", "saves", use: apiGETSaves(req:))
+    apiAuth.get("api", "v1", "user", ":user_id", "profile", ":profile_id", "saves", use: apiGETSaves(req:))
+    apiAuth.delete("api", "v1", "user", "profile", ":profile_id", "saves") { req async throws -> HTTPStatus in
+        try await apiDELETESaves(req: req)
+        return .ok
+    }
+    apiAuth.delete("api", "v1", "user", ":user_id", "profile", ":profile_id", "saves") { req async throws -> HTTPStatus in
+        try await apiDELETESaves(req: req)
+        return .ok
+    }
+    apiAuth.get("api", "v1", "user", "profile", ":profile_id", "games", ":game_meta_id", "saves", use: apiGETSaves(req:))
+    apiAuth.get("api", "v1", "user", ":user_id", "profile", ":profile_id", "games", ":game_meta_id", "saves", use: apiGETSaves(req:))
+    apiAuth.delete("api", "v1", "user", "profile", ":profile_id", "games", ":game_meta_id", "saves") { req async throws -> HTTPStatus in
+        try await apiDELETESaves(req: req)
+        return .ok
+    }
+    apiAuth.delete("api", "v1", "user", ":user_id", "profile", ":profile_id", "games", ":game_meta_id", "saves") { req async throws -> HTTPStatus in
+        try await apiDELETESaves(req: req)
+        return .ok
+    }
+    apiAuth.get("api", "v1", "save", ":save_id", use: apiGETSave(req:))
+    apiAuth.delete("api", "v1", "save", ":save_id") { req async throws -> HTTPStatus in
+        try await apiDELETESave(req: req)
+        return .ok
+    }
 
     let userSessGroup = app.routes.grouped([
         UserSessionAuthenticator(),

@@ -86,13 +86,14 @@ final class PostUserProfile: Content, IValidate {
 //POST /user/:user_id/profile
 @Sendable func apiPOSTUserProfile(req: Request) async throws -> UserProfile {
     let (userId, isAdmin) = try req.expectValidAuth()
+    let pathUserId: UUID? = req.parameters.get("user_id")
     if (isAdmin == false) {
         throw Abort(.unauthorized)
     }
     
     let contents = try req.content.decode(PostUserProfile.self)
     try contents.checkValdiation()
-    let userIdForProfile = contents.userId ?? userId
+    let userIdForProfile = contents.userId ?? pathUserId ?? userId
     if (!isAdmin && userIdForProfile != userId) {
         throw Abort(.unauthorized, reason: "Cannot create a profile for another user.")
     }
@@ -100,7 +101,7 @@ final class PostUserProfile: Content, IValidate {
     let userDefinedId = contents.id != nil
     let id = contents.id ?? UUID()
     let date = Date()
-    let userProfile = UserProfile(id: id, userId: userId, name: contents.name, createdAt: date, updatedAt: date)
+    let userProfile = UserProfile(id: id, userId: userIdForProfile, name: contents.name, createdAt: date, updatedAt: date)
     let pool = DBShared.pool()
     return try await pool.write { db in
         var profile = userProfile

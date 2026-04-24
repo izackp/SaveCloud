@@ -8,6 +8,10 @@
 import Vapor
 
 extension Request {
+    private func userPathId() -> UUID? {
+        self.parameters.get("user_id")
+    }
+
     func authSession() throws -> AuthSession {
         guard let session: AuthSession = self.auth.get() else {
             throw Abort(.unauthorized)
@@ -18,7 +22,7 @@ extension Request {
     func expectValidAuth() throws -> (UUID, Bool) {
         let session = try authSession()
         
-        let pathId:UUID? = self.parameters.get("user_id")
+        let pathId = userPathId()
         if let pathId = pathId {
             if (pathId != session.user && !session.isAdmin) {
                 throw Abort(.unauthorized)
@@ -32,7 +36,7 @@ extension Request {
     func expectValidUserId() throws -> UUID {
         let session = try authSession()
         
-        let pathId:UUID? = self.parameters.get("user_id")
+        let pathId = userPathId()
         if let pathId = pathId {
             if (pathId != session.user && !session.isAdmin) {
                 throw Abort(.unauthorized)
@@ -44,7 +48,7 @@ extension Request {
     }
     
     func validUserIdIfExists() throws -> UUID? {
-        let pathId:UUID? = self.parameters.get("user_id")
+        let pathId = userPathId()
         guard let pathId = pathId else { return nil }
         
         let session = try authSession()

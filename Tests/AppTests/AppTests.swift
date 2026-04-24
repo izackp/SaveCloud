@@ -1,4 +1,5 @@
 @testable import App
+import GRDB
 import XCTVapor
 
 final class AppTests: XCTestCase {
@@ -261,6 +262,208 @@ final class AppTests: XCTestCase {
         }
         XCTAssertNil(fetchedUser)
     }
+
+    func testAPIGameRoutesSupportCRUD() async throws {
+        _ = try await registerUser(
+            username: "games-admin",
+            email: "games-admin@example.com",
+            password: "password123"
+        )
+        let adminLogin = try await loginUser(
+            username: "games-admin",
+            password: "password123"
+        )
+
+        var createdGame: GameMeta?
+        try await app.test(.POST, "api/v1/games", beforeRequest: { req in
+            req.headers.bearerAuthorization = BearerAuthorization(token: adminLogin.token.sessionId)
+            try req.content.encode(GameMetaCreate(
+                id: nil,
+                name: "Test Game",
+                version: "1.0",
+                breaksSaveFormatFromPreviousVersion: false,
+                breaksSaveFormatFromBaseGame: false
+            ))
+        }, afterResponse: { res async throws in
+            XCTAssertEqual(res.status, .ok)
+            createdGame = try res.content.decode(GameMeta.self)
+        })
+
+        let game = try XCTUnwrap(createdGame)
+
+        try await app.test(.GET, "api/v1/games", beforeRequest: { req in
+            req.headers.bearerAuthorization = BearerAuthorization(token: adminLogin.token.sessionId)
+        }, afterResponse: { res async throws in
+            XCTAssertEqual(res.status, .ok)
+            let games = try res.content.decode([GameMeta].self)
+            XCTAssertTrue(games.contains(where: { $0.id == game.id }))
+        })
+
+        try await app.test(.GET, "api/v1/games/\(game.id.uuidString)", beforeRequest: { req in
+            req.headers.bearerAuthorization = BearerAuthorization(token: adminLogin.token.sessionId)
+        }, afterResponse: { res async throws in
+            XCTAssertEqual(res.status, .ok)
+            let fetchedGame = try res.content.decode(GameMeta.self)
+            XCTAssertEqual(fetchedGame.id, game.id)
+            XCTAssertEqual(fetchedGame.name, "Test Game")
+        })
+
+        try await app.test(.PUT, "api/v1/games/\(game.id.uuidString)", beforeRequest: { req in
+            req.headers.bearerAuthorization = BearerAuthorization(token: adminLogin.token.sessionId)
+            try req.content.encode(GameMetaCreate(
+                id: nil,
+                name: "Updated Game",
+                version: "1.1",
+                breaksSaveFormatFromPreviousVersion: true,
+                breaksSaveFormatFromBaseGame: false
+            ))
+        }, afterResponse: { res async throws in
+            XCTAssertEqual(res.status, .ok)
+            let updatedGame = try res.content.decode(GameMeta.self)
+            XCTAssertEqual(updatedGame.id, game.id)
+            XCTAssertEqual(updatedGame.name, "Updated Game")
+            XCTAssertEqual(updatedGame.version, "1.1")
+            XCTAssertTrue(updatedGame.breaksSaveFormatFromPreviousVersion)
+        })
+
+        try await app.test(.DELETE, "api/v1/games/\(game.id.uuidString)", beforeRequest: { req in
+            req.headers.bearerAuthorization = BearerAuthorization(token: adminLogin.token.sessionId)
+        }, afterResponse: { res async throws in
+            XCTAssertEqual(res.status, .ok)
+        })
+
+        try await app.test(.GET, "api/v1/games/\(game.id.uuidString)", beforeRequest: { req in
+            req.headers.bearerAuthorization = BearerAuthorization(token: adminLogin.token.sessionId)
+        }, afterResponse: { res async throws in
+            XCTAssertEqual(res.status, .notFound)
+        })
+    }
+
+    func testAPIUserProfileRoutesWorkThroughPathVariants() async throws {
+        _ = try await registerUser(
+            username: "profiles-admin",
+            email: "profiles-admin@example.com",
+            password: "password123"
+        )
+        let adminLogin = try await loginUser(
+            username: "profiles-admin",
+            password: "password123"
+        )
+
+        var createdProfile: UserProfile?
+        try await app.test(.POST, "api/v1/user/profile", beforeRequest: { req in
+            req.headers.bearerAuthorization = BearerAuthorization(token: adminLogin.token.sessionId)
+            try req.content.encode(PostUserProfile(id: nil, name: "Primary Profile"))
+        }, afterResponse: { res async throws in
+            XCTAssertEqual(res.status, .ok)
+            createdProfile = try res.content.decode(UserProfile.self)
+        })
+
+        let profile = try XCTUnwrap(createdProfile)
+        let adminSession = try await currentSession(for: adminLogin.token.sessionId)
+
+        try await app.test(.GET, "api/v1/user/\(adminSession.user.uuidString)/profile", beforeRequest: { req in
+            req.headers.bearerAuthorization = BearerAuthorization(token: adminLogin.token.sessionId)
+        }, afterResponse: { res async throws in
+            XCTAssertEqual(res.status, .ok)
+            let profiles = try res.content.decode([UserProfile].self)
+            XCTAssertTrue(profiles.contains(where: { $0.id == profile.id }))
+        })
+
+        try await app.test(.PUT, "api/v1/user/\(adminSession.user.uuidString)/profile/\(profile.id.uuidString)", beforeRequest: { req in
+            req.headers.bearerAuthorization = BearerAuthorization(token: adminLogin.token.sessionId)
+            try req.content.encode(PutUserProfile(id: nil, name: "Renamed Profile"))
+        }, afterResponse: { res async throws in
+            XCTAssertEqual(res.status, .ok)
+            let updatedProfile = try res.content.decode(UserProfile.self)
+            XCTAssertEqual(updatedProfile.id, profile.id)
+            XCTAssertEqual(updatedProfile.name, "Renamed Profile")
+        })
+
+        try await app.test(.DELETE, "api/v1/user/profile/\(profile.id.uuidString)", beforeRequest: { req in
+            req.headers.bearerAuthorization = BearerAuthorization(token: adminLogin.token.sessionId)
+        }, afterResponse: { res async throws in
+            XCTAssertEqual(res.status, .ok)
+        })
+
+        let deletedProfile = try await DBShared.pool().read { db in
+            try UserProfile.filter(id: profile.id).fetchOne(db)
+        }
+        XCTAssertNil(deletedProfile)
+    }
+
+    func testAPISaveRoutesWorkForListGetAndDelete() async throws {
+        _ = try await registerUser(
+            username: "saves-admin",
+            email: "saves-admin@example.com",
+            password: "password123"
+        )
+        let adminLogin = try await loginUser(
+            username: "saves-admin",
+            password: "password123"
+        )
+        let adminSession = try await currentSession(for: adminLogin.token.sessionId)
+        let profile = try insertProfile(userId: adminSession.user, name: "Save Profile")
+        let game = try insertGameMeta(name: "Seeded Game")
+        let hash = try insertGameHash(gameMetaId: game.id, hash: "hash-save-1")
+        let save = try insertSave(
+            userId: adminSession.user,
+            profileId: profile.id,
+            gameHashId: hash.id,
+            gameMetaId: game.id,
+            name: "First Save"
+        )
+        _ = try insertSave(
+            userId: adminSession.user,
+            profileId: profile.id,
+            gameHashId: hash.id,
+            gameMetaId: game.id,
+            name: "Second Save"
+        )
+
+        try await app.test(.GET, "api/v1/user/\(adminSession.user.uuidString)/profile/\(profile.id.uuidString)/games", beforeRequest: { req in
+            req.headers.bearerAuthorization = BearerAuthorization(token: adminLogin.token.sessionId)
+        }, afterResponse: { res async throws in
+            XCTAssertEqual(res.status, .ok)
+            let games = try res.content.decode([GameMeta].self)
+            XCTAssertTrue(games.contains(where: { $0.id == game.id }))
+        })
+
+        try await app.test(.GET, "api/v1/user/\(adminSession.user.uuidString)/profile/\(profile.id.uuidString)/games/\(game.id.uuidString)/saves", beforeRequest: { req in
+            req.headers.bearerAuthorization = BearerAuthorization(token: adminLogin.token.sessionId)
+        }, afterResponse: { res async throws in
+            XCTAssertEqual(res.status, .ok)
+            let saves = try res.content.decode([Save].self)
+            XCTAssertEqual(saves.count, 2)
+            XCTAssertTrue(saves.contains(where: { $0.id == save.id }))
+        })
+
+        try await app.test(.GET, "api/v1/save/\(save.id.uuidString)", beforeRequest: { req in
+            req.headers.bearerAuthorization = BearerAuthorization(token: adminLogin.token.sessionId)
+        }, afterResponse: { res async throws in
+            XCTAssertEqual(res.status, .ok)
+            let fetchedSave = try res.content.decode(Save.self)
+            XCTAssertEqual(fetchedSave.id, save.id)
+            XCTAssertEqual(fetchedSave.userId, adminSession.user)
+        })
+
+        try await app.test(.DELETE, "api/v1/save/\(save.id.uuidString)", beforeRequest: { req in
+            req.headers.bearerAuthorization = BearerAuthorization(token: adminLogin.token.sessionId)
+        }, afterResponse: { res async throws in
+            XCTAssertEqual(res.status, .ok)
+        })
+
+        try await app.test(.DELETE, "api/v1/user/\(adminSession.user.uuidString)/profile/\(profile.id.uuidString)/games/\(game.id.uuidString)/saves", beforeRequest: { req in
+            req.headers.bearerAuthorization = BearerAuthorization(token: adminLogin.token.sessionId)
+        }, afterResponse: { res async throws in
+            XCTAssertEqual(res.status, .ok)
+        })
+
+        let remainingSaves = try await DBShared.pool().read { db in
+            try Save.filter(Column("profile_id") == profile.id).fetchCount(db)
+        }
+        XCTAssertEqual(remainingSaves, 0)
+    }
     
     private func registerUser(username: String, email: String, password: String) async throws -> PublicUser {
         var user: PublicUser?
@@ -311,5 +514,84 @@ final class AppTests: XCTestCase {
             try saved.insert(db)
         }
         return session
+    }
+
+    private func currentSession(for sessionId: String) async throws -> AuthSession {
+        let uuid = try XCTUnwrap(UUID(uuidString: sessionId))
+        let session = try await DBShared.pool().read { db in
+            try AuthSession.filter(id: uuid).fetchOne(db)
+        }
+        return try XCTUnwrap(session)
+    }
+
+    private func insertProfile(userId: UUID, name: String) throws -> UserProfile {
+        let now = Date()
+        var profile = UserProfile(
+            id: UUID(),
+            userId: userId,
+            name: name,
+            createdAt: now,
+            updatedAt: now
+        )
+        try DBShared.pool().write { db in
+            try profile.insert(db)
+        }
+        return profile
+    }
+
+    private func insertGameMeta(name: String) throws -> GameMeta {
+        let now = Date()
+        var game = GameMeta(
+            id: UUID(),
+            name: name,
+            version: "1.0",
+            breaksSaveFormatFromPreviousVersion: false,
+            breaksSaveFormatFromBaseGame: false,
+            createdAt: now,
+            updatedAt: now
+        )
+        try DBShared.pool().write { db in
+            try game.insert(db)
+        }
+        return game
+    }
+
+    private func insertGameHash(gameMetaId: UUID, hash: String) throws -> GameHash {
+        let now = Date()
+        var gameHash = GameHash(
+            id: UUID(),
+            gameMetaId: gameMetaId,
+            hashedFileName: "game.exe",
+            xxhash64: hash,
+            createdAt: now,
+            updatedAt: now
+        )
+        try DBShared.pool().write { db in
+            try gameHash.insert(db)
+        }
+        return gameHash
+    }
+
+    private func insertSave(userId: UUID, profileId: UUID, gameHashId: UUID, gameMetaId: UUID, name: String) throws -> Save {
+        let now = Date()
+        var save = Save(
+            id: UUID(),
+            gameHashId: gameHashId,
+            gameMetaId: gameMetaId,
+            sequentialId: UUID(),
+            profileId: profileId,
+            userId: userId,
+            url: "https://example.com/\(UUID().uuidString).zip",
+            fileSize: 1024,
+            sourceDevice: "tests",
+            name: name,
+            date: now,
+            createdAt: now,
+            updatedAt: now
+        )
+        try DBShared.pool().write { db in
+            try save.insert(db)
+        }
+        return save
     }
 }
