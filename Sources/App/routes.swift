@@ -67,6 +67,7 @@ func routes(_ app: Application) throws {
     app.post("saves", ":save_id", "delete", use: deleteSave(req:))
 
     app.post("register", use: register(req:))
+    app.get("logout", use: signOut(_:))
     app.post("api", "v1", "register", use: apiRegister(req:))
     app.post("api", "v1", "login", use: apiLoginSession(req:))
     

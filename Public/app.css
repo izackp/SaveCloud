@@ -257,6 +257,7 @@ td, th, dd, code, time, .num {
 
 #nav_bar .pure-menu-item {
     display: block;
+    height: auto;
     border: 0;
 }
 

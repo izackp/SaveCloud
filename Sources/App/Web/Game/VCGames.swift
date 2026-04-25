@@ -2,6 +2,19 @@ import Vapor
 import HRW
 import GRDB
 
+private func shortListDateText(_ date: Date) -> String {
+    let formatter = DateFormatter()
+    formatter.dateFormat = "M/d HH:mm"
+    return formatter.string(from: date)
+}
+
+private func fullHoverDateText(_ date: Date) -> String {
+    let formatter = DateFormatter()
+    formatter.dateStyle = .medium
+    formatter.timeStyle = .medium
+    return formatter.string(from: date)
+}
+
 struct ManagedGameRequest: Content {
     let name: String
     let version: String?
@@ -89,23 +102,27 @@ struct GamesPageState {
 }
 
 final class VCGamesTableRow: GamesTableRow {
-    init(game: GameMeta, isAdmin: Bool) throws {
+    init(game: GameMeta, baseGameNamesById: [UUID: String], isAdmin: Bool) throws {
         try super.init()
-        game_id.addChild(HTMLText(content: game.id.uuidString))
-        game_id_link.href = URL(string: "/games/\(game.id.uuidString)")
         name.addChild(HTMLText(content: game.name))
-        version.addChild(HTMLText(content: game.version ?? ""))
-        family_id.addChild(HTMLText(content: game.familyId?.uuidString ?? ""))
+        name_link.href = URL(string: "/games/\(game.id.uuidString)")
+        version.addChild(HTMLText(content: game.version ?? "N/A"))
         if let familyId = game.familyId {
-            family_id_link.href = URL(string: "/games?family_id_search=\(familyId.uuidString)")
-        } else {
-            family_id_link.globalAttributes[.style] = "display:none"
+            version_link.href = URL(string: "/games?family_id_search=\(familyId.uuidString)")
         }
-        base_game_id.addChild(HTMLText(content: game.baseGameId?.uuidString ?? ""))
+        if let baseGameId = game.baseGameId {
+            base_game_name.addChild(HTMLText(content: baseGameNamesById[baseGameId] ?? baseGameId.uuidString))
+            base_game_link.href = URL(string: "/games/\(baseGameId.uuidString)")
+        } else {
+            base_game_name.addChild(HTMLText(content: ""))
+            base_game_link.globalAttributes[.style] = "display:none"
+        }
         breaks_prev.addChild(HTMLText(content: game.breaksSaveFormatFromPreviousVersion ? "Yes" : "No"))
         breaks_base.addChild(HTMLText(content: game.breaksSaveFormatFromBaseGame ? "Yes" : "No"))
-        created_at.addChild(HTMLText(content: String(describing: game.createdAt)))
-        updated_at.addChild(HTMLText(content: String(describing: game.updatedAt)))
+        created_at.addChild(HTMLText(content: shortListDateText(game.createdAt)))
+        created_at.globalAttributes[.title] = fullHoverDateText(game.createdAt)
+        updated_at.addChild(HTMLText(content: shortListDateText(game.updatedAt)))
+        updated_at.globalAttributes[.title] = fullHoverDateText(game.updatedAt)
         if isAdmin {
             edit_link.href = URL(string: "/games/\(game.id.uuidString)/edit")
             delete_link.href = URL(string: "/games/\(game.id.uuidString)/delete")
@@ -118,7 +135,7 @@ final class VCGamesTableRow: GamesTableRow {
 }
 
 final class VCGamesPage: GamesPage {
-    init(viewer: AuthSession?, games: [GameMeta], state: GamesPageState, hasNextPage: Bool, error: String?) throws {
+    init(viewer: AuthSession?, games: [GameMeta], baseGameNamesById: [UUID: String], state: GamesPageState, hasNextPage: Bool, error: String?) throws {
         try super.init()
         if let viewer {
             nav_bar.addChild(try VCNavBar(isAdmin: viewer.isAdmin).rootNode)
@@ -127,12 +144,11 @@ final class VCGamesPage: GamesPage {
             p_error.addChild(HTMLText(content: error))
             p_error.globalAttributes[.style] = ""
         }
-        sort_id_link.href = URL(string: state.sortURL(.id))
         sort_name_link.href = URL(string: state.sortURL(.name))
         sort_created_at_link.href = URL(string: state.sortURL(.createdAt))
         sort_updated_at_link.href = URL(string: state.sortURL(.updatedAt))
         for game in games {
-            table.children.append(try VCGamesTableRow(game: game, isAdmin: viewer?.isAdmin == true).rootNode)
+            table.children.append(try VCGamesTableRow(game: game, baseGameNamesById: baseGameNamesById, isAdmin: viewer?.isAdmin == true).rootNode)
         }
         page_text.addChild(HTMLText(content: "Page \(state.pageInfo.page + 1)"))
         if state.pageInfo.page > 0 {
@@ -272,7 +288,20 @@ private func fetchManagedGame(req: Request, pool: DatabasePool) async throws -> 
         )
         hasNextPage = !(try GameMeta.fetchLatestPerFamilyPaged(nextPageInfo, searchList: effectiveSearches).isEmpty)
     }
-    return try VCGamesPage(viewer: viewer, games: pageGames, state: state, hasNextPage: hasNextPage, error: nil).rootNode.response()
+    let baseGameIds = Array(Set(pageGames.compactMap(\.baseGameId)))
+    let baseGameNamesById: [UUID: String]
+    if baseGameIds.isEmpty {
+        baseGameNamesById = [:]
+    } else {
+        let pool = DBShared.pool()
+        let baseGames = try await pool.read { db in
+            try GameMeta
+                .filter(baseGameIds.contains(GameMeta.id))
+                .fetchAll(db)
+        }
+        baseGameNamesById = Dictionary(uniqueKeysWithValues: baseGames.map { ($0.id, $0.name) })
+    }
+    return try VCGamesPage(viewer: viewer, games: pageGames, baseGameNamesById: baseGameNamesById, state: state, hasNextPage: hasNextPage, error: nil).rootNode.response()
 }
 
 @Sendable func gameDetailPage(req: Request) async throws -> Response {
@@ -280,7 +309,7 @@ private func fetchManagedGame(req: Request, pool: DatabasePool) async throws -> 
     let pool = DBShared.pool()
     guard let game = try await fetchManagedGame(req: req, pool: pool) else {
         let state = try GamesPageState(req: req)
-        return try VCGamesPage(viewer: viewer, games: [], state: state, hasNextPage: false, error: "Game not found.").rootNode.response()
+        return try VCGamesPage(viewer: viewer, games: [], baseGameNamesById: [:], state: state, hasNextPage: false, error: "Game not found.").rootNode.response()
     }
     return try VCGameDetailPage(viewer: viewer, game: game, error: nil).rootNode.response()
 }
@@ -291,7 +320,7 @@ private func fetchManagedGame(req: Request, pool: DatabasePool) async throws -> 
     }
     let pool = DBShared.pool()
     guard let game = try await fetchManagedGame(req: req, pool: pool) else {
-        return try VCGamesPage(viewer: session, games: [], state: try GamesPageState(req: req), hasNextPage: false, error: "Game not found.").rootNode.response()
+        return try VCGamesPage(viewer: session, games: [], baseGameNamesById: [:], state: try GamesPageState(req: req), hasNextPage: false, error: "Game not found.").rootNode.response()
     }
     return try VCManagedGamePage(session: session, game: game, error: nil).rootNode.response()
 }
@@ -302,7 +331,7 @@ private func fetchManagedGame(req: Request, pool: DatabasePool) async throws -> 
     }
     let pool = DBShared.pool()
     guard let game = try await fetchManagedGame(req: req, pool: pool) else {
-        return try VCGamesPage(viewer: session, games: [], state: try GamesPageState(req: req), hasNextPage: false, error: "Game not found.").rootNode.response()
+        return try VCGamesPage(viewer: session, games: [], baseGameNamesById: [:], state: try GamesPageState(req: req), hasNextPage: false, error: "Game not found.").rootNode.response()
     }
 
     let contents = try req.content.decode(ManagedGameRequest.self)
@@ -334,7 +363,7 @@ private func fetchManagedGame(req: Request, pool: DatabasePool) async throws -> 
     }
     let pool = DBShared.pool()
     guard let game = try await fetchManagedGame(req: req, pool: pool) else {
-        return try VCGamesPage(viewer: session, games: [], state: try GamesPageState(req: req), hasNextPage: false, error: "Game not found.").rootNode.response()
+        return try VCGamesPage(viewer: session, games: [], baseGameNamesById: [:], state: try GamesPageState(req: req), hasNextPage: false, error: "Game not found.").rootNode.response()
     }
     return try VCDeleteManagedGamePage(session: session, game: game).rootNode.response()
 }
