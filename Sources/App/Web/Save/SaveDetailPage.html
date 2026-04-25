@@ -9,29 +9,29 @@
 <body>
     <div id="nav_bar"></div>
     <div class="nav_body">
-        <h1 style="margin-bottom:1.5rem;">Save Detail</h1>
+        <header class="page-head">
+            <h1>Save Detail</h1>
+        </header>
         <p id="p_error" class="error-msg" style="display:none"></p>
-        <table class="pure-table pure-table-bordered" style="max-width:600px;">
-            <tbody>
-                <tr><th>ID</th><td><span id="save_id"></span></td></tr>
-                <tr><th>User ID</th><td><span id="user_id"></span></td></tr>
-                <tr><th>Profile ID</th><td><span id="profile_id"></span></td></tr>
-                <tr><th>Game Meta ID</th><td><a id="game_meta_id_link"><span id="game_meta_id"></span></a></td></tr>
-                <tr><th>Game Hash ID</th><td><span id="game_hash_id"></span></td></tr>
-                <tr><th>Compatibility ID</th><td><span id="compatibility_id"></span></td></tr>
-                <tr><th>Sequential ID</th><td><span id="sequential_id"></span></td></tr>
-                <tr><th>Name</th><td><span id="name"></span></td></tr>
-                <tr><th>URL</th><td><span id="url"></span></td></tr>
-                <tr><th>File Size</th><td><span id="file_size"></span></td></tr>
-                <tr><th>Source Device</th><td><span id="source_device"></span></td></tr>
-                <tr><th>Content Hash</th><td><code id="content_hash"></code></td></tr>
-                <tr><th>Notes</th><td><span id="notes"></span></td></tr>
-                <tr><th>Date</th><td><span id="date"></span></td></tr>
-                <tr><th>Created</th><td><span id="created_at"></span></td></tr>
-                <tr><th>Updated</th><td><span id="updated_at"></span></td></tr>
-            </tbody>
-        </table>
-        <p style="margin-top:1.5rem;"><a id="back_link">&#8592; Back to Saves</a></p>
+        <dl class="record">
+            <dt>ID</dt>             <dd><code id="save_id"></code></dd>
+            <dt>User ID</dt>        <dd><code id="user_id"></code></dd>
+            <dt>Profile ID</dt>     <dd><code id="profile_id"></code></dd>
+            <dt>Game Meta ID</dt>   <dd><a id="game_meta_id_link"><code id="game_meta_id"></code></a></dd>
+            <dt>Game Hash ID</dt>   <dd><code id="game_hash_id"></code></dd>
+            <dt>Compatibility ID</dt> <dd><code id="compatibility_id"></code></dd>
+            <dt>Sequential ID</dt>  <dd><code id="sequential_id"></code></dd>
+            <dt>Name</dt>           <dd><span id="name"></span></dd>
+            <dt>URL</dt>            <dd><span id="url"></span></dd>
+            <dt>File Size</dt>      <dd><span id="file_size"></span></dd>
+            <dt>Source Device</dt>  <dd><span id="source_device"></span></dd>
+            <dt>Content Hash</dt>   <dd><code id="content_hash"></code></dd>
+            <dt>Notes</dt>          <dd><span id="notes"></span></dd>
+            <dt>Date</dt>           <dd><span id="date"></span></dd>
+            <dt>Created</dt>        <dd><span id="created_at"></span></dd>
+            <dt>Updated</dt>        <dd><span id="updated_at"></span></dd>
+        </dl>
+        <a id="back_link" class="back-link">&#8592; Back to Saves</a>
     </div>
 </body>
 </html>

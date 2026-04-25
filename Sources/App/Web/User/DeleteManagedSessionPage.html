@@ -9,19 +9,25 @@
 <body>
     <div id="nav_bar"></div>
     <div class="nav_body">
-        <h1>Delete Session</h1>
-        <p>Are you sure you want to delete this session?</p>
-        <ul>
-            <li>Session ID: <span id="session_id"></span></li>
-            <li>User ID: <span id="user_id"></span></li>
-            <li>Device: <span id="device_name"></span></li>
-            <li>IP Address: <span id="ip_address"></span></li>
-            <li>Expires At: <span id="expires_at"></span></li>
-        </ul>
-        <form id="delete_form" action="/sessions" method="POST" enctype="application/x-www-form-urlencoded" class="pure-form">
-            <button type="submit" class="pure-button btn-danger">Delete Session</button>
-            <a id="cancel_link" href="/sessions" class="pure-button" style="margin-left:0.5rem;">Cancel</a>
-        </form>
+        <header class="page-head">
+            <h1>Delete Session</h1>
+        </header>
+        <div class="confirm-prompt">
+            <p>Are you sure you want to delete this session?</p>
+            <ul>
+                <li>Session ID: <span id="session_id"></span></li>
+                <li>User ID: <span id="user_id"></span></li>
+                <li>Device: <span id="device_name"></span></li>
+                <li>IP Address: <span id="ip_address"></span></li>
+                <li>Expires At: <span id="expires_at"></span></li>
+            </ul>
+            <form id="delete_form" action="/sessions" method="POST" enctype="application/x-www-form-urlencoded" class="pure-form">
+                <div class="confirm-actions">
+                    <button type="submit" class="pure-button btn-danger">Delete Session</button>
+                    <a id="cancel_link" href="/sessions" class="pure-button">Cancel</a>
+                </div>
+            </form>
+        </div>
     </div>
 </body>
 </html>

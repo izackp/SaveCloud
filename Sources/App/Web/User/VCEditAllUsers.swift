@@ -387,7 +387,7 @@ final class VCEditSessionsTableRow: EditSessionsTableRow {
         session_id.addChild(HTMLText(content: session.id.uuidString))
         if context.isCurrent(session) {
             session_id.addChild(HTMLText(content: " (Current)"))
-            rootNode.globalAttributes[.style] = "background-color:#fff7d6;"
+            rootNode.globalAttributes[.class_] = "is-current-session"
         }
         user_id.addChild(HTMLText(content: session.user.uuidString))
         refresh_token.addChild(HTMLText(content: session.refreshToken?.uuidString ?? ""))

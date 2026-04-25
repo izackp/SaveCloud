@@ -9,24 +9,24 @@
 <body>
     <div id="nav_bar"></div>
     <div class="nav_body">
-        <h1 style="margin-bottom:1.5rem;">Game Detail</h1>
+        <header class="page-head">
+            <h1>Game Detail</h1>
+        </header>
         <p id="p_error" class="error-msg" style="display:none"></p>
-        <table class="pure-table pure-table-bordered" style="max-width:600px;">
-            <tbody>
-                <tr><th>ID</th><td><span id="game_id"></span></td></tr>
-                <tr><th>Name</th><td><span id="name"></span></td></tr>
-                <tr><th>Version</th><td><span id="version"></span></td></tr>
-                <tr><th>Family ID</th><td><a id="family_id_link"><span id="family_id"></span></a></td></tr>
-                <tr><th>Base Game ID</th><td><span id="base_game_id"></span></td></tr>
-                <tr><th>Hashed File</th><td><span id="hashed_file_name"></span></td></tr>
-                <tr><th>xxHash64</th><td><code id="xxhash64"></code></td></tr>
-                <tr><th>Breaks Previous</th><td><span id="breaks_prev"></span></td></tr>
-                <tr><th>Breaks Base</th><td><span id="breaks_base"></span></td></tr>
-                <tr><th>Created</th><td><span id="created_at"></span></td></tr>
-                <tr><th>Updated</th><td><span id="updated_at"></span></td></tr>
-            </tbody>
-        </table>
-        <p style="margin-top:1.5rem;"><a id="back_link">&#8592; Back to Games</a></p>
+        <dl class="record">
+            <dt>ID</dt>            <dd><code id="game_id"></code></dd>
+            <dt>Name</dt>          <dd><span id="name"></span></dd>
+            <dt>Version</dt>       <dd><span id="version"></span></dd>
+            <dt>Family ID</dt>     <dd><a id="family_id_link"><code id="family_id"></code></a></dd>
+            <dt>Base Game ID</dt>  <dd><code id="base_game_id"></code></dd>
+            <dt>Hashed File</dt>   <dd><span id="hashed_file_name"></span></dd>
+            <dt>xxHash64</dt>      <dd><code id="xxhash64"></code></dd>
+            <dt>Breaks Previous</dt> <dd><span id="breaks_prev"></span></dd>
+            <dt>Breaks Base</dt>   <dd><span id="breaks_base"></span></dd>
+            <dt>Created</dt>       <dd><span id="created_at"></span></dd>
+            <dt>Updated</dt>       <dd><span id="updated_at"></span></dd>
+        </dl>
+        <a id="back_link" class="back-link">&#8592; Back to Games</a>
     </div>
 </body>
 </html>

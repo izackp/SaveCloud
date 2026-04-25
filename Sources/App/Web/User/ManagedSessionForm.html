@@ -7,46 +7,46 @@
 
         <label>
             Session ID
-            <span id="session_id" style="display:block; color:#6b7280; font-weight:400; font-family:monospace; font-size:0.85rem;"></span>
+            <code id="session_id"></code>
         </label>
 
-        <label for="user_id" style="margin-top:0.75rem;">User ID</label>
+        <label for="user_id">User ID</label>
         <input type="text" id="user_id" name="user_id" class="pure-input-1" required autocomplete="off">
 
-        <label for="refresh_token" style="margin-top:0.75rem;">Refresh Token</label>
+        <label for="refresh_token">Refresh Token</label>
         <input type="text" id="refresh_token" name="refresh_token" class="pure-input-1" autocomplete="off">
 
-        <label for="device_name" style="margin-top:0.75rem;">Device Name</label>
+        <label for="device_name">Device Name</label>
         <input type="text" id="device_name" name="device_name" class="pure-input-1" autocomplete="off">
 
-        <label for="location" style="margin-top:0.75rem;">Location</label>
+        <label for="location">Location</label>
         <input type="text" id="location" name="location" class="pure-input-1" autocomplete="off">
 
-        <label for="ip_address" style="margin-top:0.75rem;">IP Address</label>
+        <label for="ip_address">IP Address</label>
         <input type="text" id="ip_address" name="ip_address" class="pure-input-1" required autocomplete="off">
 
-        <label for="is_admin" class="pure-checkbox" style="margin-top:0.75rem; font-weight:400;">
+        <label for="is_admin" class="pure-checkbox">
             <input type="checkbox" id="is_admin" name="is_admin">
             Admin Session
         </label>
 
-        <label for="expires_at" style="margin-top:0.75rem;">Expires At</label>
+        <label for="expires_at">Expires At</label>
         <input type="text" id="expires_at" name="expires_at" class="pure-input-1" required autocomplete="off">
 
-        <label style="margin-top:0.75rem;">
+        <label>
             Created At
-            <span id="created_at" style="display:block; color:#6b7280; font-weight:400;"></span>
+            <span id="created_at"></span>
         </label>
 
-        <label style="margin-top:0.5rem;">
+        <label>
             Updated At
-            <span id="updated_at" style="display:block; color:#6b7280; font-weight:400;"></span>
+            <span id="updated_at"></span>
         </label>
 
-        <label id="error_container" class="error-msg" style="display:none; margin-top:0.5rem;">
+        <label id="error_container" class="error-msg" style="display:none">
             <span id="span_error"></span>
         </label>
 
-        <button type="submit" class="pure-button pure-button-primary" style="margin-top:1rem;">Update Session</button>
+        <button type="submit" class="pure-button pure-button-primary">Update Session</button>
     </fieldset>
 </form>

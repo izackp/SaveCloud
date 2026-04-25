@@ -9,18 +9,24 @@
 <body>
     <div id="nav_bar"></div>
     <div class="nav_body">
-        <h1>Delete User</h1>
-        <p>Are you sure you want to delete this user?</p>
-        <ul>
-            <li>ID: <span id="user_id"></span></li>
-            <li>Username: <span id="username"></span></li>
-            <li>Email: <span id="email"></span></li>
-            <li>Admin: <span id="is_admin"></span></li>
-        </ul>
-        <form id="delete_form" action="/user/edit_all" method="POST" enctype="application/x-www-form-urlencoded" class="pure-form">
-            <button type="submit" class="pure-button btn-danger">Delete User</button>
-            <a id="cancel_link" href="/user/edit_all" class="pure-button" style="margin-left:0.5rem;">Cancel</a>
-        </form>
+        <header class="page-head">
+            <h1>Delete User</h1>
+        </header>
+        <div class="confirm-prompt">
+            <p>Are you sure you want to delete this user?</p>
+            <ul>
+                <li>ID: <span id="user_id"></span></li>
+                <li>Username: <span id="username"></span></li>
+                <li>Email: <span id="email"></span></li>
+                <li>Admin: <span id="is_admin"></span></li>
+            </ul>
+            <form id="delete_form" action="/user/edit_all" method="POST" enctype="application/x-www-form-urlencoded" class="pure-form">
+                <div class="confirm-actions">
+                    <button type="submit" class="pure-button btn-danger">Delete User</button>
+                    <a id="cancel_link" href="/user/edit_all" class="pure-button">Cancel</a>
+                </div>
+            </form>
+        </div>
     </div>
 </body>
 </html>

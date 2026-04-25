@@ -6,33 +6,33 @@
         <legend>Edit Profile</legend>
 
         <label for="eu_username">Username</label>
-        <input type="text" id="eu_username" name="username" class="pure-input-1" required autofocus autocomplete="off">
+        <input type="text" id="eu_username" name="username" class="pure-input-1" required autofocus autocomplete="username">
 
-        <label for="eu_email" style="margin-top:0.75rem;">Email</label>
-        <input type="email" id="eu_email" name="email" class="pure-input-1" required>
+        <label for="eu_email">Email</label>
+        <input type="email" id="eu_email" name="email" class="pure-input-1" required autocomplete="email">
 
-        <label id="password_container" style="display:none; margin-top:0.75rem;">
+        <label id="password_container" style="display:none">
             Password Hash
-            <code id="password_hash" style="display:block; font-size:0.8rem; word-break:break-all; color:#555; margin-top:0.25rem;"></code>
+            <code id="password_hash"></code>
         </label>
 
-        <label style="margin-top:0.75rem;">
+        <label>
             Created At
-            <span id="created_at" style="display:block; color:#6b7280; font-weight:400;"></span>
+            <span id="created_at"></span>
         </label>
 
-        <label style="margin-top:0.5rem;">
+        <label>
             Updated At
-            <span id="updated_at" style="display:block; color:#6b7280; font-weight:400;"></span>
+            <span id="updated_at"></span>
         </label>
 
-        <label for="eu_password" style="margin-top:0.75rem;">Current password required to save</label>
-        <input type="password" id="eu_password" name="password" class="pure-input-1 password-input">
+        <label for="eu_password">Current password required to save</label>
+        <input type="password" id="eu_password" name="password" class="pure-input-1 password-input" autocomplete="current-password">
 
-        <label id="error_container" class="error-msg" style="display:none; margin-top:0.5rem;">
+        <label id="error_container" class="error-msg" style="display:none">
             <span id="span_error"></span>
         </label>
 
-        <button type="submit" class="pure-button pure-button-primary" style="margin-top:1rem;">Update</button>
+        <button type="submit" class="pure-button pure-button-primary">Update</button>
     </fieldset>
 </form>

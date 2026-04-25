@@ -7,51 +7,51 @@
 
         <label>
             Game ID
-            <span id="game_id" style="display:block; color:#6b7280; font-weight:400; font-family:monospace; font-size:0.85rem;"></span>
+            <code id="game_id"></code>
         </label>
 
-        <label for="name" style="margin-top:0.75rem;">Name</label>
+        <label for="name">Name</label>
         <input type="text" id="name" name="name" class="pure-input-1" required autofocus autocomplete="off">
 
-        <label for="version" style="margin-top:0.75rem;">Version</label>
+        <label for="version">Version</label>
         <input type="text" id="version" name="version" class="pure-input-1" autocomplete="off">
 
-        <label for="family_id" style="margin-top:0.75rem;">Family ID</label>
+        <label for="family_id">Family ID</label>
         <input type="text" id="family_id" name="family_id" class="pure-input-1" autocomplete="off">
 
-        <label for="base_game_id" style="margin-top:0.75rem;">Base Game ID</label>
+        <label for="base_game_id">Base Game ID</label>
         <input type="text" id="base_game_id" name="base_game_id" class="pure-input-1" autocomplete="off">
 
-        <label for="hashed_file_name" style="margin-top:0.75rem;">Hashed File Name</label>
+        <label for="hashed_file_name">Hashed File Name</label>
         <input type="text" id="hashed_file_name" name="hashed_file_name" class="pure-input-1" autocomplete="off">
 
-        <label for="xxhash64" style="margin-top:0.75rem;">xxHash64</label>
+        <label for="xxhash64">xxHash64</label>
         <input type="text" id="xxhash64" name="xxhash64" class="pure-input-1" autocomplete="off">
 
-        <label for="breaks_save_format_from_previous_version" class="pure-checkbox" style="margin-top:0.75rem; font-weight:400;">
+        <label for="breaks_save_format_from_previous_version" class="pure-checkbox">
             <input type="checkbox" id="breaks_save_format_from_previous_version" name="breaks_save_format_from_previous_version">
             Breaks Save Format From Previous Version
         </label>
 
-        <label for="breaks_save_format_from_base_game" class="pure-checkbox" style="font-weight:400;">
+        <label for="breaks_save_format_from_base_game" class="pure-checkbox">
             <input type="checkbox" id="breaks_save_format_from_base_game" name="breaks_save_format_from_base_game">
             Breaks Save Format From Base Game
         </label>
 
-        <label style="margin-top:0.75rem;">
+        <label>
             Created At
-            <span id="created_at" style="display:block; color:#6b7280; font-weight:400;"></span>
+            <span id="created_at"></span>
         </label>
 
-        <label style="margin-top:0.5rem;">
+        <label>
             Updated At
-            <span id="updated_at" style="display:block; color:#6b7280; font-weight:400;"></span>
+            <span id="updated_at"></span>
         </label>
 
-        <label id="error_container" class="error-msg" style="display:none; margin-top:0.5rem;">
+        <label id="error_container" class="error-msg" style="display:none">
             <span id="span_error"></span>
         </label>
 
-        <button type="submit" class="pure-button pure-button-primary" style="margin-top:1rem;">Update Game</button>
+        <button type="submit" class="pure-button pure-button-primary">Update Game</button>
     </fieldset>
 </form>

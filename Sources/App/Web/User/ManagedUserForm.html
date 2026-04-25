@@ -6,33 +6,33 @@
         <legend><span id="title">Manage User</span></legend>
 
         <label for="username">Username</label>
-        <input type="text" id="username" name="username" class="pure-input-1" required autofocus autocomplete="off">
+        <input type="text" id="username" name="username" class="pure-input-1" required autofocus autocomplete="username">
 
-        <label for="email" style="margin-top:0.75rem;">Email</label>
-        <input type="email" id="email" name="email" class="pure-input-1" required>
+        <label for="email">Email</label>
+        <input type="email" id="email" name="email" class="pure-input-1" required autocomplete="email">
 
-        <label for="password" style="margin-top:0.75rem;">Password</label>
-        <input type="password" id="password" name="password" class="pure-input-1 password-input">
+        <label for="password">Password</label>
+        <input type="password" id="password" name="password" class="pure-input-1 password-input" autocomplete="new-password">
 
-        <label for="is_admin" class="pure-checkbox" style="margin-top:0.75rem; font-weight:400;">
+        <label for="is_admin" class="pure-checkbox">
             <input type="checkbox" id="is_admin" name="is_admin">
             Admin User
         </label>
 
-        <label id="created_container" style="display:none; margin-top:0.75rem;">
+        <label id="created_container" style="display:none">
             Created At
-            <span id="created_at" style="display:block; color:#6b7280; font-weight:400;"></span>
+            <span id="created_at"></span>
         </label>
 
-        <label id="updated_container" style="display:none; margin-top:0.5rem;">
+        <label id="updated_container" style="display:none">
             Updated At
-            <span id="updated_at" style="display:block; color:#6b7280; font-weight:400;"></span>
+            <span id="updated_at"></span>
         </label>
 
-        <label id="error_container" class="error-msg" style="display:none; margin-top:0.5rem;">
+        <label id="error_container" class="error-msg" style="display:none">
             <span id="span_error"></span>
         </label>
 
-        <button id="submit_button" type="submit" class="pure-button pure-button-primary" style="margin-top:1rem;">Save</button>
+        <button id="submit_button" type="submit" class="pure-button pure-button-primary">Save</button>
     </fieldset>
 </form>

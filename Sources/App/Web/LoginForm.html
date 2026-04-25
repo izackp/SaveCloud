@@ -2,26 +2,27 @@
       method="POST"
       enctype="application/x-www-form-urlencoded"
       class="pure-form pure-form-stacked">
-  <fieldset>
-    <label for="lf_email">Username or Email</label>
-    <input type="text"
-           id="lf_email"
-           name="email_or_username"
-           class="pure-input-1"
-           required
-           autofocus
-           autocomplete="off">
+    <fieldset>
+        <label for="lf_email">Username or Email</label>
+        <input type="text"
+               id="lf_email"
+               name="email_or_username"
+               class="pure-input-1"
+               required
+               autofocus
+               autocomplete="username">
 
-    <label for="lf_password" style="margin-top:0.75rem;">Password</label>
-    <input type="password"
-           id="lf_password"
-           name="password"
-           class="pure-input-1 password-input"
-           required
-           minlength="8"
-           pattern="(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{8,}"
-           title="Must contain at least one number and one uppercase and lowercase letter, and at least 8 or more characters">
+        <label for="lf_password">Password</label>
+        <input type="password"
+               id="lf_password"
+               name="password"
+               class="pure-input-1 password-input"
+               required
+               minlength="8"
+               autocomplete="current-password"
+               pattern="(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{8,}"
+               title="Must contain at least one number and one uppercase and lowercase letter, and at least 8 or more characters">
 
-    <button type="submit" class="pure-button pure-button-primary pure-input-1" style="margin-top:1rem;">Login</button>
-  </fieldset>
+        <button type="submit" class="pure-button pure-button-primary pure-input-1">Login</button>
+    </fieldset>
 </form>
