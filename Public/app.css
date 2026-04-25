@@ -695,6 +695,97 @@ td, th, dd, code, time, .num {
 
 
 /* =========================================================================
+   Profile grid
+   ========================================================================= */
+
+.profile-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+    gap: var(--space-4);
+}
+
+.profile-grid > #profiles_container {
+    display: contents;
+}
+
+.profile-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--space-3);
+    min-height: 220px;
+    padding: var(--space-5);
+    border: 1px solid var(--border-soft);
+    border-radius: var(--radius-md);
+    background: var(--surface-raised);
+    text-decoration: none;
+    color: var(--text-primary);
+    transition: border-color var(--motion-fast) var(--ease-out),
+                background var(--motion-fast) var(--ease-out),
+                transform var(--motion-fast) var(--ease-out);
+}
+
+.profile-card:hover {
+    background: var(--surface-row-alt);
+    border-color: var(--border-medium);
+    color: var(--text-primary);
+    transform: translateY(-1px);
+}
+
+.profile-card svg {
+    flex: 0 0 auto;
+}
+
+.profile-card-name {
+    font-size: var(--text-md);
+    font-weight: var(--weight-semi);
+    text-align: center;
+    text-wrap: balance;
+    word-break: break-word;
+}
+
+.profile-create-card {
+    align-items: stretch;
+    justify-content: flex-start;
+}
+
+.profile-create-card label {
+    margin: 0;
+}
+
+.profile-create-card input[type="text"] {
+    margin-top: var(--space-1);
+}
+
+.profile-card-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+    justify-content: center;
+    margin-top: auto;
+}
+
+.profile-detail-hero {
+    display: flex;
+    align-items: center;
+    gap: var(--space-5);
+    margin-bottom: var(--space-6);
+}
+
+.profile-detail-copy {
+    display: grid;
+    gap: var(--space-1);
+}
+
+@media (max-width: 599px) {
+    .profile-detail-hero {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+}
+
+
+/* =========================================================================
    Status / messaging
    ========================================================================= */
 
