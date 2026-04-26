@@ -1,0 +1,35 @@
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Profiles — Save Cloud</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/purecss@3.0.0/build/pure-min.css" integrity="sha384-X38yfunGUhNzHpBaEBsWLO+A0HDYOQi8ufWDkZ0k9e0eXz/tH3II7uKZ9msv++Ls" crossorigin="anonymous">
+    <link rel="stylesheet" href="/app.css">
+    <script src="https://cdn.jsdelivr.net/npm/jdenticon@3.3.0/dist/jdenticon.min.js" async
+        integrity="sha384-LfouGM03m83ArVtne1JPk926e3SGD0Tz8XHtW2OKGsgeBU/UfR0Fa8eX+UlwSSAZ"
+        crossorigin="anonymous"></script>
+    <script src="/user-profiles.js" defer></script>
+</head>
+<body>
+    <div id="nav_bar"></div>
+    <div class="nav_body">
+        <header class="page-head">
+            <h1>Profiles</h1>
+        </header>
+        <p id="p_error" class="error-msg" style="display:none"></p>
+        <div class="profile-grid">
+            <form id="create_form" action="/user/profiles" method="POST" class="profile-card profile-create-card pure-form">
+                <div id="create_profile_avatar_container"></div>
+                <input type="hidden" name="id" id="create_profile_id" value="2D2F6D2A-7D14-4554-B8A4-B47D3CDD0001">
+                <label for="create_profile_name">Name</label>
+                <input type="text" name="name" id="create_profile_name" required>
+                <div class="profile-card-actions">
+                    <button type="submit" class="pure-button pure-button-primary">Create Profile</button>
+                    <button type="button" id="shuffle_button" class="pure-button">Shuffle</button>
+                </div>
+            </form>
+            <div id="profiles_container"></div>
+        </div>
+    </div>
+</body>
+</html>

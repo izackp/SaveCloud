@@ -1,0 +1,48 @@
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>User — Save Cloud</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/purecss@3.0.0/build/pure-min.css" integrity="sha384-X38yfunGUhNzHpBaEBsWLO+A0HDYOQi8ufWDkZ0k9e0eXz/tH3II7uKZ9msv++Ls" crossorigin="anonymous">
+    <link rel="stylesheet" href="/app.css">
+    <script src="https://cdn.jsdelivr.net/npm/jdenticon@3.3.0/dist/jdenticon.min.js" async
+        integrity="sha384-LfouGM03m83ArVtne1JPk926e3SGD0Tz8XHtW2OKGsgeBU/UfR0Fa8eX+UlwSSAZ"
+        crossorigin="anonymous"></script>
+</head>
+<body>
+    <div id="nav_bar"></div>
+    <div class="nav_body">
+        <header class="page-head">
+            <h1 id="title"></h1>
+            <div class="actions">
+                <a id="edit_link" class="pure-button pure-button-primary">Edit User</a>
+            </div>
+        </header>
+        <p id="p_error" class="error-msg" style="display:none"></p>
+        <dl class="record">
+            <dt>Username</dt>
+            <dd id="username"></dd>
+            <dt>Email</dt>
+            <dd id="email"></dd>
+            <dt>Admin</dt>
+            <dd id="is_admin"></dd>
+            <dt>ID</dt>
+            <dd><code id="user_id"></code></dd>
+            <dt>Created</dt>
+            <dd><span id="created_at"></span></dd>
+            <dt>Updated</dt>
+            <dd><span id="updated_at"></span></dd>
+        </dl>
+        <section class="stack-md">
+            <header class="page-head">
+                <h2>Profiles</h2>
+            </header>
+            <div class="profile-grid">
+                <div id="profiles_container"></div>
+            </div>
+            <p id="empty_profiles_text" class="muted" style="display:none">No profiles for this user yet.</p>
+        </section>
+        <a id="back_link" class="back-link">&#8592; Back to Users</a>
+    </div>
+</body>
+</html>

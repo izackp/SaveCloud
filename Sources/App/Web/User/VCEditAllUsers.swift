@@ -10,6 +10,19 @@ import Argon2Swift
 import HRW
 import GRDB
 
+private func shortManagedUserDateText(_ date: Date) -> String {
+    let formatter = DateFormatter()
+    formatter.dateFormat = "M/d HH:mm"
+    return formatter.string(from: date)
+}
+
+private func fullManagedUserDateText(_ date: Date) -> String {
+    let formatter = DateFormatter()
+    formatter.dateStyle = .medium
+    formatter.timeStyle = .medium
+    return formatter.string(from: date)
+}
+
 struct ManagedUserPageInfo {
     let page: UInt
     let perPage: UInt
@@ -52,12 +65,14 @@ struct ManagedUserRequest: Content {
 final class VCEditAllUsersTableRow: EditAllUsersTableRow {
     init(user: User) throws {
         try super.init()
-        user_id.addChild(HTMLText(content: user.id.uuidString))
         username.addChild(HTMLText(content: user.username))
+        username_link.href = URL(string: "/users/\(user.id.uuidString)")
         email.addChild(HTMLText(content: user.email ?? ""))
         is_admin.addChild(HTMLText(content: user.isAdmin ? "Yes" : "No"))
-        created_at.addChild(HTMLText(content: String(describing: user.createdAt)))
-        updated_at.addChild(HTMLText(content: String(describing: user.updatedAt)))
+        created_at.addChild(HTMLText(content: shortManagedUserDateText(user.createdAt)))
+        created_at.globalAttributes[.title] = fullManagedUserDateText(user.createdAt)
+        updated_at.addChild(HTMLText(content: shortManagedUserDateText(user.updatedAt)))
+        updated_at.globalAttributes[.title] = fullManagedUserDateText(user.updatedAt)
         edit_link.href = URL(string: "/user/edit_all/\(user.id.uuidString)/edit")
         delete_link.href = URL(string: "/user/edit_all/\(user.id.uuidString)/delete")
     }
@@ -87,7 +102,7 @@ final class VCEditAllUsersPage: EditAllUsersPage {
 }
 
 final class VCManagedUserForm: ManagedUserForm {
-    init(user: User?, error: String?) throws {
+    init(user: User?, editPath: String?, error: String?) throws {
         try super.init()
         let isNewUser = user == nil
         title.children.removeAll()
@@ -95,7 +110,7 @@ final class VCManagedUserForm: ManagedUserForm {
         submit_button.children.removeAll()
         submit_button.addChild(HTMLText(content: isNewUser ? "Create User" : "Update User"))
         if let user {
-            rootNode.action = URL(string: "/user/edit_all/\(user.id.uuidString)/edit")
+            rootNode.action = URL(string: editPath ?? "/user/edit_all/\(user.id.uuidString)/edit")
             username.value = user.username
             email.value = user.email ?? ""
             if user.isAdmin {
@@ -117,10 +132,47 @@ final class VCManagedUserForm: ManagedUserForm {
 }
 
 final class VCManagedUserPage: ManagedUserPage {
-    init(session: AuthSession, user: User?, error: String?) throws {
+    init(session: AuthSession, user: User?, editPath: String?, error: String?) throws {
         try super.init()
         nav_bar.addChild(try VCNavBar(isAdmin: session.isAdmin).rootNode)
-        form_container.addChild(try VCManagedUserForm(user: user, error: error).rootNode)
+        form_container.addChild(try VCManagedUserForm(user: user, editPath: editPath, error: error).rootNode)
+    }
+}
+
+final class VCManagedUserProfileGridItem: ProfileGridItem {
+    init(user: User, profile: UserProfile) throws {
+        try super.init()
+        profile_link.href = URL(string: "/users/\(user.id.uuidString)/profiles/\(profile.id.uuidString)/games")
+        let profileId = profile.id.uuidString.uppercased()
+        profile_avatar_container.addChild(HTMLText(content: #"<svg width="80" height="80" data-jdenticon-value="\#(profileId)"></svg>"#))
+        name.addChild(HTMLText(content: profile.name))
+    }
+}
+
+final class VCManagedUserDetailPage: ManagedUserDetailPage {
+    init(session: AuthSession, user: User, profiles: [UserProfile], error: String?) throws {
+        try super.init()
+        nav_bar.addChild(try VCNavBar(isAdmin: session.isAdmin).rootNode)
+        if let error {
+            p_error.addChild(HTMLText(content: error))
+            p_error.globalAttributes[.style] = ""
+        }
+        title.addChild(HTMLText(content: user.username))
+        edit_link.href = URL(string: "/users/\(user.id.uuidString)/edit")
+        username.addChild(HTMLText(content: user.username))
+        email.addChild(HTMLText(content: user.email ?? ""))
+        is_admin.addChild(HTMLText(content: user.isAdmin ? "Yes" : "No"))
+        user_id.addChild(HTMLText(content: user.id.uuidString))
+        created_at.addChild(HTMLText(content: String(describing: user.createdAt)))
+        updated_at.addChild(HTMLText(content: String(describing: user.updatedAt)))
+        if profiles.isEmpty {
+            empty_profiles_text.globalAttributes[.style] = ""
+        } else {
+            for profile in profiles {
+                profiles_container.children.append(try VCManagedUserProfileGridItem(user: user, profile: profile).rootNode)
+            }
+        }
+        back_link.href = URL(string: "/user/edit_all")
     }
 }
 
@@ -148,16 +200,35 @@ private func adminAccessDeniedResponse() throws -> Response {
     try VCWelcomePage(users: [], error: "Admin access required.").rootNode.response()
 }
 
-private func managedUserFormError(_ session: AuthSession, user: User?, error: String) throws -> Response {
-    try VCManagedUserPage(session: session, user: user, error: error).rootNode.response()
+private func managedUserEditPath(for req: Request, user: User?) -> String? {
+    guard let user else {
+        return nil
+    }
+    if req.url.path == "/users/\(user.id.uuidString)/edit" {
+        return "/users/\(user.id.uuidString)/edit"
+    }
+    return "/user/edit_all/\(user.id.uuidString)/edit"
+}
+
+private func managedUserFormError(_ session: AuthSession, req: Request, user: User?, error: String) throws -> Response {
+    try VCManagedUserPage(session: session, user: user, editPath: managedUserEditPath(for: req, user: user), error: error).rootNode.response()
 }
 
 private func fetchManagedUser(req: Request, pool: DatabasePool) async throws -> User? {
-    guard let userId: UUID = req.parameters.get("managed_user_id") else {
+    guard let userId: UUID = req.parameters.get("managed_user_id") ?? req.parameters.get("user_id") else {
         return nil
     }
     return try await pool.read { db in
         try User.filter(id: userId).fetchOne(db)
+    }
+}
+
+private func fetchProfiles(for user: User, pool: DatabasePool) async throws -> [UserProfile] {
+    try await pool.read { db in
+        try UserProfile
+            .filter(UserProfile.user_id == user.id)
+            .order(UserProfile.name.asc)
+            .fetchAll(db)
     }
 }
 
@@ -209,7 +280,7 @@ private func ensureUniqueManagedUserFields(pool: DatabasePool, username: String,
     guard let session = try await adminSession(for: req) else {
         return try adminAccessDeniedResponse()
     }
-    return try VCManagedUserPage(session: session, user: nil, error: nil).rootNode.response()
+    return try VCManagedUserPage(session: session, user: nil, editPath: nil, error: nil).rootNode.response()
 }
 
 @Sendable func createManagedUser(req: Request) async throws -> Response {
@@ -219,12 +290,12 @@ private func ensureUniqueManagedUserFields(pool: DatabasePool, username: String,
 
     let contents = try req.content.decode(ManagedUserRequest.self)
     if let error = contents.validate(isNewUser: true) {
-        return try managedUserFormError(session, user: nil, error: error)
+        return try managedUserFormError(session, req: req, user: nil, error: error)
     }
 
     let pool = DBShared.pool()
     if let error = try await ensureUniqueManagedUserFields(pool: pool, username: contents.username, email: contents.email, excluding: nil) {
-        return try managedUserFormError(session, user: nil, error: error)
+        return try managedUserFormError(session, req: req, user: nil, error: error)
     }
 
     let password = contents.password ?? ""
@@ -257,7 +328,24 @@ private func ensureUniqueManagedUserFields(pool: DatabasePool, username: String,
     guard let user = try await fetchManagedUser(req: req, pool: pool) else {
         return try VCEditAllUsersPage(session: session, users: [], pageInfo: ManagedUserPageInfo(req: req), hasNextPage: false, error: "User not found.").rootNode.response()
     }
-    return try VCManagedUserPage(session: session, user: user, error: nil).rootNode.response()
+    return try VCManagedUserPage(session: session, user: user, editPath: managedUserEditPath(for: req, user: user), error: nil).rootNode.response()
+}
+
+@Sendable func managedUserPageByUserId(req: Request) async throws -> Response {
+    guard let session = try await adminSession(for: req) else {
+        return try adminAccessDeniedResponse()
+    }
+
+    let pool = DBShared.pool()
+    guard let user = try await fetchManagedUser(req: req, pool: pool) else {
+        return try VCEditAllUsersPage(session: session, users: [], pageInfo: ManagedUserPageInfo(req: req), hasNextPage: false, error: "User not found.").rootNode.response()
+    }
+    let profiles = try await fetchProfiles(for: user, pool: pool)
+    return try VCManagedUserDetailPage(session: session, user: user, profiles: profiles, error: nil).rootNode.response()
+}
+
+@Sendable func editManagedUserPageByUserId(req: Request) async throws -> Response {
+    try await editManagedUserPage(req: req)
 }
 
 @Sendable func updateManagedUser(req: Request) async throws -> Response {
@@ -272,10 +360,10 @@ private func ensureUniqueManagedUserFields(pool: DatabasePool, username: String,
 
     let contents = try req.content.decode(ManagedUserRequest.self)
     if let error = contents.validate(isNewUser: false) {
-        return try managedUserFormError(session, user: user, error: error)
+        return try managedUserFormError(session, req: req, user: user, error: error)
     }
     if let error = try await ensureUniqueManagedUserFields(pool: pool, username: contents.username, email: contents.email, excluding: user.id) {
-        return try managedUserFormError(session, user: user, error: error)
+        return try managedUserFormError(session, req: req, user: user, error: error)
     }
 
     let newPasswordHash: String?
@@ -297,7 +385,7 @@ private func ensureUniqueManagedUserFields(pool: DatabasePool, username: String,
         return matchingUser
     }
 
-    return try VCManagedUserPage(session: session, user: updatedUser, error: nil).rootNode.response()
+    return try VCManagedUserPage(session: session, user: updatedUser, editPath: managedUserEditPath(for: req, user: updatedUser), error: nil).rootNode.response()
 }
 
 @Sendable func deleteManagedUserPage(req: Request) async throws -> Response {

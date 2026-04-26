@@ -1,0 +1,35 @@
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Profile — Save Cloud</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/purecss@3.0.0/build/pure-min.css" integrity="sha384-X38yfunGUhNzHpBaEBsWLO+A0HDYOQi8ufWDkZ0k9e0eXz/tH3II7uKZ9msv++Ls" crossorigin="anonymous">
+    <link rel="stylesheet" href="/app.css">
+    <script src="https://cdn.jsdelivr.net/npm/jdenticon@3.3.0/dist/jdenticon.min.js" async
+        integrity="sha384-LfouGM03m83ArVtne1JPk926e3SGD0Tz8XHtW2OKGsgeBU/UfR0Fa8eX+UlwSSAZ"
+        crossorigin="anonymous"></script>
+</head>
+<body>
+    <div id="nav_bar"></div>
+    <div class="nav_body">
+        <header class="page-head">
+            <h1 id="title"></h1>
+        </header>
+        <p id="p_error" class="error-msg" style="display:none"></p>
+        <section class="profile-detail-hero">
+            <div id="profile_avatar_container"></div>
+            <div class="profile-detail-copy">
+                <p class="muted mono" id="profile_id"></p>
+                <p class="muted">Profile details</p>
+            </div>
+        </section>
+        <dl class="record">
+            <dt>Name</dt>
+            <dd id="name"></dd>
+            <dt>ID</dt>
+            <dd><code id="profile_id_record"></code></dd>
+        </dl>
+        <a id="back_link" class="back-link">&#8592; Back to Profiles</a>
+    </div>
+</body>
+</html>
