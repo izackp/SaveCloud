@@ -1,0 +1,36 @@
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Delete Save - Save Cloud</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/purecss@3.0.0/build/pure-min.css" integrity="sha384-X38yfunGUhNzHpBaEBsWLO+A0HDYOQi8ufWDkZ0k9e0eXz/tH3II7uKZ9msv++Ls" crossorigin="anonymous">
+    <link rel="stylesheet" href="/app.css">
+</head>
+<body>
+    <div id="nav_bar"></div>
+    <div class="nav_body">
+        <header class="page-head">
+            <h1 id="title"></h1>
+        </header>
+        <div class="confirm-prompt">
+            <p id="message"></p>
+            <dl class="detail-list">
+                <dt>Game</dt>
+                <dd id="game_name"></dd>
+                <dt>Profile</dt>
+                <dd id="profile_name"></dd>
+                <dt>Save</dt>
+                <dd id="save_name"></dd>
+                <dt>Date</dt>
+                <dd id="save_date"></dd>
+            </dl>
+            <form id="delete_form" method="POST" enctype="application/x-www-form-urlencoded" class="pure-form">
+                <div class="confirm-actions">
+                    <button id="delete_button" type="submit" class="pure-button btn-danger"></button>
+                    <a id="cancel_link" class="pure-button">Cancel</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</body>
+</html>

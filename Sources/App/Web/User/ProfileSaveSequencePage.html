@@ -1,0 +1,35 @@
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Save Sequence - Save Cloud</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/purecss@3.0.0/build/pure-min.css" integrity="sha384-X38yfunGUhNzHpBaEBsWLO+A0HDYOQi8ufWDkZ0k9e0eXz/tH3II7uKZ9msv++Ls" crossorigin="anonymous">
+    <link rel="stylesheet" href="/app.css">
+</head>
+<body>
+    <div id="nav_bar"></div>
+    <div class="nav_body">
+        <nav class="breadcrumbs" aria-label="Breadcrumb">
+            <a id="breadcrumb_root_link"><span id="breadcrumb_root_label"></span></a>
+            <span aria-hidden="true">/</span>
+            <a id="breadcrumb_profile_link"><span id="breadcrumb_profile_name"></span></a>
+            <span aria-hidden="true">/</span>
+            <a id="breadcrumb_game_link"><span id="breadcrumb_game_name"></span></a>
+            <span aria-hidden="true">/</span>
+            <span>Sequence</span>
+        </nav>
+        <p id="p_error" class="error-msg" style="display:none"></p>
+        <section class="profile-game-detail-hero">
+            <div>
+                <h1 class="profile-game-detail-title">
+                    <span id="title"></span>
+                </h1>
+                <p id="summary_text" class="muted profile-game-version-line"></p>
+            </div>
+        </section>
+        <div id="saves_list" class="profile-save-list"></div>
+        <p id="empty_text" class="muted" style="display:none">No saves in this sequence.</p>
+        <a id="back_link" class="back-link">&#8592; Back to Game Saves</a>
+    </div>
+</body>
+</html>

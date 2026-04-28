@@ -23,20 +23,29 @@
                 <p class="muted" id="summary_text"></p>
             </div>
         </section>
-        <div class="table-wrap">
-            <table class="pure-table pure-table-horizontal">
-                <thead>
-                    <tr>
-                        <th>Game</th>
-                        <th>Version</th>
-                        <th>Most Recent Save</th>
-                        <th>Save Name</th>
-                    </tr>
-                </thead>
-                <tbody id="table"></tbody>
-            </table>
+        <form class="profile-game-search pure-form" method="GET">
+            <label for="search_input">Search games</label>
+            <div class="profile-game-search-row">
+                <input id="search_input" type="search" name="q" placeholder="Game name">
+                <input type="hidden" name="per_page" value="20">
+                <input id="sort_by_input" type="hidden" name="sort_by">
+                <input id="asc_input" type="hidden" name="asc">
+                <button type="submit" class="pure-button">Search</button>
+            </div>
+            <p id="result_count" class="muted"></p>
+        </form>
+        <div class="profile-game-sort" aria-label="Sort games">
+            <span>Sort</span>
+            <a id="sort_name_link" class="profile-game-sort-button">Game name</a>
+            <a id="sort_date_link" class="profile-game-sort-button">Last save</a>
         </div>
-        <p id="empty_text" class="muted" style="display:none">No saves for this profile yet.</p>
+        <section id="game_list" class="profile-game-list" aria-label="Games with saves"></section>
+        <p id="empty_text" class="muted" style="display:none">No games found.</p>
+        <div class="profile-game-pager">
+            <a id="prev_link" style="display:none">&#8592; Previous</a>
+            <span id="page_text"></span>
+            <a id="next_link" style="display:none">Next &#8594;</a>
+        </div>
         <a id="back_link" class="back-link">&#8592; Back to Profiles</a>
     </div>
 </body>
