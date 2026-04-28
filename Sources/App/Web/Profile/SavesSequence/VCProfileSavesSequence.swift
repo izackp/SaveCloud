@@ -31,7 +31,6 @@ final class VCProfileSaveSequencePage: ProfileSaveSequencePage {
         breadcrumb_game_link.href = URL(string: gameLinkPath)
         let saveCopy = sequenceData.saves.count == 1 ? "1 save in sequence" : "\(sequenceData.saves.count) saves in sequence"
         title.addChild(HTMLText(content: saveCopy))
-        summary_text.addChild(HTMLText(content: "Ordered by newest save first"))
         if sequenceData.saves.isEmpty {
             empty_text.globalAttributes[.style] = ""
         } else {
