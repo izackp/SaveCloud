@@ -66,7 +66,7 @@ class VCRegistrationForm : RegistrationForm {
     let isAdmin = numUsers == 0
     let date = Date()
     let newUser = try await pool.write { db in
-        var user = User(id: UUID.init(), username:contents.username, email: contents.email, passwordHash: encodedPassword, isAdmin: isAdmin, createdAt: date, updatedAt: date)
+        var user = User(id: SmallUid(), username:contents.username, email: contents.email, passwordHash: encodedPassword, isAdmin: isAdmin, createdAt: date, updatedAt: date)
         try user.insert(db)
         return user
     }
@@ -79,7 +79,7 @@ class VCRegistrationForm : RegistrationForm {
     
     let expirationDate = date.advanced(by: 24 * 60 * 60)
     let newSession = try await pool.write { db in
-        var session = AuthSession(id: UUID.init(), refreshToken: UUID.init(), user: newUser.id, deviceName: userAgent, location: nil, ipAddress: ipAddress, isAdmin: isAdmin, createdAt: date, updatedAt: date, expiresAt: expirationDate)
+        var session = AuthSession(id: UUID(), refreshToken: UUID(), user: newUser.id, deviceName: userAgent, location: nil, ipAddress: ipAddress, isAdmin: isAdmin, createdAt: date, updatedAt: date, expiresAt: expirationDate)
         try session.insert(db)
         return session
     }

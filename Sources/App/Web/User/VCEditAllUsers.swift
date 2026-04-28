@@ -66,15 +66,15 @@ final class VCEditAllUsersTableRow: EditAllUsersTableRow {
     init(user: User) throws {
         try super.init()
         username.addChild(HTMLText(content: user.username))
-        username_link.href = URL(string: "/users/\(user.id.uuidString)")
+        username_link.href = URL(string: "/users/\(user.id.description)")
         email.addChild(HTMLText(content: user.email ?? ""))
         is_admin.addChild(HTMLText(content: user.isAdmin ? "Yes" : "No"))
         created_at.addChild(HTMLText(content: shortManagedUserDateText(user.createdAt)))
         created_at.globalAttributes[.title] = fullManagedUserDateText(user.createdAt)
         updated_at.addChild(HTMLText(content: shortManagedUserDateText(user.updatedAt)))
         updated_at.globalAttributes[.title] = fullManagedUserDateText(user.updatedAt)
-        edit_link.href = URL(string: "/user/edit_all/\(user.id.uuidString)/edit")
-        delete_link.href = URL(string: "/user/edit_all/\(user.id.uuidString)/delete")
+        edit_link.href = URL(string: "/user/edit_all/\(user.id.description)/edit")
+        delete_link.href = URL(string: "/user/edit_all/\(user.id.description)/delete")
     }
 }
 
@@ -110,7 +110,7 @@ final class VCManagedUserForm: ManagedUserForm {
         submit_button.children.removeAll()
         submit_button.addChild(HTMLText(content: isNewUser ? "Create User" : "Update User"))
         if let user {
-            rootNode.action = URL(string: editPath ?? "/user/edit_all/\(user.id.uuidString)/edit")
+            rootNode.action = URL(string: editPath ?? "/user/edit_all/\(user.id.description)/edit")
             username.value = user.username
             email.value = user.email ?? ""
             if user.isAdmin {
@@ -142,7 +142,7 @@ final class VCManagedUserPage: ManagedUserPage {
 final class VCManagedUserProfileGridItem: ProfileGridItem {
     init(user: User, profile: UserProfile) throws {
         try super.init()
-        profile_link.href = URL(string: "/users/\(user.id.uuidString)/profiles/\(profile.id.description)/games")
+        profile_link.href = URL(string: "/users/\(user.id.description)/profiles/\(profile.id.description)/games")
         let profileId = profile.id.description
         profile_avatar_container.addChild(HTMLText(content: #"<svg width="80" height="80" data-jdenticon-value="\#(profileId)"></svg>"#))
         name.addChild(HTMLText(content: profile.name))
@@ -158,11 +158,11 @@ final class VCManagedUserDetailPage: ManagedUserDetailPage {
             p_error.globalAttributes[.style] = ""
         }
         title.addChild(HTMLText(content: user.username))
-        edit_link.href = URL(string: "/users/\(user.id.uuidString)/edit")
+        edit_link.href = URL(string: "/users/\(user.id.description)/edit")
         username.addChild(HTMLText(content: user.username))
         email.addChild(HTMLText(content: user.email ?? ""))
         is_admin.addChild(HTMLText(content: user.isAdmin ? "Yes" : "No"))
-        user_id.addChild(HTMLText(content: user.id.uuidString))
+        user_id.addChild(HTMLText(content: user.id.description))
         created_at.addChild(HTMLText(content: String(describing: user.createdAt)))
         updated_at.addChild(HTMLText(content: String(describing: user.updatedAt)))
         if profiles.isEmpty {
@@ -180,11 +180,11 @@ final class VCDeleteManagedUserPage: DeleteManagedUserPage {
     init(session: AuthSession, user: User) throws {
         try super.init()
         nav_bar.addChild(try VCNavBar(isAdmin: session.isAdmin).rootNode)
-        user_id.addChild(HTMLText(content: user.id.uuidString))
+        user_id.addChild(HTMLText(content: user.id.description))
         username.addChild(HTMLText(content: user.username))
         email.addChild(HTMLText(content: user.email ?? ""))
         is_admin.addChild(HTMLText(content: user.isAdmin ? "Yes" : "No"))
-        delete_form.action = URL(string: "/user/edit_all/\(user.id.uuidString)/delete")
+        delete_form.action = URL(string: "/user/edit_all/\(user.id.description)/delete")
         cancel_link.href = URL(string: "/user/edit_all")
     }
 }
@@ -204,10 +204,10 @@ private func managedUserEditPath(for req: Request, user: User?) -> String? {
     guard let user else {
         return nil
     }
-    if req.url.path == "/users/\(user.id.uuidString)/edit" {
-        return "/users/\(user.id.uuidString)/edit"
+    if req.url.path == "/users/\(user.id.description)/edit" {
+        return "/users/\(user.id.description)/edit"
     }
-    return "/user/edit_all/\(user.id.uuidString)/edit"
+    return "/user/edit_all/\(user.id.description)/edit"
 }
 
 private func managedUserFormError(_ session: AuthSession, req: Request, user: User?, error: String) throws -> Response {
@@ -215,7 +215,7 @@ private func managedUserFormError(_ session: AuthSession, req: Request, user: Us
 }
 
 private func fetchManagedUser(req: Request, pool: DatabasePool) async throws -> User? {
-    guard let userId: UUID = req.parameters.get("managed_user_id") ?? req.parameters.get("user_id") else {
+    guard let userId: SmallUid = req.parameters.get("managed_user_id") ?? req.parameters.get("user_id") else {
         return nil
     }
     return try await pool.read { db in
@@ -232,7 +232,7 @@ private func fetchProfiles(for user: User, pool: DatabasePool) async throws -> [
     }
 }
 
-private func ensureUniqueManagedUserFields(pool: DatabasePool, username: String, email: String, excluding userId: UUID?) async throws -> String? {
+private func ensureUniqueManagedUserFields(pool: DatabasePool, username: String, email: String, excluding userId: SmallUid?) async throws -> String? {
     let duplicateUsername = try await pool.read { db in
         var request = User.filter(User.username == username)
         if let userId {
@@ -304,7 +304,7 @@ private func ensureUniqueManagedUserFields(pool: DatabasePool, username: String,
     let date = Date()
     let newUser = try await pool.write { db in
         var user = User(
-            id: UUID(),
+            id: SmallUid(),
             username: contents.username,
             email: contents.email,
             passwordHash: passwordHash,
@@ -316,7 +316,7 @@ private func ensureUniqueManagedUserFields(pool: DatabasePool, username: String,
         return user
     }
 
-    return req.redirect(to: "/user/edit_all/\(newUser.id.uuidString)/edit", redirectType: .normal)
+    return req.redirect(to: "/user/edit_all/\(newUser.id.description)/edit", redirectType: .normal)
 }
 
 @Sendable func editManagedUserPage(req: Request) async throws -> Response {
@@ -438,7 +438,7 @@ struct ManagedSessionRequest: Content {
     }
 
     func validate() -> String? {
-        if UUID(uuidString: user_id) == nil {
+        if SmallUid(user_id) == nil {
             return "User ID is invalid."
         }
         if let refresh_token, !refresh_token.isEmpty && UUID(uuidString: refresh_token) == nil {
@@ -456,7 +456,7 @@ struct ManagedSessionRequest: Content {
 
 struct SessionPageContext {
     let viewer: AuthSession
-    let targetUserId: UUID?
+    let targetUserId: SmallUid?
     let basePath: String
     let canEdit: Bool
 
@@ -477,7 +477,7 @@ final class VCEditSessionsTableRow: EditSessionsTableRow {
             session_id.addChild(HTMLText(content: " (Current)"))
             rootNode.globalAttributes[.class_] = "is-current-session"
         }
-        user_id.addChild(HTMLText(content: session.user.uuidString))
+        user_id.addChild(HTMLText(content: session.user.description))
         refresh_token.addChild(HTMLText(content: session.refreshToken?.uuidString ?? ""))
         device_name.addChild(HTMLText(content: session.deviceName ?? ""))
         location.addChild(HTMLText(content: session.location ?? ""))
@@ -525,7 +525,7 @@ final class VCManagedSessionForm: ManagedSessionForm {
         try super.init()
         rootNode.action = URL(string: "\(basePath)/\(session.id.uuidString)/edit")
         session_id.addChild(HTMLText(content: session.id.uuidString))
-        user_id.value = session.user.uuidString
+        user_id.value = session.user.description
         refresh_token.value = session.refreshToken?.uuidString ?? ""
         device_name.value = session.deviceName ?? ""
         location.value = session.location ?? ""
@@ -554,7 +554,7 @@ final class VCDeleteManagedSessionPage: DeleteManagedSessionPage {
         try super.init()
         nav_bar.addChild(try VCNavBar(isAdmin: context.viewer.isAdmin).rootNode)
         session_id.addChild(HTMLText(content: managedSession.id.uuidString))
-        user_id.addChild(HTMLText(content: managedSession.user.uuidString))
+        user_id.addChild(HTMLText(content: managedSession.user.description))
         device_name.addChild(HTMLText(content: managedSession.deviceName ?? ""))
         ip_address.addChild(HTMLText(content: managedSession.ipAddress))
         expires_at.addChild(HTMLText(content: String(describing: managedSession.expiresAt)))
@@ -588,14 +588,14 @@ private func sessionPageContext(for req: Request) async throws -> SessionPageCon
         )
     }
 
-    if let userId: UUID = req.parameters.get("user_id") {
+    if let userId: SmallUid = req.parameters.get("user_id") {
         guard viewer.isAdmin || viewer.user == userId else {
             return nil
         }
         return SessionPageContext(
             viewer: viewer,
             targetUserId: userId,
-            basePath: "/users/\(userId.uuidString)/sessions",
+            basePath: "/users/\(userId.description)/sessions",
             canEdit: viewer.isAdmin
         )
     }
@@ -608,7 +608,7 @@ private func sessionPageContext(for req: Request) async throws -> SessionPageCon
     )
 }
 
-private func fetchManagedSession(req: Request, pool: DatabasePool, targetUserId: UUID?) async throws -> AuthSession? {
+private func fetchManagedSession(req: Request, pool: DatabasePool, targetUserId: SmallUid?) async throws -> AuthSession? {
     guard let sessionId: UUID = req.parameters.get("managed_session_id") else {
         return nil
     }
@@ -671,7 +671,7 @@ private func fetchManagedSession(req: Request, pool: DatabasePool, targetUserId:
 
     let updatedSession = try await pool.write { db in
         var updated = managedSession
-        updated.user = UUID(uuidString: contents.user_id)!
+        updated.user = SmallUid(contents.user_id)!
         updated.refreshToken = contents.refresh_token?.isEmpty == false ? UUID(uuidString: contents.refresh_token!) : nil
         updated.deviceName = contents.device_name?.isEmpty == false ? contents.device_name : nil
         updated.location = contents.location?.isEmpty == false ? contents.location : nil

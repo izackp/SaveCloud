@@ -10,8 +10,8 @@ import GRDB
 import Argon2Swift
 
 @Sendable func apiGETUser(req: Request) async throws -> PublicUser {
-    let pathId:UUID? = req.parameters.get("user_id")
-    let userId:UUID
+    let pathId:SmallUid? = req.parameters.get("user_id")
+    let userId:SmallUid
     let session = try req.authSession()
     if let pathId = pathId {
         if (pathId != session.user && !session.isAdmin) {
@@ -34,14 +34,14 @@ import Argon2Swift
 
 final class PutUser: Content, IValidate {
     
-    init(id: UUID?, username:String?, email: String? = nil, isAdmin:Bool?) {
+    init(id: SmallUid?, username:String?, email: String? = nil, isAdmin:Bool?) {
         self.id = id
         self.username = username
         self.email = email
         self.isAdmin = isAdmin
     }
     
-    var id: UUID? //TODO: Test invalid UUID
+    var id: SmallUid?
     var username: String?
     var email: String?
     var isAdmin: Bool?
@@ -70,7 +70,7 @@ final class PutUser: Content, IValidate {
     let session = try req.authSession()
     let contents = try req.content.decode(PutUser.self)
     try contents.checkValdiation()
-    let pathId:UUID? = req.parameters.get("user_id")
+    let pathId:SmallUid? = req.parameters.get("user_id")
     guard let id = pathId ?? contents.id else {
         throw Abort(.badRequest, reason: "No user specified.")
     }
@@ -158,7 +158,7 @@ final class PasswordCheck: Content, IValidate {
 @Sendable func apiDELETEUser(req: Request) async throws -> PublicUser {
     let session = try req.authSession()
     
-    let pathId:UUID? = req.parameters.get("user_id")
+    let pathId:SmallUid? = req.parameters.get("user_id")
     let id = pathId ?? session.user
     
     let allowed = (session.isAdmin || session.user == id)

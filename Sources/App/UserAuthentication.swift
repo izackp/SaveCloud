@@ -89,12 +89,12 @@ struct UserCredentialsAuthenticator: AsyncCredentialsAuthenticator {
     }
 }
 
-func createSession(_ req: Request, _ userId:UUID, _ isAdmin:Bool, _ expiresIn:TimeInterval = hours24, _ refreshToken:UUID?) async throws -> AuthSession {
+func createSession(_ req: Request, _ userId:SmallUid, _ isAdmin:Bool, _ expiresIn:TimeInterval = hours24, _ refreshToken:UUID?) async throws -> AuthSession {
     let pool = DBShared.pool()
     return try await createSession(req, userId, isAdmin, expiresIn, refreshToken, pool)
 }
 
-func createSession(_ req: Request, _ userId:UUID, _ isAdmin:Bool, _ expiresIn:TimeInterval = hours24, _ refreshToken:UUID?, _ pool:DatabasePool) async throws -> AuthSession {
+func createSession(_ req: Request, _ userId:SmallUid, _ isAdmin:Bool, _ expiresIn:TimeInterval = hours24, _ refreshToken:UUID?, _ pool:DatabasePool) async throws -> AuthSession {
     //TODO: Build with SEC-CH-UA-PLATFORM etc
     let userAgent = req.headers.first(name: .userAgent)
     //TODO: Add ip address field

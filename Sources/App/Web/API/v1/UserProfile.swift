@@ -10,7 +10,7 @@ import GRDB
 import Argon2Swift
 
 @Sendable func apiGETUserProfiles(req: Request) async throws -> [UserProfile] {
-    let userId:UUID = try req.expectValidUserId()
+    let userId:SmallUid = try req.expectValidUserId()
     
     let pool = DBShared.pool()
     guard let user = try await pool.read({ db in
@@ -66,7 +66,7 @@ final class PostUserProfile: Content, IValidate {
     }
     
     var id: SmallUid?
-    var userId: UUID?
+    var userId: SmallUid?
     var name: String
     
     func iterateErrors(_ index:inout Int) -> String? {
@@ -86,7 +86,7 @@ final class PostUserProfile: Content, IValidate {
 //POST /user/:user_id/profile
 @Sendable func apiPOSTUserProfile(req: Request) async throws -> UserProfile {
     let (userId, isAdmin) = try req.expectValidAuth()
-    let pathUserId: UUID? = req.parameters.get("user_id")
+    let pathUserId: SmallUid? = req.parameters.get("user_id")
     if (isAdmin == false) {
         throw Abort(.unauthorized)
     }

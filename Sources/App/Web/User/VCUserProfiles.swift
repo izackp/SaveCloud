@@ -269,8 +269,8 @@ final class VCProfileGamesPage: ProfileGamesPage {
         title.addChild(HTMLText(content: profile.name))
         let profileId = profile.id.description
         profile_avatar_container.addChild(HTMLText(content: #"<svg width="120" height="120" data-jdenticon-value="\#(profileId)"></svg>"#))
-        profile_id.addChild(HTMLText(content: profile.id.description))
-        let summaryCopy = totalCount == 1 ? "1 game with saves" : "\(totalCount) games with saves"
+        profile_id.addChild(HTMLText(content: profile.name))
+        let summaryCopy = totalCount == 1 ? "1 game" : "\(totalCount) games"
         summary_text.addChild(HTMLText(content: summaryCopy))
         search_input.value = state.query
         sort_by_input.value = state.sortBy.rawValue
@@ -511,7 +511,7 @@ private func fetchOwnedProfile(req: Request, session: AuthSession, pool: Databas
     }
 }
 
-private func fetchProfile(userId: UUID, profileId: SmallUid, pool: DatabasePool) async throws -> UserProfile? {
+private func fetchProfile(userId: SmallUid, profileId: SmallUid, pool: DatabasePool) async throws -> UserProfile? {
     try await pool.read { db in
         try UserProfile
             .filter(id: profileId)
@@ -520,7 +520,7 @@ private func fetchProfile(userId: UUID, profileId: SmallUid, pool: DatabasePool)
     }
 }
 
-private func fetchProfileGameSummaries(userId: UUID, profile: UserProfile, pool: DatabasePool) async throws -> [ProfileGameSummary] {
+private func fetchProfileGameSummaries(userId: SmallUid, profile: UserProfile, pool: DatabasePool) async throws -> [ProfileGameSummary] {
     try await pool.read { db in
         let saves = try Save
             .filter(Save.user_id == userId)
@@ -572,7 +572,7 @@ private func fetchProfileGameSummaries(userId: UUID, profile: UserProfile, pool:
     }
 }
 
-private func fetchProfileGame(userId: UUID, profile: UserProfile, gameId: UUID, pool: DatabasePool) async throws -> (GameMeta, [Save])? {
+private func fetchProfileGame(userId: SmallUid, profile: UserProfile, gameId: UUID, pool: DatabasePool) async throws -> (GameMeta, [Save])? {
     try await pool.read { db in
         guard let game = try GameMeta.filter(id: gameId).fetchOne(db) else {
             return nil
@@ -595,7 +595,7 @@ private func fetchProfileGame(userId: UUID, profile: UserProfile, gameId: UUID, 
     }
 }
 
-private func fetchProfileSave(userId: UUID, profile: UserProfile, saveId: UUID, pool: DatabasePool) async throws -> Save? {
+private func fetchProfileSave(userId: SmallUid, profile: UserProfile, saveId: UUID, pool: DatabasePool) async throws -> Save? {
     try await pool.read { db in
         try Save
             .filter(id: saveId)
@@ -651,7 +651,7 @@ private func buildProfileGameFamilySavesData(familyId: UUID, games: [GameMeta], 
     return ProfileGameFamilySavesData(familyId: familyId, displayGame: displayGame, saves: saves.sorted(by: isMoreRecent(_:than:)), versionGroups: versionGroups)
 }
 
-private func fetchProfileGameFamily(userId: UUID, profile: UserProfile, familyId: UUID, pool: DatabasePool) async throws -> ProfileGameFamilySavesData? {
+private func fetchProfileGameFamily(userId: SmallUid, profile: UserProfile, familyId: UUID, pool: DatabasePool) async throws -> ProfileGameFamilySavesData? {
     try await pool.read { db in
         let games = try GameMeta
             .filter(GameMeta.id == familyId || GameMeta.family_id == familyId)
@@ -669,7 +669,7 @@ private func fetchProfileGameFamily(userId: UUID, profile: UserProfile, familyId
     }
 }
 
-private func fetchProfileSaveSequence(userId: UUID, profile: UserProfile, sequenceId: UUID, pool: DatabasePool) async throws -> ProfileSaveSequenceData? {
+private func fetchProfileSaveSequence(userId: SmallUid, profile: UserProfile, sequenceId: UUID, pool: DatabasePool) async throws -> ProfileSaveSequenceData? {
     try await pool.read { db in
         let saves = try Save
             .filter(Save.user_id == userId)
@@ -700,7 +700,7 @@ private func findSequenceGroup(_ sequentialId: UUID, in familyData: ProfileGameF
         .first { $0.sequentialId == sequentialId }
 }
 
-private func fetchProfileGameSave(userId: UUID, profile: UserProfile, gameId: UUID, saveId: UUID, pool: DatabasePool) async throws -> Save? {
+private func fetchProfileGameSave(userId: SmallUid, profile: UserProfile, gameId: UUID, saveId: UUID, pool: DatabasePool) async throws -> Save? {
     try await pool.read { db in
         try Save
             .filter(id: saveId)
@@ -711,7 +711,7 @@ private func fetchProfileGameSave(userId: UUID, profile: UserProfile, gameId: UU
     }
 }
 
-private func deleteProfileGameFamilySaves(userId: UUID, profile: UserProfile, familyId: UUID, sequentialId: UUID?, pool: DatabasePool) async throws {
+private func deleteProfileGameFamilySaves(userId: SmallUid, profile: UserProfile, familyId: UUID, sequentialId: UUID?, pool: DatabasePool) async throws {
     try await pool.write { db in
         let games = try GameMeta
             .filter(GameMeta.id == familyId || GameMeta.family_id == familyId)
@@ -728,7 +728,7 @@ private func deleteProfileGameFamilySaves(userId: UUID, profile: UserProfile, fa
     }
 }
 
-private func deleteProfileSave(userId: UUID, profile: UserProfile, saveId: UUID, pool: DatabasePool) async throws {
+private func deleteProfileSave(userId: SmallUid, profile: UserProfile, saveId: UUID, pool: DatabasePool) async throws {
     try await pool.write { db in
         _ = try Save
             .filter(id: saveId)
@@ -979,7 +979,7 @@ private func deleteProfileSave(userId: UUID, profile: UserProfile, saveId: UUID,
     guard let session = try await req.fetchSession(), session.isAdmin else {
         return try VCWelcomePage(users: [], error: "Admin access required.").rootNode.response()
     }
-    guard let userId: UUID = req.parameters.get("user_id"),
+    guard let userId: SmallUid = req.parameters.get("user_id"),
           let profileId: SmallUid = req.parameters.get("profile_id") else {
         throw Abort(.badRequest)
     }
@@ -992,15 +992,16 @@ private func deleteProfileSave(userId: UUID, profile: UserProfile, saveId: UUID,
     let filteredSummaries = filterProfileGameSummaries(summaries, state: state)
     let sortedSummaries = sortProfileGameSummaries(filteredSummaries, state: state)
     let (pageSummaries, hasNextPage) = pageProfileGameSummaries(sortedSummaries, state: state)
-    let listPath = "/users/\(userId.uuidString)/profiles/\(profile.id.description)/games"
-    return try VCProfileGamesPage(session: session, profile: profile, summaries: pageSummaries, totalCount: filteredSummaries.count, state: state, hasNextPage: hasNextPage, listPath: listPath, gameLinkBasePath: "/users/\(userId.uuidString)/profiles/\(profile.id.description)/games-family", backLinkPath: "/users/\(userId.uuidString)", error: nil).rootNode.response()
+    let userIdText = userId.description
+    let listPath = "/users/\(userIdText)/profiles/\(profile.id.description)/games"
+    return try VCProfileGamesPage(session: session, profile: profile, summaries: pageSummaries, totalCount: filteredSummaries.count, state: state, hasNextPage: hasNextPage, listPath: listPath, gameLinkBasePath: "/users/\(userIdText)/profiles/\(profile.id.description)/games-family", backLinkPath: "/users/\(userIdText)", error: nil).rootNode.response()
 }
 
 @Sendable func managedUserProfileGameSavesPage(req: Request) async throws -> Response {
     guard let session = try await req.fetchSession(), session.isAdmin else {
         return try VCWelcomePage(users: [], error: "Admin access required.").rootNode.response()
     }
-    guard let userId: UUID = req.parameters.get("user_id"),
+    guard let userId: SmallUid = req.parameters.get("user_id"),
           let profileId: SmallUid = req.parameters.get("profile_id"),
           let familyId: UUID = req.parameters.get("family_id") else {
         throw Abort(.badRequest)
@@ -1015,18 +1016,20 @@ private func deleteProfileSave(userId: UUID, profile: UserProfile, saveId: UUID,
         let filteredSummaries = filterProfileGameSummaries(summaries, state: state)
         let sortedSummaries = sortProfileGameSummaries(filteredSummaries, state: state)
         let (pageSummaries, hasNextPage) = pageProfileGameSummaries(sortedSummaries, state: state)
-        let listPath = "/users/\(userId.uuidString)/profiles/\(profile.id.description)/games"
-        return try VCProfileGamesPage(session: session, profile: profile, summaries: pageSummaries, totalCount: filteredSummaries.count, state: state, hasNextPage: hasNextPage, listPath: listPath, gameLinkBasePath: "/users/\(userId.uuidString)/profiles/\(profile.id.description)/games-family", backLinkPath: "/users/\(userId.uuidString)", error: "Game family not found.").rootNode.response()
+        let userIdText = userId.description
+        let listPath = "/users/\(userIdText)/profiles/\(profile.id.description)/games"
+        return try VCProfileGamesPage(session: session, profile: profile, summaries: pageSummaries, totalCount: filteredSummaries.count, state: state, hasNextPage: hasNextPage, listPath: listPath, gameLinkBasePath: "/users/\(userIdText)/profiles/\(profile.id.description)/games-family", backLinkPath: "/users/\(userIdText)", error: "Game family not found.").rootNode.response()
     }
-    let savesPath = "/users/\(userId.uuidString)/profiles/\(profile.id.description)/games-family/\(familyId.uuidString)"
-    return try VCProfileGameSavesPage(session: session, profile: profile, familyData: familyData, rootLabel: "User", rootLinkPath: "/users/\(userId.uuidString)", backLinkPath: "/users/\(userId.uuidString)/profiles/\(profile.id.description)/games", downloadAllPath: "\(savesPath)/saves/download", deleteAllPath: "\(savesPath)/saves/delete", saveBasePath: "/users/\(userId.uuidString)/profiles/\(profile.id.description)/saves", deleteSequenceBasePath: "\(savesPath)/saves", sequenceBasePath: "/users/\(userId.uuidString)/profiles/\(profile.id.description)/saves-sequence", error: nil).rootNode.response()
+    let userIdText = userId.description
+    let savesPath = "/users/\(userIdText)/profiles/\(profile.id.description)/games-family/\(familyId.uuidString)"
+    return try VCProfileGameSavesPage(session: session, profile: profile, familyData: familyData, rootLabel: "User", rootLinkPath: "/users/\(userIdText)", backLinkPath: "/users/\(userIdText)/profiles/\(profile.id.description)/games", downloadAllPath: "\(savesPath)/saves/download", deleteAllPath: "\(savesPath)/saves/delete", saveBasePath: "/users/\(userIdText)/profiles/\(profile.id.description)/saves", deleteSequenceBasePath: "\(savesPath)/saves", sequenceBasePath: "/users/\(userIdText)/profiles/\(profile.id.description)/saves-sequence", error: nil).rootNode.response()
 }
 
 @Sendable func managedUserProfileGameSavesDownloadPage(req: Request) async throws -> Response {
     guard let session = try await req.fetchSession(), session.isAdmin else {
         return try VCWelcomePage(users: [], error: "Admin access required.").rootNode.response()
     }
-    guard let userId: UUID = req.parameters.get("user_id"),
+    guard let userId: SmallUid = req.parameters.get("user_id"),
           let profileId: SmallUid = req.parameters.get("profile_id"),
           let familyId: UUID = req.parameters.get("family_id") else {
         throw Abort(.badRequest)
@@ -1036,14 +1039,15 @@ private func deleteProfileSave(userId: UUID, profile: UserProfile, saveId: UUID,
           let familyData = try await fetchProfileGameFamily(userId: userId, profile: profile, familyId: familyId, pool: pool) else {
         return try VCEditAllUsersPage(session: session, users: [], pageInfo: ManagedUserPageInfo(req: req), hasNextPage: false, error: "Profile or game not found.").rootNode.response()
     }
-    return try VCProfileGameSavesDownloadPage(session: session, familyData: familyData, saveBasePath: "/users/\(userId.uuidString)/profiles/\(profile.id.description)/saves", backLinkPath: "/users/\(userId.uuidString)/profiles/\(profile.id.description)/games-family/\(familyId.uuidString)").rootNode.response()
+    let userIdText = userId.description
+    return try VCProfileGameSavesDownloadPage(session: session, familyData: familyData, saveBasePath: "/users/\(userIdText)/profiles/\(profile.id.description)/saves", backLinkPath: "/users/\(userIdText)/profiles/\(profile.id.description)/games-family/\(familyId.uuidString)").rootNode.response()
 }
 
 @Sendable func managedUserProfileSaveDownload(req: Request) async throws -> Response {
     guard let session = try await req.fetchSession(), session.isAdmin else {
         return try VCWelcomePage(users: [], error: "Admin access required.").rootNode.response()
     }
-    guard let userId: UUID = req.parameters.get("user_id"),
+    guard let userId: SmallUid = req.parameters.get("user_id"),
           let profileId: SmallUid = req.parameters.get("profile_id"),
           let saveId: UUID = req.parameters.get("save_id") else {
         throw Abort(.badRequest)
@@ -1060,7 +1064,7 @@ private func deleteProfileSave(userId: UUID, profile: UserProfile, saveId: UUID,
     guard let session = try await req.fetchSession(), session.isAdmin else {
         return try VCWelcomePage(users: [], error: "Admin access required.").rootNode.response()
     }
-    guard let userId: UUID = req.parameters.get("user_id"),
+    guard let userId: SmallUid = req.parameters.get("user_id"),
           let profileId: SmallUid = req.parameters.get("profile_id"),
           let sequenceId: UUID = req.parameters.get("sequence_id") else {
         throw Abort(.badRequest)
@@ -1076,11 +1080,11 @@ private func deleteProfileSave(userId: UUID, profile: UserProfile, saveId: UUID,
         profile: profile,
         sequenceData: sequenceData,
         rootLabel: "User",
-        rootLinkPath: "/users/\(userId.uuidString)",
-        profileLinkPath: "/users/\(userId.uuidString)/profiles/\(profile.id.description)/games",
-        gameLinkPath: "/users/\(userId.uuidString)/profiles/\(profile.id.description)/games-family/\(familyId.uuidString)",
-        backLinkPath: "/users/\(userId.uuidString)/profiles/\(profile.id.description)/games-family/\(familyId.uuidString)",
-        saveBasePath: "/users/\(userId.uuidString)/profiles/\(profile.id.description)/saves",
+        rootLinkPath: "/users/\(userId.description)",
+        profileLinkPath: "/users/\(userId.description)/profiles/\(profile.id.description)/games",
+        gameLinkPath: "/users/\(userId.description)/profiles/\(profile.id.description)/games-family/\(familyId.uuidString)",
+        backLinkPath: "/users/\(userId.description)/profiles/\(profile.id.description)/games-family/\(familyId.uuidString)",
+        saveBasePath: "/users/\(userId.description)/profiles/\(profile.id.description)/saves",
         error: nil
     ).rootNode.response()
 }
@@ -1089,7 +1093,7 @@ private func deleteProfileSave(userId: UUID, profile: UserProfile, saveId: UUID,
     guard let session = try await req.fetchSession(), session.isAdmin else {
         return try VCWelcomePage(users: [], error: "Admin access required.").rootNode.response()
     }
-    guard let userId: UUID = req.parameters.get("user_id"),
+    guard let userId: SmallUid = req.parameters.get("user_id"),
           let profileId: SmallUid = req.parameters.get("profile_id"),
           let familyId: UUID = req.parameters.get("family_id") else {
         throw Abort(.badRequest)
@@ -1104,7 +1108,7 @@ private func deleteProfileSave(userId: UUID, profile: UserProfile, saveId: UUID,
     if sequentialId != nil && sequenceGroup == nil {
         throw Abort(.notFound)
     }
-    let basePath = "/users/\(userId.uuidString)/profiles/\(profile.id.description)/games-family/\(familyId.uuidString)"
+    let basePath = "/users/\(userId.description)/profiles/\(profile.id.description)/games-family/\(familyId.uuidString)"
     let deletePath = sequentialId.map { "\(basePath)/saves/\($0.uuidString)/delete" } ?? "\(basePath)/saves/delete"
     return try VCDeleteProfileGameSavesPage(session: session, profile: profile, familyData: familyData, deletePath: deletePath, cancelPath: basePath, sequenceGroup: sequenceGroup).rootNode.response()
 }
@@ -1113,7 +1117,7 @@ private func deleteProfileSave(userId: UUID, profile: UserProfile, saveId: UUID,
     guard let session = try await req.fetchSession(), session.isAdmin else {
         return try VCWelcomePage(users: [], error: "Admin access required.").rootNode.response()
     }
-    guard let userId: UUID = req.parameters.get("user_id"),
+    guard let userId: SmallUid = req.parameters.get("user_id"),
           let profileId: SmallUid = req.parameters.get("profile_id"),
           let familyId: UUID = req.parameters.get("family_id") else {
         throw Abort(.badRequest)
@@ -1124,14 +1128,14 @@ private func deleteProfileSave(userId: UUID, profile: UserProfile, saveId: UUID,
     }
     let sequentialId: UUID? = req.parameters.get("sequential_id")
     try await deleteProfileGameFamilySaves(userId: userId, profile: profile, familyId: familyId, sequentialId: sequentialId, pool: pool)
-    return req.redirect(to: "/users/\(userId.uuidString)/profiles/\(profile.id.description)/games-family/\(familyId.uuidString)", redirectType: .normal)
+    return req.redirect(to: "/users/\(userId.description)/profiles/\(profile.id.description)/games-family/\(familyId.uuidString)", redirectType: .normal)
 }
 
 @Sendable func deleteManagedUserProfileSavePage(req: Request) async throws -> Response {
     guard let session = try await req.fetchSession(), session.isAdmin else {
         return try VCWelcomePage(users: [], error: "Admin access required.").rootNode.response()
     }
-    guard let userId: UUID = req.parameters.get("user_id"),
+    guard let userId: SmallUid = req.parameters.get("user_id"),
           let profileId: SmallUid = req.parameters.get("profile_id"),
           let saveId: UUID = req.parameters.get("save_id") else {
         throw Abort(.badRequest)
@@ -1147,7 +1151,7 @@ private func deleteProfileSave(userId: UUID, profile: UserProfile, saveId: UUID,
         }
         return try GameMeta.filter(id: gameId).fetchOne(db)
     }
-    let basePath = "/users/\(userId.uuidString)/profiles/\(profile.id.description)"
+    let basePath = "/users/\(userId.description)/profiles/\(profile.id.description)"
     return try VCDeleteProfileSavePage(session: session, profile: profile, game: game, save: save, deletePath: "\(basePath)/saves/\(save.id.uuidString)/delete", cancelPath: "\(basePath)/saves-sequence/\(save.sequentialId.uuidString)").rootNode.response()
 }
 
@@ -1155,7 +1159,7 @@ private func deleteProfileSave(userId: UUID, profile: UserProfile, saveId: UUID,
     guard let session = try await req.fetchSession(), session.isAdmin else {
         return try VCWelcomePage(users: [], error: "Admin access required.").rootNode.response()
     }
-    guard let userId: UUID = req.parameters.get("user_id"),
+    guard let userId: SmallUid = req.parameters.get("user_id"),
           let profileId: SmallUid = req.parameters.get("profile_id"),
           let saveId: UUID = req.parameters.get("save_id") else {
         throw Abort(.badRequest)
@@ -1167,5 +1171,5 @@ private func deleteProfileSave(userId: UUID, profile: UserProfile, saveId: UUID,
     }
     let sequenceId = save.sequentialId
     try await deleteProfileSave(userId: userId, profile: profile, saveId: save.id, pool: pool)
-    return req.redirect(to: "/users/\(userId.uuidString)/profiles/\(profile.id.description)/saves-sequence/\(sequenceId.uuidString)", redirectType: .normal)
+    return req.redirect(to: "/users/\(userId.description)/profiles/\(profile.id.description)/saves-sequence/\(sequenceId.uuidString)", redirectType: .normal)
 }

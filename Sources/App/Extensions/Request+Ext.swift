@@ -8,15 +8,15 @@
 import Vapor
 
 extension Request {
-    private func userPathId() -> UUID? {
+    private func userPathId() -> SmallUid? {
         self.parameters.get("user_id")
     }
 
-    func idFromParameterOrQuery(_ name: String) -> UUID? {
-        if let value: UUID = self.parameters.get(name) {
+    func idFromParameterOrQuery(_ name: String) -> SmallUid? {
+        if let value: SmallUid = self.parameters.get(name) {
             return value
         }
-        return try? self.query.get(UUID.self, at: name)
+        return try? self.query.get(SmallUid.self, at: name)
     }
 
     func authSession() throws -> AuthSession {
@@ -26,7 +26,7 @@ extension Request {
         return session
     }
     
-    func expectValidAuth() throws -> (UUID, Bool) {
+    func expectValidAuth() throws -> (SmallUid, Bool) {
         let session = try authSession()
         
         let pathId = userPathId()
@@ -40,7 +40,7 @@ extension Request {
         return (session.user, session.isAdmin)
     }
     
-    func expectValidUserId() throws -> UUID {
+    func expectValidUserId() throws -> SmallUid {
         let session = try authSession()
         
         let pathId = userPathId()
@@ -54,7 +54,7 @@ extension Request {
         return session.user
     }
     
-    func validUserIdIfExists() throws -> UUID? {
+    func validUserIdIfExists() throws -> SmallUid? {
         let pathId = userPathId()
         guard let pathId = pathId else { return nil }
         

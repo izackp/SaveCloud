@@ -19,30 +19,31 @@
         <section class="profile-detail-hero">
             <div id="profile_avatar_container"></div>
             <div class="profile-detail-copy">
-                <p class="muted mono" id="profile_id"></p>
+                <p class="profile-detail-kicker" id="profile_id"></p>
                 <p class="muted" id="summary_text"></p>
             </div>
         </section>
-        <form class="profile-game-search pure-form" method="GET">
-            <label for="search_input">Search games</label>
-            <div class="profile-game-search-row">
-                <input id="search_input" type="search" name="q" placeholder="Game name">
-                <input type="hidden" name="per_page" value="20">
-                <input id="sort_by_input" type="hidden" name="sort_by">
-                <input id="asc_input" type="hidden" name="asc">
-                <button type="submit" class="pure-button">Search</button>
+        <div class="profile-game-controls">
+            <form class="profile-game-search pure-form" method="GET">
+                <div class="profile-game-search-row">
+                    <input id="search_input" type="search" name="q" placeholder="Search game names">
+                    <input type="hidden" name="per_page" value="20">
+                    <input id="sort_by_input" type="hidden" name="sort_by">
+                    <input id="asc_input" type="hidden" name="asc">
+                    <button type="submit" class="pure-button">Search</button>
+                </div>
+            </form>
+            <div class="profile-game-sort" aria-label="Sort games">
+                <span>Sort</span>
+                <a id="sort_name_link" class="profile-game-sort-button">Game name</a>
+                <a id="sort_date_link" class="profile-game-sort-button">Last save</a>
             </div>
-            <p id="result_count" class="muted"></p>
-        </form>
-        <div class="profile-game-sort" aria-label="Sort games">
-            <span>Sort</span>
-            <a id="sort_name_link" class="profile-game-sort-button">Game name</a>
-            <a id="sort_date_link" class="profile-game-sort-button">Last save</a>
         </div>
-        <section id="game_list" class="profile-game-list" aria-label="Games with saves"></section>
+        <section id="game_list" class="profile-game-list" aria-label="Games"></section>
         <p id="empty_text" class="muted" style="display:none">No games found.</p>
         <div class="profile-game-pager">
             <a id="prev_link" style="display:none">&#8592; Previous</a>
+            <span id="result_count" class="muted"></span>
             <span id="page_text"></span>
             <a id="next_link" style="display:none">Next &#8594;</a>
         </div>

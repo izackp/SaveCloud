@@ -12,11 +12,11 @@ import Vapor
 final class AuthenticatedUser {
 
     public let id: UUID
-    public let userId: UUID
+    public let userId: SmallUid
     
     public init(
         id: UUID,
-        userId: UUID
+        userId: SmallUid
     ) {
         self.id = id
         self.userId = userId
@@ -29,14 +29,14 @@ extension AuthenticatedUser: SessionAuthenticatable {
 
 final class PublicUser: Codable, Content, IValidate {
 
-    var id: UUID
+    var id: SmallUid
     var username: String
     var email: String?
     var isAdmin: Bool
     var createdAt: Date
     var updatedAt: Date
     
-    public init(id: UUID, username:String, email: String? = nil, isAdmin:Bool, createdAt: Date, updatedAt: Date) {
+    public init(id: SmallUid, username:String, email: String? = nil, isAdmin:Bool, createdAt: Date, updatedAt: Date) {
         self.id = id
         self.username = username
         self.email = email
@@ -67,7 +67,7 @@ final class PublicUser: Codable, Content, IValidate {
 
 struct User: Content, Codable, SQLItem, Identifiable, Sendable {
 
-    var id: UUID
+    var id: SmallUid
     var username: String
     var email: String?
     var passwordHash: String?
@@ -75,7 +75,7 @@ struct User: Content, Codable, SQLItem, Identifiable, Sendable {
     var createdAt: Date
     var updatedAt: Date
     
-    init(id: UUID, username:String, email: String? = nil, passwordHash: String? = nil, isAdmin:Bool, createdAt: Date, updatedAt: Date) {
+    init(id: SmallUid, username:String, email: String? = nil, passwordHash: String? = nil, isAdmin:Bool, createdAt: Date, updatedAt: Date) {
         self.id = id
         self.username = username
         self.email = email

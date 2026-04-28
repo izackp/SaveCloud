@@ -10,12 +10,12 @@ import Vapor
 
 struct UserProfile : Codable, Content, SQLItem, Identifiable, Sendable {
     var id: SmallUid
-    var userId: UUID
+    var userId: SmallUid
     var name: String
     var createdAt: Date
     var updatedAt: Date
     
-    init(id: SmallUid, userId: UUID, name: String, createdAt: Date, updatedAt: Date) {
+    init(id: SmallUid, userId: SmallUid, name: String, createdAt: Date, updatedAt: Date) {
         self.id = id
         self.userId = userId
         self.name = name

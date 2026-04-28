@@ -11,7 +11,7 @@ import HRW
 class VCWelcomeTableRow : WelcomeTableRow {
     public init(user: User) throws {
         try super.init()
-        user_id.addChild(HTMLText(content: user.id.uuidString))
+        user_id.addChild(HTMLText(content: user.id.description))
         username.addChild(HTMLText(content: user.username))
         email.addChild(HTMLText(content: user.email ?? ""))
         password_hash.addChild(HTMLText(content: user.passwordHash ?? ""))

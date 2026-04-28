@@ -38,7 +38,7 @@ final class VCSavesTableRow: SavesTableRow {
         try super.init()
         save_id.addChild(HTMLText(content: save.id.uuidString))
         save_id_link.href = URL(string: "/saves/\(save.id.uuidString)")
-        user_id.addChild(HTMLText(content: save.userId.uuidString))
+        user_id.addChild(HTMLText(content: save.userId.description))
         profile_id.addChild(HTMLText(content: save.profileId.description))
         game_meta_id.addChild(HTMLText(content: save.gameMetaId?.uuidString ?? ""))
         if let gameMetaId = save.gameMetaId {
@@ -92,7 +92,7 @@ final class VCSaveDetailPage: SaveDetailPage {
             p_error.globalAttributes[.style] = ""
         }
         save_id.addChild(HTMLText(content: save.id.uuidString))
-        user_id.addChild(HTMLText(content: save.userId.uuidString))
+        user_id.addChild(HTMLText(content: save.userId.description))
         profile_id.addChild(HTMLText(content: save.profileId.description))
         game_meta_id.addChild(HTMLText(content: save.gameMetaId?.uuidString ?? ""))
         if let gameMetaId = save.gameMetaId {
@@ -121,7 +121,7 @@ final class VCDeleteManagedSavePage: DeleteManagedSavePage {
         try super.init()
         nav_bar.addChild(try VCNavBar(isAdmin: session.isAdmin).rootNode)
         save_id.addChild(HTMLText(content: save.id.uuidString))
-        user_id.addChild(HTMLText(content: save.userId.uuidString))
+        user_id.addChild(HTMLText(content: save.userId.description))
         profile_id.addChild(HTMLText(content: save.profileId.description))
         game_meta_id.addChild(HTMLText(content: save.gameMetaId?.uuidString ?? ""))
         name.addChild(HTMLText(content: save.name ?? ""))

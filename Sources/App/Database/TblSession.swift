@@ -16,7 +16,7 @@ struct AuthSession: Content, Codable, SessionAuthenticatable, SQLItem, Identifia
     
     var id: UUID
     var refreshToken: UUID?
-    var user: UUID
+    var user: SmallUid
     var deviceName: String?
     var location: String?
     var ipAddress: String
@@ -25,7 +25,7 @@ struct AuthSession: Content, Codable, SessionAuthenticatable, SQLItem, Identifia
     var updatedAt: Date
     var expiresAt: Date
     
-    init(id: UUID, refreshToken: UUID?, user: UUID, deviceName: String? = nil, location: String? = nil, ipAddress:String, isAdmin: Bool, createdAt: Date, updatedAt: Date, expiresAt: Date) {
+    init(id: UUID, refreshToken: UUID?, user: SmallUid, deviceName: String? = nil, location: String? = nil, ipAddress:String, isAdmin: Bool, createdAt: Date, updatedAt: Date, expiresAt: Date) {
         self.id = id
         self.refreshToken = refreshToken
         self.user = user

@@ -142,7 +142,7 @@ final class AppTests: XCTestCase {
             password: "password123"
         )
         
-        try await app.test(.GET, "api/v1/user/\(otherUser.id.uuidString)", beforeRequest: { req in
+        try await app.test(.GET, "api/v1/user/\(otherUser.id.description)", beforeRequest: { req in
             req.headers.bearerAuthorization = BearerAuthorization(token: ownerLogin.token.sessionId)
         }, afterResponse: { res async throws in
             XCTAssertEqual(res.status, .unauthorized)
@@ -221,7 +221,7 @@ final class AppTests: XCTestCase {
             password: "password123"
         )
         
-        try await app.test(.DELETE, "api/v1/user/\(registeredUser.id.uuidString)", beforeRequest: { req in
+        try await app.test(.DELETE, "api/v1/user/\(registeredUser.id.description)", beforeRequest: { req in
             req.headers.bearerAuthorization = BearerAuthorization(token: loginPair.token.sessionId)
             try req.content.encode(PasswordCheck(password: "wrong-password"))
         }, afterResponse: { res async throws in
@@ -241,7 +241,7 @@ final class AppTests: XCTestCase {
             password: "password123"
         )
         
-        try await app.test(.DELETE, "api/v1/user/\(registeredUser.id.uuidString)", beforeRequest: { req in
+        try await app.test(.DELETE, "api/v1/user/\(registeredUser.id.description)", beforeRequest: { req in
             req.headers.bearerAuthorization = BearerAuthorization(token: loginPair.token.sessionId)
             try req.content.encode(PasswordCheck(password: "password123"))
         }, afterResponse: { res async throws in
@@ -396,7 +396,7 @@ final class AppTests: XCTestCase {
             XCTAssertFalse(games.contains(where: { $0.id == excludedGame.id }))
         })
 
-        try await app.test(.GET, "api/v1/user/\(adminSession.user.uuidString)/profile/\(profile.id.description)/games?family_id_search=\(familyId.uuidString)&page=0&per_page=10&sort_by=name&asc=1", beforeRequest: { req in
+        try await app.test(.GET, "api/v1/user/\(adminSession.user.description)/profile/\(profile.id.description)/games?family_id_search=\(familyId.uuidString)&page=0&per_page=10&sort_by=name&asc=1", beforeRequest: { req in
             req.headers.bearerAuthorization = BearerAuthorization(token: adminLogin.token.sessionId)
         }, afterResponse: { res async throws in
             XCTAssertEqual(res.status, .ok)
@@ -471,7 +471,7 @@ final class AppTests: XCTestCase {
         let profile = try XCTUnwrap(createdProfile)
         let adminSession = try await currentSession(for: adminLogin.token.sessionId)
 
-        try await app.test(.GET, "api/v1/user/\(adminSession.user.uuidString)/profile", beforeRequest: { req in
+        try await app.test(.GET, "api/v1/user/\(adminSession.user.description)/profile", beforeRequest: { req in
             req.headers.bearerAuthorization = BearerAuthorization(token: adminLogin.token.sessionId)
         }, afterResponse: { res async throws in
             XCTAssertEqual(res.status, .ok)
@@ -479,7 +479,7 @@ final class AppTests: XCTestCase {
             XCTAssertTrue(profiles.contains(where: { $0.id == profile.id }))
         })
 
-        try await app.test(.PUT, "api/v1/user/\(adminSession.user.uuidString)/profile/\(profile.id.description)", beforeRequest: { req in
+        try await app.test(.PUT, "api/v1/user/\(adminSession.user.description)/profile/\(profile.id.description)", beforeRequest: { req in
             req.headers.bearerAuthorization = BearerAuthorization(token: adminLogin.token.sessionId)
             try req.content.encode(PutUserProfile(id: nil, name: "Renamed Profile"))
         }, afterResponse: { res async throws in
@@ -530,7 +530,7 @@ final class AppTests: XCTestCase {
             name: "Second Save"
         )
 
-        try await app.test(.GET, "api/v1/user/\(adminSession.user.uuidString)/profile/\(profile.id.description)/games", beforeRequest: { req in
+        try await app.test(.GET, "api/v1/user/\(adminSession.user.description)/profile/\(profile.id.description)/games", beforeRequest: { req in
             req.headers.bearerAuthorization = BearerAuthorization(token: adminLogin.token.sessionId)
         }, afterResponse: { res async throws in
             XCTAssertEqual(res.status, .ok)
@@ -538,7 +538,7 @@ final class AppTests: XCTestCase {
             XCTAssertTrue(games.contains(where: { $0.id == game.id }))
         })
 
-        try await app.test(.GET, "api/v1/user/\(adminSession.user.uuidString)/profile/\(profile.id.description)/games/\(game.id.uuidString)/saves", beforeRequest: { req in
+        try await app.test(.GET, "api/v1/user/\(adminSession.user.description)/profile/\(profile.id.description)/games/\(game.id.uuidString)/saves", beforeRequest: { req in
             req.headers.bearerAuthorization = BearerAuthorization(token: adminLogin.token.sessionId)
         }, afterResponse: { res async throws in
             XCTAssertEqual(res.status, .ok)
@@ -562,7 +562,7 @@ final class AppTests: XCTestCase {
             XCTAssertEqual(res.status, .ok)
         })
 
-        try await app.test(.DELETE, "api/v1/user/\(adminSession.user.uuidString)/profile/\(profile.id.description)/games/\(game.id.uuidString)/saves", beforeRequest: { req in
+        try await app.test(.DELETE, "api/v1/user/\(adminSession.user.description)/profile/\(profile.id.description)/games/\(game.id.uuidString)/saves", beforeRequest: { req in
             req.headers.bearerAuthorization = BearerAuthorization(token: adminLogin.token.sessionId)
         }, afterResponse: { res async throws in
             XCTAssertEqual(res.status, .ok)
@@ -606,7 +606,7 @@ final class AppTests: XCTestCase {
     }
 
     
-    private func insertSession(userId: UUID, isAdmin: Bool, expiresAt: Date) throws -> AuthSession {
+    private func insertSession(userId: SmallUid, isAdmin: Bool, expiresAt: Date) throws -> AuthSession {
         let now = Date()
         let session = AuthSession(
             id: UUID(),
@@ -635,7 +635,7 @@ final class AppTests: XCTestCase {
         return try XCTUnwrap(session)
     }
 
-    private func insertProfile(userId: UUID, name: String) throws -> UserProfile {
+    private func insertProfile(userId: SmallUid, name: String) throws -> UserProfile {
         let now = Date()
         var profile = UserProfile(
             id: SmallUid.generate(),
@@ -685,7 +685,7 @@ final class AppTests: XCTestCase {
         return gameHash
     }
 
-    private func insertSave(userId: UUID, profileId: SmallUid, gameHashId: UUID, gameMetaId: UUID, name: String) throws -> Save {
+    private func insertSave(userId: SmallUid, profileId: SmallUid, gameHashId: UUID, gameMetaId: UUID, name: String) throws -> Save {
         let now = Date()
         let compatibilityId = UUID()
         var compatibility = Compatibility(id: compatibilityId, updatedAt: now)

@@ -548,7 +548,7 @@ enum FakeDataSeeder {
         }
         let passwordHash = try Argon2Swift.hashPasswordString(password: "Password12", salt: salt).encodedString()
         return User(
-            id: UUID(),
+            id: SmallUid(),
             username: username,
             email: email,
             passwordHash: passwordHash,

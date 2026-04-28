@@ -48,7 +48,7 @@ struct LoginRequest: Content {
     if (!verified) {
         return try VCWelcomePage(users: [], error: "Incorrect password").rootNode.response()
     }
-    let newSession = try await createSession(req, user.id, user.isAdmin, hours24, UUID.init(), pool)
+    let newSession = try await createSession(req, user.id, user.isAdmin, hours24, UUID(), pool)
     let response = req.redirect(to: "/", redirectType: .normal)
     setBrowserSessionCookie(on: response, session: newSession)
     return response
