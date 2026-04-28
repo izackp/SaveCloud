@@ -103,6 +103,7 @@ Contributors must sign commits with `git commit --signoff` to agree to the CLA i
 ## Behavior Preservation Rules
 
 - Preserve existing user-visible behavior unless the user explicitly asked to change it.
+- Do not prioritize backward-compatibility shims, aliases, or transitional code when they increase complexity. This app is not released yet, so prefer the simpler final design.
 - Do not remove or rewrite useful comments without a concrete reason.
 - If a failing test is caused by environment, template lookup, or tooling behavior, do not hide it by changing app behavior.
 - When in doubt, ask before changing a route contract, response contract, or page flow.
