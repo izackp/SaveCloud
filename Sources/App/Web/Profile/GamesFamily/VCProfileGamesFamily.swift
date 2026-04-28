@@ -22,8 +22,7 @@ final class VCProfileGameSaveVersionGroup: ProfileGameSaveVersionGroup {
         try super.init()
         version_title.addChild(HTMLText(content: profileGameVersionText(versionGroup.game)))
         let sequenceCopy = versionGroup.sequenceGroups.count == 1 ? "1 save sequence" : "\(versionGroup.sequenceGroups.count) save sequences"
-        let saveCopy = versionGroup.saves.count == 1 ? "1 save" : "\(versionGroup.saves.count) saves"
-        version_summary.addChild(HTMLText(content: "\(sequenceCopy), \(saveCopy)"))
+        version_summary.addChild(HTMLText(content: sequenceCopy))
         version_game_link.href = URL(string: "/games/\(versionGroup.game.id.uuidString)")
         for group in versionGroup.sequenceGroups {
             saves_list.children.append(try VCProfileGameSaveRow(
@@ -59,8 +58,6 @@ final class VCProfileGameSavesPage: ProfileGameSavesPage {
         breadcrumb_profile_link.href = URL(string: backLinkPath)
         breadcrumb_profile_name.addChild(HTMLText(content: profile.name))
         breadcrumb_game_name.addChild(HTMLText(content: familyData.displayGame.name))
-        let summaryCopy = familyData.saves.count == 1 ? "1 save" : "\(familyData.saves.count) saves"
-        summary_text.addChild(HTMLText(content: summaryCopy))
         game_name.addChild(HTMLText(content: familyData.displayGame.name))
         game_detail_link.href = URL(string: "/games/\(familyData.displayGame.id.uuidString)")
         download_all_link.href = URL(string: downloadAllPath)

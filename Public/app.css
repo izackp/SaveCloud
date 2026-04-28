@@ -878,7 +878,7 @@ td, th, dd, code, time, .num {
 .profile-save-list {
     display: grid;
     gap: 0;
-    margin: var(--space-4) 0 var(--space-5);
+    margin: 0;
     border-top: 1px solid var(--border-soft);
     border-bottom: 1px solid var(--border-soft);
 }
@@ -899,8 +899,6 @@ td, th, dd, code, time, .num {
     align-items: flex-end;
     justify-content: space-between;
     gap: var(--space-3);
-    padding-bottom: var(--space-2);
-    border-bottom: 1px solid var(--border-soft);
 }
 
 .profile-save-version-header h2 {
