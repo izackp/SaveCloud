@@ -1,6 +1,6 @@
 //
 //  File.swift
-//  
+//
 //
 //  Created by Isaac Paul on 5/23/24.
 //
@@ -14,31 +14,31 @@ struct EditUserRequest: Content {
     let username: String
     let email: String
     let password: String
-    
+
     func validate() -> String? {
-        if (username.isEmpty) {
+        if username.isEmpty {
             return "Username is empty."
         }
-        if (email.isEmpty) {
+        if email.isEmpty {
             return "Email is empty."
         }
-        if (password.isEmpty) {
+        if password.isEmpty {
             return "Password is empty."
         }
-        
+
         return nil
     }
 }
 
-class VCEditUserForm : EditUserForm {
+class VCEditUserForm: EditUserForm {
 
-    public init(user:User, error:String?) throws {
+    public init(user: User, error: String?) throws {
         try super.init()
         if let passwordHash = user.passwordHash {
             password_hash.addChild(HTMLText(content: passwordHash))
             password_container.globalAttributes[.style] = ""
         }
-        if let error = error {
+        if let error {
             span_error.addChild(HTMLText(content: error))
             error_container.globalAttributes[.style] = ""
         }
@@ -52,7 +52,7 @@ extension Request {
             try fetchSession(db)
         }
     }
-    
+
     func fetchSession(_ db: GRDB.Database) throws -> AuthSession? {
         guard let sessionCookie = cookies[browserSessionCookieName]?.string,
               let sessionId = UUID(uuidString: sessionCookie) else {
@@ -70,7 +70,6 @@ func expiredSessionResponse() throws -> Response {
 
 @Sendable func editUser(req: Request) async throws -> Response {
     let pool = DBShared.pool()
-    //let app = req.application
     let result: (AuthSession?, User?) = try await pool.read { db in
         guard let session = try req.fetchSession(db) else {
             return (nil, nil)
@@ -85,22 +84,22 @@ func expiredSessionResponse() throws -> Response {
     guard session != nil else {
         return try expiredSessionResponse()
     }
-    guard let user = user else {
-        return try VCWelcomePage(users:[], error:"User not found").rootNode.response()
+    guard let user else {
+        return try VCWelcomePage(users: [], error: "User not found").rootNode.response()
     }
-    
+
     let contents = try req.content.decode(EditUserRequest.self)
     let error = contents.validate()
-    if let error = error {
+    if let error {
         let response = try VCEditUserPage(user: user, userEditError: error, passwordEditError: nil).rootNode
         return response.response()
     }
-    
+
     let verified = try Argon2Swift.verifyHashString(password: contents.password, hash: user.passwordHash ?? "")
-    if (!verified) {
+    if !verified {
         return try VCEditUserPage(user: user, userEditError: nil, passwordEditError: "Password is incorrect.").rootNode.response()
     }
-    
+
     let updatedUser: User = {
         var user = user
         user.email = contents.email
@@ -113,7 +112,7 @@ func expiredSessionResponse() throws -> Response {
         try user.update(db)
         return user
     }
-    
+
     let response = try VCEditUserPage(user: savedUser, userEditError: nil, passwordEditError: nil).rootNode
     return response.response()
 }
