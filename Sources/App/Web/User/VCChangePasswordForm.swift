@@ -45,7 +45,7 @@ class VCChangePasswordForm : ChangePasswordForm {
         let user = try await pool.read({ db in
             try User.filter(id: session.user).fetchOne(db)
         }) else {
-            return try VCWelcomePage(users: [], error:"Session doesn't exist").rootNode.response()
+            return try expiredSessionResponse()
     }
     
     let contents = try req.content.decode(ChangePasswordRequest.self)

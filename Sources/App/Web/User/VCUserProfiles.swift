@@ -734,7 +734,7 @@ private func deleteProfileSave(userId: UUID, profile: UserProfile, saveId: UUID,
 
 @Sendable func userProfilesPage(req: Request) async throws -> Response {
     guard let session = try await req.fetchSession() else {
-        return try VCWelcomePage(users: [], error: "Session doesn't exist").rootNode.response()
+        return try expiredSessionResponse()
     }
     let pool = DBShared.pool()
     let profiles = try await fetchUserProfiles(for: session, pool: pool)
@@ -743,7 +743,7 @@ private func deleteProfileSave(userId: UUID, profile: UserProfile, saveId: UUID,
 
 @Sendable func createUserProfile(req: Request) async throws -> Response {
     guard let session = try await req.fetchSession() else {
-        return try VCWelcomePage(users: [], error: "Session doesn't exist").rootNode.response()
+        return try expiredSessionResponse()
     }
     let contents = try req.content.decode(UserProfileCreateRequest.self)
     if let error = contents.validate() {
@@ -771,7 +771,7 @@ private func deleteProfileSave(userId: UUID, profile: UserProfile, saveId: UUID,
 
 @Sendable func userProfileDetailPage(req: Request) async throws -> Response {
     guard let session = try await req.fetchSession() else {
-        return try VCWelcomePage(users: [], error: "Session doesn't exist").rootNode.response()
+        return try expiredSessionResponse()
     }
     let pool = DBShared.pool()
     guard let profile = try await fetchOwnedProfile(req: req, session: session, pool: pool) else {
@@ -783,7 +783,7 @@ private func deleteProfileSave(userId: UUID, profile: UserProfile, saveId: UUID,
 
 @Sendable func userProfileGamesPage(req: Request) async throws -> Response {
     guard let session = try await req.fetchSession() else {
-        return try VCWelcomePage(users: [], error: "Session doesn't exist").rootNode.response()
+        return try expiredSessionResponse()
     }
     let pool = DBShared.pool()
     guard let profile = try await fetchOwnedProfile(req: req, session: session, pool: pool) else {
@@ -801,7 +801,7 @@ private func deleteProfileSave(userId: UUID, profile: UserProfile, saveId: UUID,
 
 @Sendable func userProfileGameSavesPage(req: Request) async throws -> Response {
     guard let session = try await req.fetchSession() else {
-        return try VCWelcomePage(users: [], error: "Session doesn't exist").rootNode.response()
+        return try expiredSessionResponse()
     }
     guard let familyId: UUID = req.parameters.get("family_id") else {
         throw Abort(.badRequest)
@@ -826,7 +826,7 @@ private func deleteProfileSave(userId: UUID, profile: UserProfile, saveId: UUID,
 
 @Sendable func userProfileGameSavesDownloadPage(req: Request) async throws -> Response {
     guard let session = try await req.fetchSession() else {
-        return try VCWelcomePage(users: [], error: "Session doesn't exist").rootNode.response()
+        return try expiredSessionResponse()
     }
     guard let familyId: UUID = req.parameters.get("family_id") else {
         throw Abort(.badRequest)
@@ -842,7 +842,7 @@ private func deleteProfileSave(userId: UUID, profile: UserProfile, saveId: UUID,
 
 @Sendable func userProfileSaveDownload(req: Request) async throws -> Response {
     guard let session = try await req.fetchSession() else {
-        return try VCWelcomePage(users: [], error: "Session doesn't exist").rootNode.response()
+        return try expiredSessionResponse()
     }
     guard let saveId: UUID = req.parameters.get("save_id") else {
         throw Abort(.badRequest)
@@ -858,7 +858,7 @@ private func deleteProfileSave(userId: UUID, profile: UserProfile, saveId: UUID,
 
 @Sendable func userProfileSaveSequencePage(req: Request) async throws -> Response {
     guard let session = try await req.fetchSession() else {
-        return try VCWelcomePage(users: [], error: "Session doesn't exist").rootNode.response()
+        return try expiredSessionResponse()
     }
     guard let sequenceId: UUID = req.parameters.get("sequence_id") else {
         throw Abort(.badRequest)
@@ -886,7 +886,7 @@ private func deleteProfileSave(userId: UUID, profile: UserProfile, saveId: UUID,
 
 @Sendable func deleteUserProfileGameSavesPage(req: Request) async throws -> Response {
     guard let session = try await req.fetchSession() else {
-        return try VCWelcomePage(users: [], error: "Session doesn't exist").rootNode.response()
+        return try expiredSessionResponse()
     }
     guard let familyId: UUID = req.parameters.get("family_id") else {
         throw Abort(.badRequest)
@@ -909,7 +909,7 @@ private func deleteProfileSave(userId: UUID, profile: UserProfile, saveId: UUID,
 
 @Sendable func deleteUserProfileGameSaves(req: Request) async throws -> Response {
     guard let session = try await req.fetchSession() else {
-        return try VCWelcomePage(users: [], error: "Session doesn't exist").rootNode.response()
+        return try expiredSessionResponse()
     }
     guard let familyId: UUID = req.parameters.get("family_id") else {
         throw Abort(.badRequest)
@@ -926,7 +926,7 @@ private func deleteProfileSave(userId: UUID, profile: UserProfile, saveId: UUID,
 
 @Sendable func deleteUserProfileSavePage(req: Request) async throws -> Response {
     guard let session = try await req.fetchSession() else {
-        return try VCWelcomePage(users: [], error: "Session doesn't exist").rootNode.response()
+        return try expiredSessionResponse()
     }
     guard let saveId: UUID = req.parameters.get("save_id") else {
         throw Abort(.badRequest)
@@ -949,7 +949,7 @@ private func deleteProfileSave(userId: UUID, profile: UserProfile, saveId: UUID,
 
 @Sendable func deleteUserProfileSave(req: Request) async throws -> Response {
     guard let session = try await req.fetchSession() else {
-        return try VCWelcomePage(users: [], error: "Session doesn't exist").rootNode.response()
+        return try expiredSessionResponse()
     }
     guard let saveId: UUID = req.parameters.get("save_id") else {
         throw Abort(.badRequest)

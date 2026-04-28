@@ -62,6 +62,12 @@ extension Request {
     }
 }
 
+func expiredSessionResponse() throws -> Response {
+    let response = try VCWelcomePage(users: [], error: "Session expired. Please sign in again.").rootNode.response()
+    clearBrowserSessionCookie(on: response)
+    return response
+}
+
 @Sendable func editUser(req: Request) async throws -> Response {
     let pool = DBShared.pool()
     //let app = req.application
@@ -77,7 +83,7 @@ extension Request {
     }
     let (session, user) = result
     guard session != nil else {
-        return try VCWelcomePage(users:[], error:"Session doesn't exist").rootNode.response()
+        return try expiredSessionResponse()
     }
     guard let user = user else {
         return try VCWelcomePage(users:[], error:"User not found").rootNode.response()

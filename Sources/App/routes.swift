@@ -201,7 +201,7 @@ func routes(_ app: Application) throws {
         }
         let (session, user) = result
         guard session != nil else {
-            return try VCWelcomePage(users:[], error:"Session doesn't exist").rootNode.response()
+            return try expiredSessionResponse()
         }
         guard let user = user else {
             return try VCWelcomePage(users:[], error:"User not found").rootNode.response()
