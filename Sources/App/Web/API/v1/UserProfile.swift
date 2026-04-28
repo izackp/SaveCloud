@@ -27,21 +27,21 @@ import Argon2Swift
 
 final class PlainId: Content {
     
-    init(id: UUID) {
+    init(id: SmallUid) {
         self.id = id
     }
     
-    var id: UUID
+    var id: SmallUid
 }
 
 final class PutUserProfile: Content, IValidate {
     
-    init(id: UUID?, name:String) {
+    init(id: SmallUid?, name:String) {
         self.id = id
         self.name = name
     }
     
-    var id: UUID?
+    var id: SmallUid?
     var name: String
     
     func iterateErrors(_ index:inout Int) -> String? {
@@ -60,12 +60,12 @@ final class PutUserProfile: Content, IValidate {
 
 final class PostUserProfile: Content, IValidate {
     
-    init(id: UUID?, name:String) {
+    init(id: SmallUid?, name:String) {
         self.id = id
         self.name = name
     }
     
-    var id: UUID?
+    var id: SmallUid?
     var userId: UUID?
     var name: String
     
@@ -99,7 +99,7 @@ final class PostUserProfile: Content, IValidate {
     }
     
     let userDefinedId = contents.id != nil
-    let id = contents.id ?? UUID()
+    let id = contents.id ?? SmallUid.generate()
     let date = Date()
     let userProfile = UserProfile(id: id, userId: userIdForProfile, name: contents.name, createdAt: date, updatedAt: date)
     let pool = DBShared.pool()
@@ -115,7 +115,7 @@ final class PostUserProfile: Content, IValidate {
                 try profile.insert(db)
                 return profile
             } catch let error as DatabaseError where error.resultCode == .SQLITE_CONSTRAINT && attempt < 4 {
-                profile.id = UUID()
+                profile.id = SmallUid.generate()
             }
         }
 
@@ -129,7 +129,7 @@ final class PostUserProfile: Content, IValidate {
     let session = try req.authSession()
     let contents = try req.content.decode(PutUserProfile.self)
     try contents.checkValdiation()
-    let pathId:UUID? = req.parameters.get("profile_id")
+    let pathId:SmallUid? = req.parameters.get("profile_id")
     guard let profileId = pathId ?? contents.id else {
         throw Abort(.badRequest)
     }
@@ -158,8 +158,8 @@ final class PostUserProfile: Content, IValidate {
 @Sendable func apiDELETEUserProfile(req: Request) async throws {
     let session = try req.authSession()
     
-    let pathId:UUID? = req.parameters.get("profile_id")
-    let profileId:UUID
+    let pathId:SmallUid? = req.parameters.get("profile_id")
+    let profileId:SmallUid
     if let pathId = pathId {
         profileId = pathId
     } else {

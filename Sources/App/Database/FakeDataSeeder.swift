@@ -537,11 +537,20 @@ enum FakeDataSeeder {
 
     private static func makeSeedUser(index: Int, now: Date) throws -> User {
         let salt = Salt.newSalt()
-        let passwordHash = try Argon2Swift.hashPasswordString(password: "password", salt: salt).encodedString()
+        let username:String
+        let email:String
+        if (index == 0) {
+            username = "izackp"
+            email = "izackp@gmail.com"
+        } else {
+            username = "seed_user_\(index)"
+            email = "seed_user_\(index)@example.com"
+        }
+        let passwordHash = try Argon2Swift.hashPasswordString(password: "Password12", salt: salt).encodedString()
         return User(
             id: UUID(),
-            username: "seed_user_\(index)",
-            email: "seed_user_\(index)@example.com",
+            username: username,
+            email: email,
             passwordHash: passwordHash,
             isAdmin: index == 0,
             createdAt: now,
@@ -642,7 +651,7 @@ enum FakeDataSeeder {
 
             for profileIndex in 0..<profilesPerUser {
                 var profile = UserProfile(
-                    id: UUID(),
+                    id: SmallUid.generate(),
                     userId: user.id,
                     name: "Profile \(profileIndex + 1)",
                     createdAt: now,

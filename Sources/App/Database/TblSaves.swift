@@ -25,7 +25,7 @@ import GRDB
 import Vapor
 
 struct Save: Content, Codable, SQLItem, Identifiable, Sendable {
-    internal init(id: UUID, gameHashId: UUID, gameMetaId: UUID?, compatibilityId: UUID, sequentialId: UUID, profileId: UUID, userId: UUID, url: String, fileSize: Int, sourceDevice: String? = nil, screenshot: Data? = nil, name: String? = nil, contentHash: String? = nil, notes: String? = nil, date: Date? = nil, createdAt: Date, updatedAt: Date) {
+    internal init(id: UUID, gameHashId: UUID, gameMetaId: UUID?, compatibilityId: UUID, sequentialId: UUID, profileId: SmallUid, userId: UUID, url: String, fileSize: Int, sourceDevice: String? = nil, screenshot: Data? = nil, name: String? = nil, contentHash: String? = nil, notes: String? = nil, date: Date? = nil, createdAt: Date, updatedAt: Date) {
         self.id = id
         self.gameHashId = gameHashId
         self.gameMetaId = gameMetaId
@@ -50,7 +50,7 @@ struct Save: Content, Codable, SQLItem, Identifiable, Sendable {
     var gameMetaId: UUID?
     var compatibilityId: UUID
     var sequentialId: UUID
-    var profileId: UUID
+    var profileId: SmallUid
     var userId: UUID
     var url: String
     var fileSize: Int
@@ -146,7 +146,7 @@ extension Save {
     static let createdAt = created_at
     static let updatedAt = updated_at
 
-    private static func baseRequest(userId: UUID, profileId: UUID?, gameHashId: UUID?) -> QueryInterfaceRequest<Save> {
+    private static func baseRequest(userId: UUID, profileId: SmallUid?, gameHashId: UUID?) -> QueryInterfaceRequest<Save> {
         var filter = all().filter(self.user_id == userId)
         if let profileId {
             filter = filter.filter(self.profile_id == profileId)
@@ -157,7 +157,7 @@ extension Save {
         return filter
     }
 
-    private static func baseRequest(userId: UUID, profileId: UUID?, gameHashIdList: [UUID]) -> QueryInterfaceRequest<Save> {
+    private static func baseRequest(userId: UUID, profileId: SmallUid?, gameHashIdList: [UUID]) -> QueryInterfaceRequest<Save> {
         var filter = all().filter(self.user_id == userId)
         if let profileId {
             filter = filter.filter(self.profile_id == profileId)
@@ -210,7 +210,7 @@ extension Save {
         }
     }
 
-    static func fetchPaged(_ pageInfo: PageInfo<SaveSortField>, userId: UUID, profileId: UUID?, gameHashId: UUID?, existingCon: DatabasePool? = nil) throws -> [Save] {
+    static func fetchPaged(_ pageInfo: PageInfo<SaveSortField>, userId: UUID, profileId: SmallUid?, gameHashId: UUID?, existingCon: DatabasePool? = nil) throws -> [Save] {
         let pool = existingCon ?? DBShared.pool()
         let request = applySort(baseRequest(userId: userId, profileId: profileId, gameHashId: gameHashId), pageInfo: pageInfo)
         return try pool.read { db in
@@ -220,7 +220,7 @@ extension Save {
         }
     }
 
-    static func fetchPaged(_ pageInfo: PageInfo<SaveSortField>, userId: UUID, profileId: UUID?, gameHashIdList: [UUID], existingCon: DatabasePool? = nil) throws -> [Save] {
+    static func fetchPaged(_ pageInfo: PageInfo<SaveSortField>, userId: UUID, profileId: SmallUid?, gameHashIdList: [UUID], existingCon: DatabasePool? = nil) throws -> [Save] {
         let pool = existingCon ?? DBShared.pool()
         let request = applySort(baseRequest(userId: userId, profileId: profileId, gameHashIdList: gameHashIdList), pageInfo: pageInfo)
         return try pool.read { db in
@@ -230,14 +230,14 @@ extension Save {
         }
     }
 
-    static func deleteAll(userId: UUID, profileId: UUID?, gameHashIdList: [UUID], existingCon: DatabasePool? = nil) throws {
+    static func deleteAll(userId: UUID, profileId: SmallUid?, gameHashIdList: [UUID], existingCon: DatabasePool? = nil) throws {
         let pool = existingCon ?? DBShared.pool()
         try pool.write { db in
             _ = try baseRequest(userId: userId, profileId: profileId, gameHashIdList: gameHashIdList).deleteAll(db)
         }
     }
 
-    static func fetchAllGameIds(userId: UUID, profileId: UUID?, existingCon: DatabasePool? = nil) throws -> [UUID] {
+    static func fetchAllGameIds(userId: UUID, profileId: SmallUid?, existingCon: DatabasePool? = nil) throws -> [UUID] {
         let pool = existingCon ?? DBShared.pool()
         return try pool.read { db in
             try baseRequest(userId: userId, profileId: profileId, gameHashIdList: [])

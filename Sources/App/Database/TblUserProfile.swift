@@ -9,13 +9,13 @@ import GRDB
 import Vapor
 
 struct UserProfile : Codable, Content, SQLItem, Identifiable, Sendable {
-    var id: UUID
+    var id: SmallUid
     var userId: UUID
     var name: String
     var createdAt: Date
     var updatedAt: Date
     
-    init(id: UUID, userId: UUID, name: String, createdAt: Date, updatedAt: Date) {
+    init(id: SmallUid, userId: UUID, name: String, createdAt: Date, updatedAt: Date) {
         self.id = id
         self.userId = userId
         self.name = name

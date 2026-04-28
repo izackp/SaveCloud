@@ -50,7 +50,7 @@ final class SmallUidTests: XCTestCase {
 
     func testSmallUidGeneratedValueUsesCurrentLayout() throws {
         let before = UInt64(Date().timeIntervalSince1970 * 1_000)
-        let uid = try SmallUid.generate()
+        let uid = SmallUid.generate()
         let after = UInt64(Date().timeIntervalSince1970 * 1_000)
 
         XCTAssertGreaterThanOrEqual(uid.timestamp, before)

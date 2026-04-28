@@ -9,6 +9,5 @@ import Foundation
 import GRDB
 
 protocol SQLItem: FetchableRecord, MutablePersistableRecord, TableRecord {
-    var id: UUID { get }
     var updatedAt: Date { get }
 }

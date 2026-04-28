@@ -46,7 +46,7 @@ import GRDB
 //GET /user/:user_id/profile/:profile_id/games?family_id_search=abc&page=0&per_page=10&sort_by=name&asc=1
 @Sendable func apiGETGameList(req: Request) async throws -> [GameMeta] {
     let userId = try req.validUserIdIfExists()
-    let profileId:UUID? = req.parameters.get("profile_id")
+    let profileId:SmallUid? = req.parameters.get("profile_id")
     let pageInfo:PageInfo<GameMetaSortField> = try req.getPageInfo()
     var searches = GameMetaSearchField.searchFieldsInRequest(req)
     let onlyBaseGames = (try? req.query.get(String.self, at: "base_games")) == "1"

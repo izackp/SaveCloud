@@ -18,7 +18,7 @@ import GRDB
 @Sendable func apiGETSaves(req: Request) async throws -> [Save] {
     let userId = try req.expectValidUserId()
     let pageInfo:PageInfo<SaveSortField> = try req.getPageInfo()
-    let profileId:UUID? = req.parameters.get("profile_id")
+    let profileId:SmallUid? = req.parameters.get("profile_id")
     let gameMetaId:UUID? = req.parameters.get("game_meta_id")
     let gameHash = try? req.query.get(String.self, at: "game_hash")
     
@@ -73,7 +73,7 @@ import GRDB
 //DELETE /user/:user_id/profile/:profile_id/saves?game_hash=xyz
 @Sendable func apiDELETESaves(req: Request) async throws {
     let userId = try req.expectValidUserId()
-    let profileId:UUID? = req.parameters.get("profile_id")
+    let profileId:SmallUid? = req.parameters.get("profile_id")
     let gameMetaId:UUID? = req.parameters.get("game_meta_id")
     let gameHash = try? req.query.get(String.self, at: "game_hash")
     

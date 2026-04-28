@@ -142,8 +142,8 @@ final class VCManagedUserPage: ManagedUserPage {
 final class VCManagedUserProfileGridItem: ProfileGridItem {
     init(user: User, profile: UserProfile) throws {
         try super.init()
-        profile_link.href = URL(string: "/users/\(user.id.uuidString)/profiles/\(profile.id.uuidString)/games")
-        let profileId = profile.id.uuidString.uppercased()
+        profile_link.href = URL(string: "/users/\(user.id.uuidString)/profiles/\(profile.id.description)/games")
+        let profileId = profile.id.description
         profile_avatar_container.addChild(HTMLText(content: #"<svg width="80" height="80" data-jdenticon-value="\#(profileId)"></svg>"#))
         name.addChild(HTMLText(content: profile.name))
     }

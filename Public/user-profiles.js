@@ -7,32 +7,52 @@
         return;
     }
 
-    const initialId = "2D2F6D2A-7D14-4554-B8A4-B47D3CDD0001";
+    const initialId = "";
     let currentId = createIdInput.value || initialId;
 
+    function randomSmallUid() {
+        const timestamp = BigInt(Date.now());
+        const randomBytes = new Uint32Array(1);
+        crypto.getRandomValues(randomBytes);
+        const random = BigInt(randomBytes[0] & 0xFFFFF);
+        const value = (timestamp << 20n) | random;
+
+        const bytes = new Uint8Array(8);
+        let remaining = value;
+        for (let index = 7; index >= 0; index -= 1) {
+            bytes[index] = Number(remaining & 0xFFn);
+            remaining >>= 8n;
+        }
+
+        let binary = "";
+        bytes.forEach(function (byte) {
+            binary += String.fromCharCode(byte);
+        });
+        return btoa(binary).replace(/\+/g, "-").replace(/\//g, "_").replace(/=/g, "");
+    }
+
     function renderProfileId(value) {
-        const normalizedValue = value.toUpperCase();
-        currentId = normalizedValue;
-        createIdInput.value = normalizedValue;
+        currentId = value;
+        createIdInput.value = value;
         createAvatarContainer.innerHTML =
-            '<' + 'svg width="80" height="80" data-jdenticon-value="' + normalizedValue + '"></' + 'svg>';
+            '<' + 'svg width="80" height="80" data-jdenticon-value="' + value + '"></' + 'svg>';
         if (window.jdenticon && createAvatarContainer.firstElementChild) {
             window.jdenticon.update(createAvatarContainer.firstElementChild);
         }
     }
 
     function shuffleProfileId() {
-        renderProfileId(crypto.randomUUID());
+        renderProfileId(randomSmallUid());
     }
 
     createForm.addEventListener("submit", function () {
         if (!createIdInput.value) {
-            renderProfileId(currentId || initialId);
+            renderProfileId(currentId || randomSmallUid());
         } else {
             createIdInput.value = currentId;
         }
     });
 
-    renderProfileId(currentId);
+    renderProfileId(currentId || randomSmallUid());
     shuffleButton.addEventListener("click", shuffleProfileId);
 }());

@@ -1,4 +1,6 @@
 import Foundation
+import GRDB
+import Vapor
 
 public enum SmallUidError: Error, LocalizedError, Equatable {
     case timestampLimit
@@ -23,7 +25,7 @@ public enum SmallUidError: Error, LocalizedError, Equatable {
     }
 }
 
-public struct SmallUid: Hashable, Comparable, Sendable, Codable, CustomStringConvertible, ExpressibleByIntegerLiteral {
+public struct SmallUid: Hashable, Comparable, Sendable, CustomStringConvertible, ExpressibleByIntegerLiteral, LosslessStringConvertible, Codable, DatabaseValueConvertible {
     public static let timestampBitCount: UInt64 = 44
     public static let randomBitCount: UInt64 = 20
     public static let maxTimestamp: UInt64 = (1 << timestampBitCount) - 1
@@ -40,8 +42,12 @@ public struct SmallUid: Hashable, Comparable, Sendable, Codable, CustomStringCon
         self.init(rawValue: value)
     }
 
-    public init() throws {
-        self = try Self.generate()
+    public init?(_ description: String) {
+        try? self.init(base64URL: description)
+    }
+
+    public init() {
+        self = Self.generate()
     }
 
     public init(timestamp: UInt64, random: UInt64) throws {
@@ -140,6 +146,17 @@ public struct SmallUid: Hashable, Comparable, Sendable, Codable, CustomStringCon
             .replacingOccurrences(of: "=", with: "")
     }
 
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.singleValueContainer()
+        let value = try container.decode(String.self)
+        try self.init(base64URL: value)
+    }
+
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.singleValueContainer()
+        try container.encode(description)
+    }
+
     public static func currentTimestamp() throws -> UInt64 {
         let milliseconds = UInt64(Date().timeIntervalSince1970 * 1_000)
         guard milliseconds <= maxTimestamp else {
@@ -152,17 +169,41 @@ public struct SmallUid: Hashable, Comparable, Sendable, Codable, CustomStringCon
         UInt64.random(in: 0...maxRandom)
     }
 
-    public static func generate() throws -> SmallUid {
-        try SmallUid(timestamp: currentTimestamp(), random: randomValue())
+    public static func generate() -> SmallUid {
+        let timestamp = uncheckedCurrentTimestamp()
+        let random = randomValue()
+        return SmallUid(rawValue: (timestamp << randomBitCount) | random)
     }
 
     public static func < (lhs: SmallUid, rhs: SmallUid) -> Bool {
         lhs.rawValue < rhs.rawValue
+    }
+
+    private static func uncheckedCurrentTimestamp() -> UInt64 {
+        let milliseconds = UInt64(Date().timeIntervalSince1970 * 1_000)
+        precondition(milliseconds <= maxTimestamp, SmallUidError.timestampLimit.localizedDescription)
+        return milliseconds
     }
 }
 
 extension UInt64 {
     var bigEndianBytes: [UInt8] {
         withUnsafeBytes(of: bigEndian, Array.init)
+    }
+}
+
+extension SmallUid {
+    public var databaseValue: DatabaseValue {
+        Data(rawValue.bigEndianBytes).databaseValue
+    }
+
+    public static func fromDatabaseValue(_ dbValue: DatabaseValue) -> SmallUid? {
+        guard let data = Data.fromDatabaseValue(dbValue),
+              data.count == MemoryLayout<UInt64>.size else {
+            return nil
+        }
+        let bytes = [UInt8](data)
+        let value = bytes.withUnsafeBytes { $0.load(as: UInt64.self) }
+        return SmallUid(rawValue: UInt64(bigEndian: value))
     }
 }
