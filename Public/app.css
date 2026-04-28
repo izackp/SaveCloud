@@ -1062,7 +1062,6 @@ td, th, dd, code, time, .num {
     margin: var(--space-3) 0 var(--space-4);
     padding: 0 0 var(--space-4);
     border: 0;
-    border-bottom: 1px solid var(--border-soft);
     background: transparent;
 }
 
