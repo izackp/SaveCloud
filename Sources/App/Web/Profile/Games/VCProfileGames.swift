@@ -22,7 +22,12 @@ final class VCProfileGamesPage: ProfileGamesPage {
             p_error.addChild(HTMLText(content: error))
             p_error.globalAttributes[.style] = ""
         }
-        title.addChild(HTMLText(content: profile.name))
+        let nav = profileNavigationContext(session: session, profile: profile)
+        breadcrumb_root_label.addChild(HTMLText(content: nav.rootLabel))
+        breadcrumb_root_link.href = URL(string: nav.rootLinkPath)
+        breadcrumb_profile_link.href = URL(string: nav.backLinkPath)
+        breadcrumb_profile_name.addChild(HTMLText(content: profile.name))
+        breadcrumb_games_label.addChild(HTMLText(content: "Games"))
         let profileId = profile.id.description
         profile_avatar_container.addChild(HTMLText(content: #"<svg width="120" height="120" data-jdenticon-value="\#(profileId)"></svg>"#))
         profile_id.addChild(HTMLText(content: profile.name))

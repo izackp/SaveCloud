@@ -12,9 +12,13 @@
 <body>
     <div id="nav_bar"></div>
     <div class="nav_body">
-        <header class="page-head">
-            <h1 id="title"></h1>
-        </header>
+        <nav class="breadcrumbs" aria-label="Breadcrumb">
+            <a id="breadcrumb_root_link"><span id="breadcrumb_root_label"></span></a>
+            <span aria-hidden="true">/</span>
+            <a id="breadcrumb_profile_link"><span id="breadcrumb_profile_name"></span></a>
+            <span aria-hidden="true">/</span>
+            <span id="breadcrumb_games_label"></span>
+        </nav>
         <p id="p_error" class="error-msg" style="display:none"></p>
         <section class="profile-detail-hero">
             <div id="profile_avatar_container"></div>
