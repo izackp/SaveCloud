@@ -1110,9 +1110,8 @@ td, th, dd, code, time, .num {
 }
 
 .profile-save-title-line {
-    display: flex;
-    align-items: baseline;
-    gap: var(--space-2);
+    display: grid;
+    gap: var(--space-1);
     min-width: 0;
 }
 
@@ -1150,9 +1149,18 @@ td, th, dd, code, time, .num {
 
 .profile-save-actions {
     display: flex;
+    flex-wrap: wrap;
     justify-content: flex-end;
     gap: var(--space-1);
     white-space: nowrap;
+}
+
+.profile-save-name {
+    white-space: normal;
+    text-overflow: clip;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
 }
 
 .profile-sequence-save-row {
