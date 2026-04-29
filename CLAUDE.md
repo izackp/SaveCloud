@@ -83,6 +83,12 @@ Pages follow a **VC (View Controller) pattern** — each page has:
 
 `HTMLNode` is made `ResponseEncodable` via `Extensions/Plot+Ext.swift`, so route handlers can return `HTMLNode` directly.
 
+### Web File Organization
+- Prefer folder structure that mirrors web URL structure as closely as practical.
+- Keep Swift route/controller files and their `.html` templates in same route-family folder.
+- Put shared helpers in `Shared/` only when reused by multiple route trees.
+- Prefer canonical route ownership over older feature buckets. Example: `/profile/:id/games` code belongs under `Web/Profile/Games/`, not a generic `Web/User/` bucket.
+
 ### Validation
 Request bodies that need validation conform to `IValidate` (in `Utility/IValidate.swift`), implementing `iterateErrors(_:)`. Call `.checkValdiation()` to throw a `400 Bad Request` with all errors joined.
 

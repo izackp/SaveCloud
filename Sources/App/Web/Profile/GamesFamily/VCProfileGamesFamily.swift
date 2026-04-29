@@ -6,7 +6,7 @@ final class VCProfileGameSaveRow: ProfileGameSaveRow {
         try super.init()
         let save = group.latestSave
         save_name.addChild(HTMLText(content: save.name ?? "Untitled save"))
-        save_count.addChild(HTMLText(content: group.saves.count == 1 ? "1 save in sequence" : "\(group.saves.count) saves in sequence"))
+        save_count.addChild(HTMLText(content: group.saves.count == 1 ? "" : "\(group.saves.count-1) previous saves"))
         sequence_link.href = URL(string: sequencePath)
         source_device.addChild(HTMLText(content: save.sourceDevice ?? "Unknown device"))
         file_size.addChild(HTMLText(content: profileFileSizeText(save.fileSize)))
@@ -21,7 +21,7 @@ final class VCProfileGameSaveVersionGroup: ProfileGameSaveVersionGroup {
     init(versionGroup: ProfileGameSaveVersionGroupData, saveBasePath: String, deleteSequenceBasePath: String, sequenceBasePath: String) throws {
         try super.init()
         version_title.addChild(HTMLText(content: profileGameVersionText(versionGroup.game)))
-        let sequenceCopy = versionGroup.sequenceGroups.count == 1 ? "1 save sequence" : "\(versionGroup.sequenceGroups.count) save sequences"
+        let sequenceCopy = versionGroup.sequenceGroups.count == 1 ? "1 save" : "\(versionGroup.sequenceGroups.count) saves"
         version_summary.addChild(HTMLText(content: sequenceCopy))
         version_game_link.href = URL(string: "/games/\(versionGroup.game.id.uuidString)")
         for group in versionGroup.sequenceGroups {

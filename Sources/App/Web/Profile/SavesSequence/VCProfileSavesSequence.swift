@@ -29,7 +29,7 @@ final class VCProfileSaveSequencePage: ProfileSaveSequencePage {
         breadcrumb_profile_link.href = URL(string: profileLinkPath)
         breadcrumb_game_name.addChild(HTMLText(content: sequenceData.displayGame.name))
         breadcrumb_game_link.href = URL(string: gameLinkPath)
-        let saveCopy = sequenceData.saves.count == 1 ? "1 save in sequence" : "\(sequenceData.saves.count) saves in sequence"
+        let saveCopy = sequenceData.saves.count == 1 ? "" : "\(sequenceData.saves.count - 1) previous saves"
         title.addChild(HTMLText(content: saveCopy))
         if sequenceData.saves.isEmpty {
             empty_text.globalAttributes[.style] = ""
