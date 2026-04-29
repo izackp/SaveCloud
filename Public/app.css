@@ -897,8 +897,13 @@ td, th, dd, code, time, .num {
 .profile-save-version-header {
     display: flex;
     align-items: flex-end;
-    justify-content: space-between;
     gap: var(--space-3);
+}
+
+.profile-save-version-title-row {
+    display: flex;
+    align-items: baseline;
+    gap: var(--space-2);
 }
 
 .profile-save-version-header h2 {
