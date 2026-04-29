@@ -660,20 +660,26 @@ enum FakeDataSeeder {
                 try profile.insert(db)
 
                 for playableGame in playableGames {
+                    let sequenceCount = max(1, (savesPerProfile + 1) / 2)
+                    let sequenceIds = (0..<sequenceCount).map { _ in UUID() }
                     for saveIndex in 0..<savesPerProfile {
+                        let sequenceIndex = saveIndex / 2
+                        let revisionIndex = saveIndex % 2
                         let saveTime = now.addingTimeInterval(TimeInterval((profileIndex * 100) + (saveIndex * 60)))
+                        let sequenceLabel = sequenceCount == 1 ? playableGame.savePrefix : "\(playableGame.savePrefix) Slot \(sequenceIndex + 1)"
+                        let saveLabel = revisionIndex == 0 ? sequenceLabel : "\(sequenceLabel) Update \(revisionIndex)"
                         var save = Save(
                             id: UUID(),
                             gameHashId: playableGame.gameHashId,
                             gameMetaId: playableGame.gameMetaId,
                             compatibilityId: playableGame.compatibilityId,
-                            sequentialId: UUID(),
+                            sequentialId: sequenceIds[sequenceIndex],
                             profileId: profile.id,
                             userId: user.id,
                             url: "https://example.com/\(UUID().uuidString).zip",
                             fileSize: 1024 + saveIndex,
                             sourceDevice: "seed-device-\(userIndex)",
-                            name: "\(playableGame.savePrefix) Save \(saveIndex + 1)",
+                            name: saveLabel,
                             contentHash: playableGame.contentHash,
                             notes: playableGame.saveNotes,
                             date: saveTime,
