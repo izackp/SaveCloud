@@ -30,7 +30,7 @@ final class VCDeleteProfileSavePage: DeleteProfileSavePage {
           let save = try await fetchProfileSave(userId: profile.userId, profile: profile, saveId: saveId, pool: pool) else {
         return try await profileNotFoundResponse(session: session, req: req, pool: pool, error: "Profile or save not found.")
     }
-    return req.redirect(to: save.url, redirectType: .normal)
+    return req.redirect(to: saveDownloadPath(saveId: save.id), redirectType: .normal)
 }
 
 @Sendable func deleteUserProfileSavePage(req: Request) async throws -> Response {

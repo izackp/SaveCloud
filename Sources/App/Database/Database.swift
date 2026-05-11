@@ -73,6 +73,7 @@ class DBShared {
         try GameMeta.createTable(db: db)
         try GameHash.createTable(db: db)
         try Save.createTable(db: db)
+        try PendingSaveUpload.createTable(db: db)
         try UserProfile.createTable(db: db)
     }
 
@@ -97,6 +98,9 @@ class DBShared {
         }
         if try db.tableExists(Save.databaseTableName) {
             try db.drop(table: Save.databaseTableName)
+        }
+        if try db.tableExists(PendingSaveUpload.databaseTableName) {
+            try db.drop(table: PendingSaveUpload.databaseTableName)
         }
         if try db.tableExists(UserProfile.databaseTableName) {
             try db.drop(table: UserProfile.databaseTableName)

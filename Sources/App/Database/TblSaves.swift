@@ -11,7 +11,6 @@
      "game_id":"uuid",
      "sequntial_id":"uuid",
      "sequence":"2",
-     "url":"http://path.to/save.zip",
      "screenshot":"Base64;asdadsasd", //Maybe a url? it would need to be less than 100kb for embedded to be viable
      "created_at":"..",
      "updated_at":"..",
@@ -25,7 +24,7 @@ import GRDB
 import Vapor
 
 struct Save: Content, Codable, SQLItem, Identifiable, Sendable {
-    internal init(id: UUID, gameHashId: UUID, gameMetaId: UUID?, compatibilityId: UUID, sequentialId: UUID, profileId: SmallUid, userId: SmallUid, url: String, fileSize: Int, sourceDevice: String? = nil, screenshot: Data? = nil, name: String? = nil, contentHash: String? = nil, notes: String? = nil, date: Date? = nil, createdAt: Date, updatedAt: Date) {
+    internal init(id: UUID, gameHashId: UUID, gameMetaId: UUID?, compatibilityId: UUID, sequentialId: UUID, profileId: SmallUid, userId: SmallUid, fileSize: Int, sourceDevice: String? = nil, screenshot: Data? = nil, name: String? = nil, contentHash: String? = nil, notes: String? = nil, date: Date? = nil, createdAt: Date, updatedAt: Date) {
         self.id = id
         self.gameHashId = gameHashId
         self.gameMetaId = gameMetaId
@@ -33,7 +32,6 @@ struct Save: Content, Codable, SQLItem, Identifiable, Sendable {
         self.sequentialId = sequentialId
         self.profileId = profileId
         self.userId = userId
-        self.url = url
         self.fileSize = fileSize
         self.sourceDevice = sourceDevice
         self.screenshot = screenshot
@@ -52,7 +50,6 @@ struct Save: Content, Codable, SQLItem, Identifiable, Sendable {
     var sequentialId: UUID
     var profileId: SmallUid
     var userId: SmallUid
-    var url: String
     var fileSize: Int
     var sourceDevice: String?
     var screenshot: Data?
@@ -71,7 +68,6 @@ struct Save: Content, Codable, SQLItem, Identifiable, Sendable {
         case sequentialId = "sequential_id"
         case profileId = "profile_id"
         case userId = "user_id"
-        case url
         case fileSize = "file_size"
         case sourceDevice = "source_device"
         case screenshot
@@ -94,7 +90,6 @@ struct Save: Content, Codable, SQLItem, Identifiable, Sendable {
     static let sequential_id = Column(CodingKeys.sequentialId)
     static let profile_id = Column(CodingKeys.profileId)
     static let user_id = Column(CodingKeys.userId)
-    static let url = Column(CodingKeys.url)
     static let file_size = Column(CodingKeys.fileSize)
     static let source_device = Column(CodingKeys.sourceDevice)
     static let screenshot = Column(CodingKeys.screenshot)
@@ -118,7 +113,6 @@ struct Save: Content, Codable, SQLItem, Identifiable, Sendable {
             t.column(sequential_id, .blob).notNull()
             t.column(profile_id, .blob).notNull()
             t.column(user_id, .blob).notNull()
-            t.column(url, .text).notNull()
             t.column(file_size, .integer).notNull()
             t.column(source_device, .text)
             t.column(screenshot, .blob)

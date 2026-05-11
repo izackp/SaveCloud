@@ -574,6 +574,214 @@ final class AppTests: XCTestCase {
         XCTAssertEqual(remainingSaves, 0)
     }
 
+    func testAPISaveCompareReturnsExactMatchForLatestBoundSave() async throws {
+        _ = try await registerUser(
+            username: "compare-exact-admin",
+            email: "compare-exact-admin@example.com",
+            password: "password123"
+        )
+        let adminLogin = try await loginUser(
+            username: "compare-exact-admin",
+            password: "password123"
+        )
+        let adminSession = try await currentSession(for: adminLogin.token.sessionId)
+        let profile = try insertProfile(userId: adminSession.user, name: "Compare Profile")
+        let game = try insertGameMeta(name: "Compare Game")
+        let hash = try insertGameHash(gameMetaId: game.id, hash: "compare-hash-exact")
+        let sequenceId = UUID()
+        let latestSave = try insertSave(
+            userId: adminSession.user,
+            profileId: profile.id,
+            gameHashId: hash.id,
+            gameMetaId: game.id,
+            name: "Latest Save",
+            contentHash: "hash-latest",
+            sequentialId: sequenceId,
+            date: Date()
+        )
+        
+        try await app.test(.POST, "api/v1/save/compare", beforeRequest: { req in
+            req.headers.bearerAuthorization = BearerAuthorization(token: adminLogin.token.sessionId)
+            try req.content.encode(ApiSaveCompareRequest(
+                profileId: profile.id,
+                gameHash: "compare-hash-exact",
+                saveId: latestSave.id,
+                sequentialId: sequenceId,
+                contentHash: "hash-latest"
+            ))
+        }, afterResponse: { res async throws in
+            XCTAssertEqual(res.status, .ok)
+            let compare = try res.content.decode(SaveCompareResponse.self)
+            XCTAssertEqual(compare.status, "exact_match")
+            XCTAssertEqual(compare.latestSave?.id, latestSave.id)
+            XCTAssertFalse(compare.uploadAllowed)
+            XCTAssertFalse(compare.pullAllowed)
+            XCTAssertFalse(compare.hasDivergence)
+        })
+    }
+
+    func testAPISaveCompareReturnsUploadWhenBoundSaveIsLatestAndLocalChanged() async throws {
+        _ = try await registerUser(
+            username: "compare-upload-admin",
+            email: "compare-upload-admin@example.com",
+            password: "password123"
+        )
+        let adminLogin = try await loginUser(
+            username: "compare-upload-admin",
+            password: "password123"
+        )
+        let adminSession = try await currentSession(for: adminLogin.token.sessionId)
+        let profile = try insertProfile(userId: adminSession.user, name: "Upload Profile")
+        let game = try insertGameMeta(name: "Upload Game")
+        let hash = try insertGameHash(gameMetaId: game.id, hash: "compare-hash-upload")
+        let sequenceId = UUID()
+        let latestSave = try insertSave(
+            userId: adminSession.user,
+            profileId: profile.id,
+            gameHashId: hash.id,
+            gameMetaId: game.id,
+            name: "Latest Save",
+            contentHash: "hash-old",
+            sequentialId: sequenceId,
+            date: Date()
+        )
+        
+        try await app.test(.POST, "api/v1/save/compare", beforeRequest: { req in
+            req.headers.bearerAuthorization = BearerAuthorization(token: adminLogin.token.sessionId)
+            try req.content.encode(ApiSaveCompareRequest(
+                profileId: profile.id,
+                gameHash: "compare-hash-upload",
+                saveId: latestSave.id,
+                sequentialId: sequenceId,
+                contentHash: "hash-new-local"
+            ))
+        }, afterResponse: { res async throws in
+            XCTAssertEqual(res.status, .ok)
+            let compare = try res.content.decode(SaveCompareResponse.self)
+            XCTAssertEqual(compare.status, "upload")
+            XCTAssertEqual(compare.latestSave?.id, latestSave.id)
+            XCTAssertTrue(compare.uploadAllowed)
+            XCTAssertFalse(compare.pullAllowed)
+            XCTAssertFalse(compare.hasDivergence)
+        })
+    }
+
+    func testAPISaveCompareReturnsRemoteNewerWhenLocalMatchesOlderBoundSave() async throws {
+        _ = try await registerUser(
+            username: "compare-remote-admin",
+            email: "compare-remote-admin@example.com",
+            password: "password123"
+        )
+        let adminLogin = try await loginUser(
+            username: "compare-remote-admin",
+            password: "password123"
+        )
+        let adminSession = try await currentSession(for: adminLogin.token.sessionId)
+        let profile = try insertProfile(userId: adminSession.user, name: "Remote Profile")
+        let game = try insertGameMeta(name: "Remote Game")
+        let hash = try insertGameHash(gameMetaId: game.id, hash: "compare-hash-remote")
+        let sequenceId = UUID()
+        let olderDate = Date().addingTimeInterval(-120)
+        let newerDate = Date()
+        let oldSave = try insertSave(
+            userId: adminSession.user,
+            profileId: profile.id,
+            gameHashId: hash.id,
+            gameMetaId: game.id,
+            name: "Old Save",
+            contentHash: "hash-old",
+            sequentialId: sequenceId,
+            date: olderDate
+        )
+        let latestSave = try insertSave(
+            userId: adminSession.user,
+            profileId: profile.id,
+            gameHashId: hash.id,
+            gameMetaId: game.id,
+            name: "Latest Save",
+            contentHash: "hash-latest",
+            sequentialId: sequenceId,
+            date: newerDate
+        )
+        
+        try await app.test(.POST, "api/v1/save/compare", beforeRequest: { req in
+            req.headers.bearerAuthorization = BearerAuthorization(token: adminLogin.token.sessionId)
+            try req.content.encode(ApiSaveCompareRequest(
+                profileId: profile.id,
+                gameHash: "compare-hash-remote",
+                saveId: oldSave.id,
+                sequentialId: sequenceId,
+                contentHash: "hash-old"
+            ))
+        }, afterResponse: { res async throws in
+            XCTAssertEqual(res.status, .ok)
+            let compare = try res.content.decode(SaveCompareResponse.self)
+            XCTAssertEqual(compare.status, "remote_newer")
+            XCTAssertEqual(compare.latestSave?.id, latestSave.id)
+            XCTAssertEqual(compare.matchingSave?.id, oldSave.id)
+            XCTAssertFalse(compare.uploadAllowed)
+            XCTAssertTrue(compare.pullAllowed)
+            XCTAssertFalse(compare.hasDivergence)
+        })
+    }
+
+    func testAPISaveCompareReturnsDivergenceWhenBoundSequenceAdvancedAndLocalUnknown() async throws {
+        _ = try await registerUser(
+            username: "compare-diverge-admin",
+            email: "compare-diverge-admin@example.com",
+            password: "password123"
+        )
+        let adminLogin = try await loginUser(
+            username: "compare-diverge-admin",
+            password: "password123"
+        )
+        let adminSession = try await currentSession(for: adminLogin.token.sessionId)
+        let profile = try insertProfile(userId: adminSession.user, name: "Diverge Profile")
+        let game = try insertGameMeta(name: "Diverge Game")
+        let hash = try insertGameHash(gameMetaId: game.id, hash: "compare-hash-diverge")
+        let sequenceId = UUID()
+        let oldSave = try insertSave(
+            userId: adminSession.user,
+            profileId: profile.id,
+            gameHashId: hash.id,
+            gameMetaId: game.id,
+            name: "Old Save",
+            contentHash: "hash-old",
+            sequentialId: sequenceId,
+            date: Date().addingTimeInterval(-120)
+        )
+        let latestSave = try insertSave(
+            userId: adminSession.user,
+            profileId: profile.id,
+            gameHashId: hash.id,
+            gameMetaId: game.id,
+            name: "Latest Save",
+            contentHash: "hash-latest",
+            sequentialId: sequenceId,
+            date: Date()
+        )
+        
+        try await app.test(.POST, "api/v1/save/compare", beforeRequest: { req in
+            req.headers.bearerAuthorization = BearerAuthorization(token: adminLogin.token.sessionId)
+            try req.content.encode(ApiSaveCompareRequest(
+                profileId: profile.id,
+                gameHash: "compare-hash-diverge",
+                saveId: oldSave.id,
+                sequentialId: sequenceId,
+                contentHash: "hash-unknown-local"
+            ))
+        }, afterResponse: { res async throws in
+            XCTAssertEqual(res.status, .ok)
+            let compare = try res.content.decode(SaveCompareResponse.self)
+            XCTAssertEqual(compare.status, "divergence")
+            XCTAssertEqual(compare.latestSave?.id, latestSave.id)
+            XCTAssertEqual(compare.matchingSave?.id, oldSave.id)
+            XCTAssertFalse(compare.uploadAllowed)
+            XCTAssertFalse(compare.pullAllowed)
+            XCTAssertTrue(compare.hasDivergence)
+        })
+    }
+
     
     private func registerUser(username: String, email: String, password: String) async throws -> PublicUser {
         var user: PublicUser?
@@ -685,8 +893,17 @@ final class AppTests: XCTestCase {
         return gameHash
     }
 
-    private func insertSave(userId: SmallUid, profileId: SmallUid, gameHashId: UUID, gameMetaId: UUID, name: String) throws -> Save {
-        let now = Date()
+    private func insertSave(
+        userId: SmallUid,
+        profileId: SmallUid,
+        gameHashId: UUID,
+        gameMetaId: UUID,
+        name: String,
+        contentHash: String? = nil,
+        sequentialId: UUID? = nil,
+        date: Date? = nil
+    ) throws -> Save {
+        let now = date ?? Date()
         let compatibilityId = UUID()
         var compatibility = Compatibility(id: compatibilityId, updatedAt: now)
         try DBShared.pool().write { db in
@@ -697,14 +914,13 @@ final class AppTests: XCTestCase {
             gameHashId: gameHashId,
             gameMetaId: gameMetaId,
             compatibilityId: compatibilityId,
-            sequentialId: UUID(),
+            sequentialId: sequentialId ?? UUID(),
             profileId: profileId,
             userId: userId,
-            url: "https://example.com/\(UUID().uuidString).zip",
             fileSize: 1024,
             sourceDevice: "tests",
             name: name,
-            contentHash: "content-\(UUID().uuidString)",
+            contentHash: contentHash ?? "content-\(UUID().uuidString)",
             notes: "test save",
             date: now,
             createdAt: now,

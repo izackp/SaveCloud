@@ -22,7 +22,7 @@ final class VCSaveDetailPage: SaveDetailPage {
         compatibility_id.addChild(HTMLText(content: save.compatibilityId.uuidString))
         sequential_id.addChild(HTMLText(content: save.sequentialId.uuidString))
         name.addChild(HTMLText(content: save.name ?? ""))
-        url.addChild(HTMLText(content: save.url))
+        url.addChild(HTMLText(content: saveDownloadPath(saveId: save.id)))
         file_size.addChild(HTMLText(content: "\(save.fileSize)"))
         source_device.addChild(HTMLText(content: save.sourceDevice ?? ""))
         content_hash.addChild(HTMLText(content: save.contentHash ?? ""))

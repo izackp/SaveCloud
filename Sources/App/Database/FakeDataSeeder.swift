@@ -676,7 +676,6 @@ enum FakeDataSeeder {
                             sequentialId: sequenceIds[sequenceIndex],
                             profileId: profile.id,
                             userId: user.id,
-                            url: "https://example.com/\(UUID().uuidString).zip",
                             fileSize: 1024 + saveIndex,
                             sourceDevice: "seed-device-\(userIndex)",
                             name: saveLabel,

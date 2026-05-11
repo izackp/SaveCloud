@@ -108,6 +108,8 @@ Contributors must sign commits with `git commit --signoff` to agree to the CLA i
 
 ## Behavior Preservation Rules
 
+- Treat existing code as intentional design unless there is strong repo evidence otherwise. Prefer extending or reshaping current APIs, models, and flows over deleting and rebuilding them.
+- Full-file replacement is allowed when the existing code is fully restored, including behavior, structure, comments, and intentional formatting, with new behavior added on top. Do not use file replacement to silently drop existing behavior, comments, formatting choices, or simplify away intentional structure.
 - Preserve existing user-visible behavior unless the user explicitly asked to change it.
 - Do not prioritize backward-compatibility shims, aliases, or transitional code when they increase complexity. This app is not released yet, so prefer the simpler final design.
 - Do not remove or rewrite useful comments without a concrete reason.

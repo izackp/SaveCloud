@@ -63,6 +63,7 @@ func routes(_ app: Application) throws {
     app.post("games", ":game_id", "delete", use: deleteGame(req:))
     app.get("saves", use: savesPage(req:))
     app.get("saves", ":save_id", use: saveDetailPage(req:))
+    app.get("saves", ":save_id", "download", use: saveDownload(req:))
     app.get("saves", ":save_id", "delete", use: deleteSavePage(req:))
     app.post("saves", ":save_id", "delete", use: deleteSave(req:))
 
@@ -126,10 +127,15 @@ func routes(_ app: Application) throws {
         return .ok
     }
     apiAuth.get("api", "v1", "save", ":save_id", use: apiGETSave(req:))
+    apiAuth.get("api", "v1", "save", ":save_id", "archive", use: apiGETSaveArchive(req:))
     apiAuth.delete("api", "v1", "save", ":save_id") { req async throws -> HTTPStatus in
         try await apiDELETESave(req: req)
         return .ok
     }
+    apiAuth.post("api", "v1", "save", "upload", "start", use: apiPOSTSaveUploadStart(req:))
+    apiAuth.put("api", "v1", "save", "upload", ":upload_id", "content", use: apiPUTSaveUploadContent(req:))
+    apiAuth.post("api", "v1", "save", "upload", ":upload_id", "complete", use: apiPOSTSaveUploadComplete(req:))
+    apiAuth.post("api", "v1", "save", "compare", use: apiPOSTSaveCompare(req:))
 
     let userSessGroup = app.routes
     userSessGroup.post("login", use: login(req:))
